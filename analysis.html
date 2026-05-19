@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>AI 智能投研报告 · 启明资本</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="assets/theme.css" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body data-page="analysis">
+
+<header class="top-nav">
+  <div class="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+        <path d="M20 3 L36 12 L36 28 L20 37 L4 28 L4 12 Z" stroke="#d4af37" stroke-width="1.4" fill="rgba(212,175,55,0.06)"/>
+        <path d="M14 24 L20 14 L26 24" stroke="#f1d77a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="leading-tight">
+        <div class="font-serif-cn text-[18px] tracking-wider brand-wordmark font-bold">启明资本</div>
+        <div class="text-[10px] text-dim tracking-[3px] uppercase">QIMING · VC PLATFORM</div>
+      </div>
+    </a>
+    <nav class="hidden md:flex items-center gap-1">
+      <a href="index.html"    class="nav-link" data-page="home">首页</a>
+      <a href="roadshow.html" class="nav-link" data-page="roadshow">项目路演</a>
+      <a href="upload.html"   class="nav-link" data-page="upload">BP 上传</a>
+      <a href="analysis.html" class="nav-link" data-page="analysis">AI 智能分析</a>
+      <a href="workshop.html" class="nav-link" data-page="workshop">投研工坊</a>
+    </nav>
+    <div id="nav-auth"></div>
+  </div>
+</header>
+
+<!-- ========== Report header ========== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-10">
+  <div class="glass corner-deco p-7">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3 mb-3">
+          <span class="chip chip-gold">AI 智能投研报告</span>
+          <span class="chip"><span class="pulse-dot"></span>2026-05-19 生成 · v1.0</span>
+          <span class="chip">报告编号：QM-AI-26051901</span>
+        </div>
+        <h1 class="font-serif-cn text-3xl md:text-4xl font-black leading-tight">
+          凌芯半导体科技（苏州）有限公司
+        </h1>
+        <div class="flex flex-wrap items-center gap-3 mt-3 text-sm text-mute">
+          <span>芯片半导体 · 车规级 MCU</span><span class="text-dim">|</span>
+          <span>B 轮 · ¥5.0 亿</span><span class="text-dim">|</span>
+          <span>投后估值 ¥45 亿</span><span class="text-dim">|</span>
+          <span>行业评级 <span class="text-gold-2 font-bold">A</span></span>
+        </div>
+      </div>
+
+      <!-- overall score -->
+      <div class="flex items-center gap-5">
+        <div class="text-right">
+          <div class="text-[11px] text-dim tracking-widest">AI 综合评分</div>
+          <div class="font-serif-cn text-5xl brand-wordmark font-black">9.1</div>
+          <div class="text-xs text-success mt-1">↑ 强烈推荐 · 建议立项</div>
+        </div>
+        <svg width="92" height="92" viewBox="0 0 100 100" class="-rotate-90">
+          <circle cx="50" cy="50" r="44" stroke="rgba(212,175,55,.15)" stroke-width="6" fill="none"/>
+          <circle cx="50" cy="50" r="44" stroke="url(#sg)" stroke-width="6" fill="none"
+                  stroke-dasharray="276" stroke-dashoffset="27" stroke-linecap="round"/>
+          <defs><linearGradient id="sg" x1="0" x2="1"><stop offset="0" stop-color="#f1d77a"/><stop offset="1" stop-color="#b88a1f"/></linearGradient></defs>
+        </svg>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-4 gap-4 mt-6">
+      <div class="hairline rounded-lg p-3"><div class="text-[10px] text-dim">建议投资额</div><div class="text-gold-2 font-mono mt-1">¥1.0 – 1.5 亿</div></div>
+      <div class="hairline rounded-lg p-3"><div class="text-[10px] text-dim">预期 IRR</div><div class="text-gold-2 font-mono mt-1">28% – 36%</div></div>
+      <div class="hairline rounded-lg p-3"><div class="text-[10px] text-dim">退出周期</div><div class="text-gold-2 font-mono mt-1">4 – 5 年</div></div>
+      <div class="hairline rounded-lg p-3"><div class="text-[10px] text-dim">主要退出路径</div><div class="text-gold-2 font-mono mt-1">A 股 IPO（科创板）</div></div>
+    </div>
+
+    <div class="flex gap-2 mt-6">
+      <button class="btn btn-gold">下载完整 PDF（38 页）</button>
+      <button class="btn btn-ghost">导出 IC Memo</button>
+      <button class="btn btn-ghost">分享报告</button>
+      <button class="btn btn-ghost ml-auto">📌 加入关注列表</button>
+    </div>
+
+    <!-- 调用专家套件 -->
+    <div class="mt-5 pt-5 border-t border-white/5">
+      <div class="text-xs text-dim mb-3 flex items-center justify-between">
+        <span>🛠️ 一键调用专家套件深化本报告</span>
+        <a href="workshop.html" class="text-gold-2 hover:underline">前往投研工坊 →</a>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button class="skill-btn" data-skill="equity-research:深度报告"
+                data-context="基于本 IC Memo 升级为 30+ 页券商体例公司深度报告。标的：凌芯半导体。">
+          <span class="skill-btn-icon">📕</span>升级为深度报告</button>
+        <button class="skill-btn" data-skill="equity-research:行业研究"
+                data-context="行业：车规级 MCU / 国产汽车芯片。本报告显示 2030E TAM ¥780 亿，CAGR 18.4%。">
+          <span class="skill-btn-icon">🏭</span>做行业研究</button>
+        <button class="skill-btn" data-skill="equity-research:可比公司分析"
+                data-context="标的：凌芯半导体；候选可比：兆易创新、芯海科技、纳芯微、士兰微。">
+          <span class="skill-btn-icon">📊</span>可比公司估值</button>
+        <button class="skill-btn" data-skill="investment-banking:财务建模"
+                data-context="基于本 IC Memo 财务表搭建详细三表 + DCF 模型。WACC 11.5%，永续增长 3%。">
+          <span class="skill-btn-icon">🧮</span>详细财务建模</button>
+        <button class="skill-btn" data-skill="pe-vc-investment:测收益"
+                data-context="本轮投资 ¥1.2 亿 @ ¥45 亿估值；退出假设：4 年后 ¥200 亿 IPO。请测三情景 IRR/MOIC。">
+          <span class="skill-btn-icon">📈</span>IRR / MOIC 测算</button>
+        <button class="skill-btn" data-skill="pe-vc-investment:审条款"
+                data-context="本项目拟签 TS 关键条款：反稀释广义加权、1× 优先清算、董事会观察员、对赌 27 年净利润 ≥ 2 亿。">
+          <span class="skill-btn-icon">✍️</span>审 Term Sheet</button>
+        <button class="skill-btn" data-skill="pe-vc-investment:退出分析"
+                data-context="被投：凌芯半导体；进度 B 轮，营收高速增长，符合科创板 5 套标准 #2。">
+          <span class="skill-btn-icon">🚪</span>规划退出路径</button>
+        <button class="skill-btn" data-skill="investment-banking:路演材料"
+                data-context="为凌芯半导体准备 B 轮路演 PPT，目标观众为美元/人民币 GP。">
+          <span class="skill-btn-icon">🎬</span>生成路演 PPT</button>
+        <button class="skill-btn" data-skill="pe-vc-investment:尽调清单"
+                data-context="项目：凌芯半导体 B 轮，重点关注客户集中度、应收账款、晶圆产能保障。">
+          <span class="skill-btn-icon">📋</span>生成尽调清单</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TOC ========== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-8">
+  <div class="glass-soft p-3 flex flex-wrap gap-1 text-sm">
+    <a href="#sec-summary"   class="nav-link active">一、投资摘要</a>
+    <a href="#sec-team"      class="nav-link">二、团队评估</a>
+    <a href="#sec-market"    class="nav-link">三、市场分析</a>
+    <a href="#sec-product"   class="nav-link">四、产品技术</a>
+    <a href="#sec-finance"   class="nav-link">五、财务建模</a>
+    <a href="#sec-valuation" class="nav-link">六、估值分析</a>
+    <a href="#sec-risk"      class="nav-link">七、风险扫描</a>
+    <a href="#sec-decision"  class="nav-link">八、投决建议</a>
+  </div>
+</section>
+
+<!-- ========== Section 1 摘要 ========== -->
+<section id="sec-summary" class="max-w-[1280px] mx-auto px-6 pt-10">
+  <div class="section-title"><div class="bar"></div><h2>一、投资摘要</h2><p>Executive Summary</p></div>
+
+  <div class="grid lg:grid-cols-3 gap-5">
+    <div class="glass p-6 lg:col-span-2">
+      <h3 class="font-serif-cn text-lg font-bold mb-3 text-gold-2">⭐ 核心结论</h3>
+      <p class="text-mute text-[14px] leading-7">
+        凌芯半导体是国内<strong class="text-gold-2">车规级 MCU 国产替代</strong>的代表性企业之一。其核心团队具备顶级国际半导体公司背景，
+        产品在 ASIL-D 高安全等级 MCU 上已实现批量出货，绑定<strong class="text-gold-2">头部三大主机厂</strong>供应链，
+        2025 年营收预计同比 <span class="text-gold-2 font-mono">+100%</span>，毛利率稳步爬升至 38%。
+        本轮估值 ¥45 亿处于<strong class="text-gold-2">合理区间下沿</strong>，具备较强安全边际，
+        建议作为<strong class="text-gold-2">领投候选</strong>立项推进。
+      </p>
+
+      <div class="grid grid-cols-3 gap-3 mt-5">
+        <div class="hairline rounded-lg p-3">
+          <div class="text-[10px] text-dim">市场空间 (TAM)</div>
+          <div class="text-gold-2 font-mono text-base mt-1">¥780 亿</div>
+          <div class="text-[10px] text-dim mt-1">2030E · CAGR 18%</div>
+        </div>
+        <div class="hairline rounded-lg p-3">
+          <div class="text-[10px] text-dim">竞争位势</div>
+          <div class="text-gold-2 font-mono text-base mt-1">国产 Top 3</div>
+          <div class="text-[10px] text-dim mt-1">市占率 8.4%</div>
+        </div>
+        <div class="hairline rounded-lg p-3">
+          <div class="text-[10px] text-dim">技术壁垒</div>
+          <div class="text-gold-2 font-mono text-base mt-1">★★★★★</div>
+          <div class="text-[10px] text-dim mt-1">37 项发明专利</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass p-6">
+      <h3 class="font-serif-cn text-lg font-bold mb-3 text-gold-2">📊 六维评分</h3>
+      <svg viewBox="0 0 220 220" class="w-full">
+        <defs>
+          <linearGradient id="rf" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f1d77a" stop-opacity=".7"/>
+            <stop offset="1" stop-color="#4f8dff" stop-opacity=".25"/>
+          </linearGradient>
+        </defs>
+        <g stroke="rgba(212,175,55,.18)" fill="none">
+          <polygon points="110,15 195,62 195,158 110,205 25,158 25,62"/>
+          <polygon points="110,42 175,76 175,144 110,178 45,144 45,76"/>
+          <polygon points="110,68 155,90 155,130 110,152 65,130 65,90"/>
+        </g>
+        <polygon points="110,20 192,68 188,148 112,200 30,150 32,72"
+                 fill="url(#rf)" stroke="#f1d77a" stroke-width="1.6"/>
+        <g font-family="PingFang SC" font-size="11" fill="#a8b2c5">
+          <text x="110" y="9"  text-anchor="middle">赛道 9.4</text>
+          <text x="208" y="62" text-anchor="middle">团队 9.0</text>
+          <text x="208" y="160" text-anchor="middle">技术 9.2</text>
+          <text x="110" y="220" text-anchor="middle">商业 8.8</text>
+          <text x="12"  y="160" text-anchor="middle">财务 8.6</text>
+          <text x="12"  y="62"  text-anchor="middle">退出 9.0</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-5 mt-5">
+    <div class="glass p-6">
+      <h3 class="font-serif-cn text-base font-bold mb-3 text-success">✓ 投资亮点</h3>
+      <ul class="space-y-2 text-mute text-[13px] leading-6">
+        <li>• 团队具备 NXP / Infineon / 中科院微电子所核心研发背景</li>
+        <li>• ASIL-D 等级 MCU 通过 AEC-Q100 认证，国内仅 3 家</li>
+        <li>• 已绑定吉利、比亚迪、零跑供应链，订单可见度高</li>
+        <li>• 政策驱动：汽车芯片国产化率从 10% → 30%（2027 目标）</li>
+        <li>• 上轮投资人持续加码，老股转让定价提供锚点</li>
+      </ul>
+    </div>
+    <div class="glass p-6">
+      <h3 class="font-serif-cn text-base font-bold mb-3 text-amber-300">⚠ 主要风险</h3>
+      <ul class="space-y-2 text-mute text-[13px] leading-6">
+        <li>• 客户集中度偏高：Top 3 客户占比 67%</li>
+        <li>• 应收账款周转天数 92 天，高于行业均值 76 天</li>
+        <li>• 上游晶圆代工产能紧张，毛利存在波动风险</li>
+        <li>• 高安全等级 MCU 国际巨头降价施压（NXP / Infineon）</li>
+        <li>• 创始人股权稀释比例较高（B 轮后约 18.6%）</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ========== Section 2 团队 ========== -->
+<section id="sec-team" class="max-w-[1280px] mx-auto px-6 pt-12">
+  <div class="section-title"><div class="bar"></div><h2>二、团队评估</h2><p>Team Assessment · 评分 9.0</p></div>
+
+  <div class="grid md:grid-cols-3 gap-5">
+    <div class="glass p-6">
+      <div class="flex items-center gap-3">
+        <div class="w-14 h-14 rounded-full font-serif-cn text-xl font-bold flex items-center justify-center"
+             style="background:linear-gradient(135deg,#f1d77a,#b88a1f);color:#1a120a;">王</div>
+        <div>
+          <div class="font-bold">王立 · CEO</div>
+          <div class="text-xs text-dim">联合创始人</div>
+        </div>
+      </div>
+      <div class="text-mute text-[13px] leading-6 mt-4">
+        前 NXP 高级架构师（10 年），主导多代车规 MCU 设计；上海交大微电子学院本硕。
+      </div>
+      <div class="flex gap-1 mt-3 flex-wrap"><span class="chip">海外背景</span><span class="chip">技术出身</span></div>
+    </div>
+    <div class="glass p-6">
+      <div class="flex items-center gap-3">
+        <div class="w-14 h-14 rounded-full font-serif-cn text-xl font-bold flex items-center justify-center"
+             style="background:linear-gradient(135deg,#7cb8ff,#3a6bd6);color:#fff;">陈</div>
+        <div>
+          <div class="font-bold">陈浩 · CTO</div>
+          <div class="text-xs text-dim">联合创始人</div>
+        </div>
+      </div>
+      <div class="text-mute text-[13px] leading-6 mt-4">
+        中科院微电子所博士，IEEE 高级会员，主持多项国家级车规芯片课题。
+      </div>
+      <div class="flex gap-1 mt-3 flex-wrap"><span class="chip">学术权威</span><span class="chip">国家队</span></div>
+    </div>
+    <div class="glass p-6">
+      <div class="flex items-center gap-3">
+        <div class="w-14 h-14 rounded-full font-serif-cn text-xl font-bold flex items-center justify-center"
+             style="background:linear-gradient(135deg,#c4b5fd,#7c3aed);color:#fff;">周</div>
+        <div>
+          <div class="font-bold">周敏 · CFO</div>
+          <div class="text-xs text-dim">合伙人</div>
+        </div>
+      </div>
+      <div class="text-mute text-[13px] leading-6 mt-4">
+        前安永合伙人，13 年半导体行业财税与资本运作经验；CPA + ACCA。
+      </div>
+      <div class="flex gap-1 mt-3 flex-wrap"><span class="chip">财务专家</span><span class="chip">IPO 经验</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== Section 3 市场 ========== -->
+<section id="sec-market" class="max-w-[1280px] mx-auto px-6 pt-12">
+  <div class="section-title"><div class="bar"></div><h2>三、市场分析</h2><p>Market · 评分 9.4</p></div>
+
+  <div class="grid lg:grid-cols-2 gap-5">
+    <div class="glass p-6">
+      <div class="text-sm text-dim mb-3">中国车规 MCU 市场规模（亿元）</div>
+      <svg viewBox="0 0 480 240" class="w-full">
+        <g class="axis">
+          <line x1="40" y1="200" x2="460" y2="200" />
+          <line x1="40" y1="40"  x2="40"  y2="200" />
+          <text x="40" y="220" text-anchor="middle">2022</text>
+          <text x="120" y="220" text-anchor="middle">2023</text>
+          <text x="200" y="220" text-anchor="middle">2024</text>
+          <text x="280" y="220" text-anchor="middle">2025E</text>
+          <text x="360" y="220" text-anchor="middle">2027E</text>
+          <text x="440" y="220" text-anchor="middle">2030E</text>
+        </g>
+        <g>
+          <rect x="32" y="170" width="16" height="30" fill="#4f8dff" opacity=".6"/>
+          <rect x="112" y="148" width="16" height="52" fill="#4f8dff" opacity=".7"/>
+          <rect x="192" y="120" width="16" height="80" fill="#4f8dff" opacity=".8"/>
+          <rect x="272" y="92"  width="16" height="108" fill="#d4af37"/>
+          <rect x="352" y="58"  width="16" height="142" fill="#d4af37"/>
+          <rect x="432" y="30"  width="16" height="170" fill="#f1d77a"/>
+        </g>
+        <text x="240" y="22" text-anchor="middle" fill="#f1d77a" font-size="13">CAGR ≈ 18.4%</text>
+      </svg>
+    </div>
+
+    <div class="glass p-6">
+      <div class="text-sm text-dim mb-4">竞争格局（市占率）</div>
+      <div class="space-y-3">
+        <div>
+          <div class="flex justify-between text-sm"><span>Infineon（英飞凌）</span><span class="font-mono text-mute">28%</span></div>
+          <div class="bar-track mt-1"><div class="bar-fill" style="width:28%;background:linear-gradient(90deg,#94a3b8,#64748b);"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm"><span>NXP</span><span class="font-mono text-mute">22%</span></div>
+          <div class="bar-track mt-1"><div class="bar-fill" style="width:22%;background:linear-gradient(90deg,#94a3b8,#64748b);"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm"><span>Renesas（瑞萨）</span><span class="font-mono text-mute">15%</span></div>
+          <div class="bar-track mt-1"><div class="bar-fill" style="width:15%;background:linear-gradient(90deg,#94a3b8,#64748b);"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm"><span class="text-gold-2">凌芯半导体</span><span class="font-mono text-gold-2">8.4%</span></div>
+          <div class="bar-track mt-1"><div class="bar-fill" style="width:8.4%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm"><span>兆易创新</span><span class="font-mono text-mute">6%</span></div>
+          <div class="bar-track mt-1"><div class="bar-fill" style="width:6%;background:linear-gradient(90deg,#94a3b8,#64748b);"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm"><span>其他</span><span class="font-mono text-mute">20.6%</span></div>
+          <div class="bar-track mt-1"><div class="bar-fill" style="width:20.6%;background:linear-gradient(90deg,#94a3b8,#64748b);"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== Section 4 产品技术 ========== -->
+<section id="sec-product" class="max-w-[1280px] mx-auto px-6 pt-12">
+  <div class="section-title"><div class="bar"></div><h2>四、产品技术</h2><p>Product · 评分 9.2</p></div>
+  <div class="grid md:grid-cols-3 gap-5">
+    <div class="glass p-6">
+      <div class="text-gold-2 font-serif-cn text-base font-bold mb-2">主力产品矩阵</div>
+      <ul class="text-mute text-[13px] space-y-2 leading-6">
+        <li>· LX-M7 系列：通用车身控制，量产 2 年</li>
+        <li>· LX-M9 系列：动力域 / 底盘控制，2024 量产</li>
+        <li>· LX-X1 系列：区域控制器主控，A 样验证中</li>
+      </ul>
+    </div>
+    <div class="glass p-6">
+      <div class="text-gold-2 font-serif-cn text-base font-bold mb-2">关键认证</div>
+      <div class="grid grid-cols-2 gap-2 text-center text-xs">
+        <div class="hairline rounded-lg py-2"><div class="text-emerald-300">✓</div><div>AEC-Q100</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-emerald-300">✓</div><div>ISO 26262</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-emerald-300">✓</div><div>ASIL-D</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-emerald-300">✓</div><div>IATF 16949</div></div>
+      </div>
+    </div>
+    <div class="glass p-6">
+      <div class="text-gold-2 font-serif-cn text-base font-bold mb-2">研发投入</div>
+      <div class="text-3xl font-mono text-gold-2 mt-2">23.6%</div>
+      <div class="text-xs text-dim mt-1">研发费用 / 营收 · 24 年</div>
+      <div class="text-xs text-mute mt-3">研发团队 168 人，硕博占比 71%；专利 37 项（发明）。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== Section 5 财务 ========== -->
+<section id="sec-finance" class="max-w-[1280px] mx-auto px-6 pt-12">
+  <div class="section-title"><div class="bar"></div><h2>五、财务建模</h2><p>Financials · 评分 8.6</p></div>
+  <div class="glass p-6">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-dim text-xs uppercase">
+            <th class="text-left py-3 pr-4">单位：万元</th>
+            <th class="py-3 px-3 text-right">2022</th>
+            <th class="py-3 px-3 text-right">2023</th>
+            <th class="py-3 px-3 text-right">2024</th>
+            <th class="py-3 px-3 text-right text-gold-2">2025E</th>
+            <th class="py-3 px-3 text-right text-gold-2">2026E</th>
+            <th class="py-3 px-3 text-right text-gold-2">2027E</th>
+          </tr>
+        </thead>
+        <tbody class="font-mono">
+          <tr class="border-t border-white/5"><td class="py-3 text-mute">营业收入</td>
+            <td class="text-right">2,180</td><td class="text-right">8,420</td><td class="text-right">21,360</td>
+            <td class="text-right text-gold-2">42,800</td><td class="text-right text-gold-2">75,600</td><td class="text-right text-gold-2">118,400</td></tr>
+          <tr class="border-t border-white/5"><td class="py-3 text-mute">同比增速</td>
+            <td class="text-right">—</td><td class="text-right">+286%</td><td class="text-right">+154%</td>
+            <td class="text-right text-gold-2">+100%</td><td class="text-right text-gold-2">+77%</td><td class="text-right text-gold-2">+57%</td></tr>
+          <tr class="border-t border-white/5"><td class="py-3 text-mute">毛利率</td>
+            <td class="text-right">22.4%</td><td class="text-right">28.6%</td><td class="text-right">34.2%</td>
+            <td class="text-right text-gold-2">38.0%</td><td class="text-right text-gold-2">41.0%</td><td class="text-right text-gold-2">43.0%</td></tr>
+          <tr class="border-t border-white/5"><td class="py-3 text-mute">净利润</td>
+            <td class="text-right text-red-300">-3,860</td><td class="text-right text-red-300">-2,140</td><td class="text-right">820</td>
+            <td class="text-right text-gold-2">5,140</td><td class="text-right text-gold-2">12,200</td><td class="text-right text-gold-2">23,680</td></tr>
+          <tr class="border-t border-white/5"><td class="py-3 text-mute">经营现金流</td>
+            <td class="text-right text-red-300">-2,940</td><td class="text-right text-red-300">-1,260</td><td class="text-right">1,520</td>
+            <td class="text-right text-gold-2">6,280</td><td class="text-right text-gold-2">14,800</td><td class="text-right text-gold-2">28,400</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ========== Section 6 估值 ========== -->
+<section id="sec-valuation" class="max-w-[1280px] mx-auto px-6 pt-12">
+  <div class="section-title"><div class="bar"></div><h2>六、估值分析</h2><p>Valuation</p></div>
+  <div class="grid md:grid-cols-3 gap-5">
+    <div class="glass p-6">
+      <div class="text-xs text-dim">PE 可比公司法</div>
+      <div class="brand-wordmark font-serif-cn text-2xl font-bold mt-2">¥38 – 46 亿</div>
+      <div class="text-xs text-mute mt-3 leading-6">参照兆易创新、芯海科技、纳芯微 25E 平均 PE 75 倍；按本公司 25E 净利润测算。</div>
+    </div>
+    <div class="glass p-6">
+      <div class="text-xs text-dim">PS 倍数法</div>
+      <div class="brand-wordmark font-serif-cn text-2xl font-bold mt-2">¥42 – 55 亿</div>
+      <div class="text-xs text-mute mt-3 leading-6">车规 MCU 一级市场 PS 区间 10–14x（25E）；考虑客户结构溢价。</div>
+    </div>
+    <div class="glass p-6">
+      <div class="text-xs text-dim">DCF 现金流折现</div>
+      <div class="brand-wordmark font-serif-cn text-2xl font-bold mt-2">¥40 – 48 亿</div>
+      <div class="text-xs text-mute mt-3 leading-6">WACC 11.5%，永续增长率 3%；保守、中性、乐观三情景。</div>
+    </div>
+  </div>
+
+  <div class="glass p-6 mt-5">
+    <div class="flex items-center justify-between mb-4">
+      <div class="text-sm text-dim">三方法综合估值区间</div>
+      <div class="font-serif-cn text-lg brand-wordmark font-bold">¥40 – 50 亿（投后）</div>
+    </div>
+    <div class="relative h-9 rounded-full" style="background:rgba(255,255,255,.04);border:1px solid var(--line-soft);">
+      <div class="absolute top-0 bottom-0 rounded-full"
+           style="left:38%;right:42%;background:linear-gradient(90deg,rgba(212,175,55,.3),rgba(212,175,55,.65));"></div>
+      <div class="absolute top-0 bottom-0 w-px bg-gold-2" style="left:50%;"></div>
+      <div class="absolute -top-6 text-xs" style="left:calc(50% - 28px);"><span class="chip chip-gold">本轮估值 ¥45 亿</span></div>
+      <div class="absolute -bottom-6 text-xs text-dim" style="left:38%;">¥38 亿</div>
+      <div class="absolute -bottom-6 text-xs text-dim" style="right:42%;">¥58 亿</div>
+    </div>
+    <div class="text-xs text-mute leading-6 mt-10">
+      综合判断：本轮 ¥45 亿估值位于<strong class="text-gold-2">合理区间下沿</strong>，相比可比公司一级市场估值具备 8–15% 折让，
+      <strong class="text-gold-2">具备较强安全边际</strong>。
+    </div>
+  </div>
+</section>
+
+<!-- ========== Section 7 风险 ========== -->
+<section id="sec-risk" class="max-w-[1280px] mx-auto px-6 pt-12">
+  <div class="section-title"><div class="bar"></div><h2>七、风险扫描</h2><p>Risk Scan · 17 项检测 · 3 项预警</p></div>
+
+  <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="glass p-5"><div class="text-[11px] text-dim">业务风险</div><div class="font-bold mt-1 text-amber-300">⚠ 客户集中度</div><div class="text-xs text-mute mt-2">Top3 客户占比 67%，建议拓展乘用车二线客户与商用车客户</div></div>
+    <div class="glass p-5"><div class="text-[11px] text-dim">财务风险</div><div class="font-bold mt-1 text-amber-300">⚠ 应收账款</div><div class="text-xs text-mute mt-2">AR 周转 92 天，高于行业均值 76 天</div></div>
+    <div class="glass p-5"><div class="text-[11px] text-dim">供应链风险</div><div class="font-bold mt-1 text-amber-300">⚠ 晶圆产能</div><div class="text-xs text-mute mt-2">主要晶圆代工绑定中芯国际 28nm，产能存在竞争性挤占</div></div>
+    <div class="glass p-5"><div class="text-[11px] text-dim">法律 / 合规</div><div class="font-bold mt-1 text-emerald-300">✓ 通过</div><div class="text-xs text-mute mt-2">股权清晰，知识产权权属明确，无重大诉讼</div></div>
+    <div class="glass p-5"><div class="text-[11px] text-dim">技术风险</div><div class="font-bold mt-1 text-emerald-300">✓ 通过</div><div class="text-xs text-mute mt-2">核心专利 37 项，技术路线在国际主流轨道</div></div>
+    <div class="glass p-5"><div class="text-[11px] text-dim">公司治理</div><div class="font-bold mt-1 text-emerald-300">✓ 通过</div><div class="text-xs text-mute mt-2">董事会结构合理，已建立 ESOP（10%）</div></div>
+    <div class="glass p-5"><div class="text-[11px] text-dim">退出风险</div><div class="font-bold mt-1 text-emerald-300">✓ 通过</div><div class="text-xs text-mute mt-2">对赌条款合理，老股转让设有回购兜底</div></div>
+    <div class="glass p-5"><div class="text-[11px] text-dim">监管 / 政策</div><div class="font-bold mt-1 text-emerald-300">✓ 通过</div><div class="text-xs text-mute mt-2">符合科创板 5 套上市标准 #2</div></div>
+  </div>
+</section>
+
+<!-- ========== Section 8 投决 ========== -->
+<section id="sec-decision" class="max-w-[1280px] mx-auto px-6 pt-12">
+  <div class="section-title"><div class="bar"></div><h2>八、投决建议</h2><p>Investment Decision</p></div>
+
+  <div class="glass corner-deco p-7">
+    <div class="flex items-center gap-4 mb-5">
+      <div class="w-14 h-14 rounded-full flex items-center justify-center"
+           style="background:linear-gradient(135deg,#f1d77a,#b88a1f);color:#1a120a;font-weight:bold;font-size:18px;">A</div>
+      <div>
+        <div class="font-serif-cn text-2xl font-bold text-gold-2">强烈推荐 · 立项</div>
+        <div class="text-xs text-mute">建议作为<strong class="text-gold-2">领投候选</strong>推进尽调</div>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-5">
+      <div class="hairline rounded-xl p-5">
+        <div class="text-xs text-dim mb-3">投资条款建议</div>
+        <ul class="text-mute text-sm space-y-2 leading-7">
+          <li>· 本轮认购：<span class="text-gold-2">¥1.0 – 1.5 亿</span> · 占比 2.2% – 3.3%</li>
+          <li>· 反稀释：广义加权平均</li>
+          <li>· 优先清算权：1× non-participating</li>
+          <li>· 董事会观察员席位 + 重大事项一票否决</li>
+          <li>· 业绩对赌：2027 年净利润 ≥ ¥2 亿，触发回购</li>
+        </ul>
+      </div>
+      <div class="hairline rounded-xl p-5">
+        <div class="text-xs text-dim mb-3">下一步行动</div>
+        <ul class="text-mute text-sm space-y-2 leading-7">
+          <li>1. 推进财法税技四线尽调（建议 4 周）</li>
+          <li>2. 安排核心团队深度访谈（CEO / CTO）</li>
+          <li>3. 实地参观苏州研发中心与封测产线</li>
+          <li>4. 与吉利、比亚迪供应链负责人交叉验证</li>
+          <li>5. 启动投决备忘录（IC Memo）撰写</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-6 pt-5 border-t border-white/5 flex items-center justify-between text-xs text-dim">
+      <span>本报告由启明资本 AI 投研引擎自动生成，所有数据仅供参考，不构成投资建议。</span>
+      <span class="font-mono">报告编号 QM-AI-26051901 · 生成时间 2026-05-19 14:22</span>
+    </div>
+  </div>
+</section>
+
+<!-- ========== Floating AI ask ========== -->
+<div class="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
+  <div id="ai-bubble" class="hidden glass p-5 w-80">
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-sm font-bold text-gold-2">问询 AI 投研助手</div>
+      <button onclick="document.getElementById('ai-bubble').classList.add('hidden')" class="text-dim hover:text-white">✕</button>
+    </div>
+    <div class="space-y-2 text-xs">
+      <button class="hairline w-full text-left p-2 rounded-lg hover:border-yellow-500/50">📈 这家公司的估值是否合理？</button>
+      <button class="hairline w-full text-left p-2 rounded-lg hover:border-yellow-500/50">🔍 与兆易创新相比有什么差异？</button>
+      <button class="hairline w-full text-left p-2 rounded-lg hover:border-yellow-500/50">⚠️ 客户集中度风险如何应对？</button>
+      <button class="hairline w-full text-left p-2 rounded-lg hover:border-yellow-500/50">💰 IRR 在不同情景下的敏感性？</button>
+    </div>
+    <div class="mt-3 flex items-center gap-2">
+      <input class="input" style="padding:8px 10px;font-size:12px;" placeholder="输入问题..." />
+      <button class="btn btn-gold" style="padding:8px 12px;">发送</button>
+    </div>
+  </div>
+  <button onclick="document.getElementById('ai-bubble').classList.toggle('hidden')"
+          class="btn btn-gold rounded-full !p-0 w-14 h-14 flex items-center justify-center shadow-lg"
+          title="问 AI">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z" fill="#1a120a"/>
+      <circle cx="18" cy="18" r="3" fill="#1a120a"/>
+    </svg>
+  </button>
+</div>
+
+<footer class="site-footer mt-20">
+  <div class="max-w-[1280px] mx-auto px-6 flex justify-between text-[12px] text-dim">
+    <span>© 2026 阿里资产 · 启明资本（仅供 Demo 演示）</span>
+    <span>沪ICP备XXXXXXXX号</span>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+<script src="assets/skills.js"></script>
+</body>
+</html>

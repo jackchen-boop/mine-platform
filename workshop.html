@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>AI 投研工坊 · 启明资本</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="assets/theme.css" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body data-page="workshop">
+
+<header class="top-nav">
+  <div class="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+        <path d="M20 3 L36 12 L36 28 L20 37 L4 28 L4 12 Z" stroke="#d4af37" stroke-width="1.4" fill="rgba(212,175,55,0.06)"/>
+        <path d="M14 24 L20 14 L26 24" stroke="#f1d77a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="leading-tight">
+        <div class="font-serif-cn text-[18px] tracking-wider brand-wordmark font-bold">启明资本</div>
+        <div class="text-[10px] text-dim tracking-[3px] uppercase">QIMING · VC PLATFORM</div>
+      </div>
+    </a>
+    <nav class="hidden md:flex items-center gap-1">
+      <a href="index.html"    class="nav-link" data-page="home">首页</a>
+      <a href="roadshow.html" class="nav-link" data-page="roadshow">项目路演</a>
+      <a href="upload.html"   class="nav-link" data-page="upload">BP 上传</a>
+      <a href="analysis.html" class="nav-link" data-page="analysis">AI 智能分析</a>
+      <a href="workshop.html" class="nav-link" data-page="workshop">投研工坊</a>
+    </nav>
+    <div id="nav-auth"></div>
+  </div>
+</header>
+
+<!-- ========== Hero ========== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-12 pb-8">
+  <div class="grid lg:grid-cols-12 gap-6">
+    <div class="lg:col-span-8">
+      <div class="chip chip-gold mb-3">AI · Skill Orchestration</div>
+      <h1 class="font-serif-cn text-3xl md:text-5xl font-black brand-wordmark leading-tight">AI 投研工坊</h1>
+      <p class="text-mute text-[15px] leading-8 mt-4 max-w-[640px]">
+        将 <span class="text-gold-2 font-bold">投研分析 · 投行业务 · 股权投资</span> 三大专家套件的
+        <span class="text-gold-2 font-bold">18 项专业技能</span>统一编排，覆盖
+        <span class="font-mono">筛选 → 尽调 → 投决 → 执行 → 退出</span> 全周期。
+        点击任意技能即可调起 AI，秒级输出可呈交的专业产物。
+      </p>
+    </div>
+    <div class="lg:col-span-4 grid grid-cols-3 gap-3 content-start">
+      <div class="glass p-4 text-center">
+        <div class="stat-num text-3xl"><span data-count="18">0</span></div>
+        <div class="text-xs text-dim mt-1">专业技能</div>
+      </div>
+      <div class="glass p-4 text-center">
+        <div class="stat-num text-3xl"><span data-count="3">0</span></div>
+        <div class="text-xs text-dim mt-1">专家套件</div>
+      </div>
+      <div class="glass p-4 text-center">
+        <div class="stat-num text-3xl"><span data-count="6">0</span></div>
+        <div class="text-xs text-dim mt-1">业务阶段</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== Suite cards ========== -->
+<section class="max-w-[1280px] mx-auto px-6">
+  <div class="grid md:grid-cols-3 gap-5">
+    <div class="glass p-6" style="border-color:rgba(79,141,255,.4);">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+               style="background:rgba(79,141,255,.12);border:1px solid rgba(79,141,255,.4);">🔭</div>
+          <div class="font-serif-cn text-lg font-bold text-blue">投研分析套件</div>
+        </div>
+        <span class="chip chip-blue">8 技能</span>
+      </div>
+      <p class="text-mute text-[13px] leading-6">
+        覆盖券商研究院全工作流：研报摘要、深度报告、行业研究、读年报、业绩快评、调研纪要、晨会纪要、可比公司分析。
+      </p>
+    </div>
+
+    <div class="glass p-6" style="border-color:rgba(212,175,55,.4);">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+               style="background:rgba(212,175,55,.12);border:1px solid var(--line);">🏛️</div>
+          <div class="font-serif-cn text-lg font-bold text-gold-2">投行业务套件</div>
+        </div>
+        <span class="chip chip-gold">6 技能</span>
+      </div>
+      <p class="text-mute text-[13px] leading-6">
+        覆盖 IPO/再融资/并购/债券：财务建模、路演材料、招股书、问询回复、并购方案、债券募集。
+      </p>
+    </div>
+
+    <div class="glass p-6" style="border-color:rgba(139,92,246,.4);">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+               style="background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.4);">💎</div>
+          <div class="font-serif-cn text-lg font-bold" style="color:#c4b5fd;">股权投资套件</div>
+        </div>
+        <span class="chip chip-purple">6 技能</span>
+      </div>
+      <p class="text-mute text-[13px] leading-6">
+        PE/VC 投决全流程：筛项目、尽调清单、投决备忘录、测收益、审条款、退出分析。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== Stage timeline ========== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-14">
+  <div class="section-title"><div class="bar"></div><h2>业务阶段 · 技能流水线</h2><p>End-to-end Investment Pipeline</p></div>
+
+  <!-- horizontal stage selector -->
+  <div class="glass p-3 flex flex-wrap gap-1 text-sm mb-8" id="stage-tabs"></div>
+
+  <div id="skill-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+</section>
+
+<!-- ========== 协同工作流 ========== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-16">
+  <div class="section-title"><div class="bar"></div><h2>典型协同工作流</h2><p>Best-practice Workflow Templates</p></div>
+
+  <div class="grid md:grid-cols-2 gap-5">
+    <div class="glass p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="chip chip-gold">工作流</span>
+        <span class="font-serif-cn text-base font-bold">从 BP 到 IC Memo · 6 步</span>
+      </div>
+      <ol class="space-y-3 text-sm">
+        <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center" style="background:linear-gradient(120deg,#f1d77a,#b88a1f);color:#1a120a;">1</span>
+          <button class="text-left flex-1 hover:text-gold-2" data-skill="pe-vc-investment:筛项目">筛项目 · 出一页评分备忘录 →</button></li>
+        <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center" style="background:linear-gradient(120deg,#f1d77a,#b88a1f);color:#1a120a;">2</span>
+          <button class="text-left flex-1 hover:text-gold-2" data-skill="equity-research:行业研究">行业研究 · 验证赛道空间 →</button></li>
+        <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center" style="background:linear-gradient(120deg,#f1d77a,#b88a1f);color:#1a120a;">3</span>
+          <button class="text-left flex-1 hover:text-gold-2" data-skill="equity-research:可比公司分析">可比公司 · 三方法估值 →</button></li>
+        <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center" style="background:linear-gradient(120deg,#f1d77a,#b88a1f);color:#1a120a;">4</span>
+          <button class="text-left flex-1 hover:text-gold-2" data-skill="investment-banking:财务建模">财务建模 · 三表 + DCF →</button></li>
+        <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center" style="background:linear-gradient(120deg,#f1d77a,#b88a1f);color:#1a120a;">5</span>
+          <button class="text-left flex-1 hover:text-gold-2" data-skill="pe-vc-investment:测收益">测收益 · IRR/MOIC 三情景 →</button></li>
+        <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center" style="background:linear-gradient(120deg,#f1d77a,#b88a1f);color:#1a120a;">6</span>
+          <button class="text-left flex-1 hover:text-gold-2" data-skill="pe-vc-investment:投决备忘录">投决备忘录 · 上 IC →</button></li>
+      </ol>
+    </div>
+
+    <div class="glass p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="chip chip-purple">工作流</span>
+        <span class="font-serif-cn text-base font-bold">投后退出全套 · 4 步</span>
+      </div>
+      <ol class="space-y-3 text-sm">
+        <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center" style="background:rgba(139,92,246,.5);color:#fff;">1</span>
+          <button class="text-left flex-1 hover:text-gold-2" data-skill="equity-research:业绩快评">业绩快评 · 跟踪季报 →</button></li>
+        <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center" style="background:rgba(139,92,246,.5);color:#fff;">2</span>
+          <button class="text-left flex-1 hover:text-gold-2" data-skill="pe-vc-investment:退出分析">退出分析 · 5 路径对比 →</button></li>
+        <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center" style="background:rgba(139,92,246,.5);color:#fff;">3</span>
+          <button class="text-left flex-1 hover:text-gold-2" data-skill="investment-banking:招股书">招股书 · 板块适配 →</button></li>
+        <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center" style="background:rgba(139,92,246,.5);color:#fff;">4</span>
+          <button class="text-left flex-1 hover:text-gold-2" data-skill="investment-banking:路演材料">路演材料 · IPO 路演 →</button></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========== Architecture preview ========== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-16 pb-20">
+  <div class="section-title"><div class="bar"></div><h2>技术接入架构</h2><p>How skills plug into the platform</p></div>
+  <div class="glass p-7">
+    <svg viewBox="0 0 1100 360" class="w-full">
+      <defs>
+        <linearGradient id="ag1" x1="0" x2="1"><stop offset="0" stop-color="#4f8dff"/><stop offset="1" stop-color="#d4af37"/></linearGradient>
+      </defs>
+      <!-- platform layer -->
+      <g>
+        <rect x="40" y="40" width="280" height="80" rx="12" fill="rgba(212,175,55,.08)" stroke="#d4af37"/>
+        <text x="180" y="74" text-anchor="middle" fill="#f1d77a" font-size="14" font-weight="bold">启明资本平台前端</text>
+        <text x="180" y="98" text-anchor="middle" fill="#a8b2c5" font-size="11">BP 上传 / 路演 / AI 分析 / 工坊</text>
+      </g>
+      <g>
+        <rect x="410" y="40" width="280" height="80" rx="12" fill="rgba(79,141,255,.08)" stroke="#4f8dff"/>
+        <text x="550" y="74" text-anchor="middle" fill="#7cb8ff" font-size="14" font-weight="bold">技能调度层 (Orchestrator)</text>
+        <text x="550" y="98" text-anchor="middle" fill="#a8b2c5" font-size="11">参数注入 · 输入归一化 · 任务编排</text>
+      </g>
+      <g>
+        <rect x="780" y="40" width="280" height="80" rx="12" fill="rgba(139,92,246,.08)" stroke="#8b5cf6"/>
+        <text x="920" y="74" text-anchor="middle" fill="#c4b5fd" font-size="14" font-weight="bold">大模型 + RAG 知识库</text>
+        <text x="920" y="98" text-anchor="middle" fill="#a8b2c5" font-size="11">通义/Claude/GPT · 投研知识库 · 政策法规</text>
+      </g>
+
+      <!-- arrows -->
+      <g stroke="url(#ag1)" stroke-width="1.5" fill="none">
+        <path d="M320 80 H410" marker-end="url(#arr)"/>
+        <path d="M690 80 H780" marker-end="url(#arr)"/>
+      </g>
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#d4af37"/>
+        </marker>
+      </defs>
+
+      <!-- Suite layer -->
+      <g>
+        <rect x="80"  y="200" width="280" height="120" rx="12" fill="rgba(79,141,255,.05)" stroke="#4f8dff" stroke-dasharray="4 3"/>
+        <text x="220" y="230" text-anchor="middle" fill="#7cb8ff" font-size="13" font-weight="bold">投研分析套件 · 8 技能</text>
+        <g font-family="PingFang SC" font-size="11" fill="#a8b2c5" text-anchor="middle">
+          <text x="220" y="254">研报摘要 · 可比公司 · 深度报告</text>
+          <text x="220" y="274">行业研究 · 读年报 · 业绩快评</text>
+          <text x="220" y="294">调研纪要 · 晨会纪要</text>
+        </g>
+      </g>
+      <g>
+        <rect x="410" y="200" width="280" height="120" rx="12" fill="rgba(212,175,55,.05)" stroke="#d4af37" stroke-dasharray="4 3"/>
+        <text x="550" y="230" text-anchor="middle" fill="#f1d77a" font-size="13" font-weight="bold">投行业务套件 · 6 技能</text>
+        <g font-family="PingFang SC" font-size="11" fill="#a8b2c5" text-anchor="middle">
+          <text x="550" y="254">财务建模 · 路演材料</text>
+          <text x="550" y="274">招股书 · 问询回复</text>
+          <text x="550" y="294">并购方案 · 债券募集</text>
+        </g>
+      </g>
+      <g>
+        <rect x="740" y="200" width="280" height="120" rx="12" fill="rgba(139,92,246,.05)" stroke="#8b5cf6" stroke-dasharray="4 3"/>
+        <text x="880" y="230" text-anchor="middle" fill="#c4b5fd" font-size="13" font-weight="bold">股权投资套件 · 6 技能</text>
+        <g font-family="PingFang SC" font-size="11" fill="#a8b2c5" text-anchor="middle">
+          <text x="880" y="254">筛项目 · 尽调清单</text>
+          <text x="880" y="274">投决备忘录 · 测收益</text>
+          <text x="880" y="294">审条款 · 退出分析</text>
+        </g>
+      </g>
+
+      <!-- top->down lines -->
+      <g stroke="rgba(212,175,55,.35)" stroke-dasharray="2 3" fill="none">
+        <path d="M550 120 V200"/>
+        <path d="M220 200 V120 H550"/>
+        <path d="M880 200 V120 H550"/>
+      </g>
+    </svg>
+
+    <p class="text-mute text-[13px] leading-7 mt-4">
+      平台前端通过统一调度层将业务输入（BP / 项目 / 公告 / TS）注入到对应技能；技能在大模型 + RAG 知识库支持下输出结构化产物（IC Memo / 估值矩阵 / 退出建议 / 路演稿等），再回写到平台项目档案与协同尽调系统中。
+    </p>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="max-w-[1280px] mx-auto px-6 flex justify-between text-[12px] text-dim">
+    <span>© 2026 阿里资产 · 启明资本（仅供 Demo 演示）</span>
+    <span>沪ICP备XXXXXXXX号</span>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+<script src="assets/skills.js"></script>
+<script>
+const stages = VCSkills.stages();
+const tabs   = document.getElementById("stage-tabs");
+let currentStage = "all";
+
+function renderTabs() {
+  tabs.innerHTML = '<button data-s="all" class="nav-link ' + (currentStage==="all"?"active":"") + '">全部 · 18 项</button>';
+  stages.forEach(s => {
+    const cnt = VCSkills.byStage(s.key).length;
+    tabs.innerHTML += '<button data-s="' + s.key + '" class="nav-link ' + (currentStage===s.key?"active":"") + '">'
+      + s.icon + ' ' + s.name + ' · ' + cnt + '</button>';
+  });
+  tabs.querySelectorAll("button").forEach(b => {
+    b.onclick = () => { currentStage = b.dataset.s; renderTabs(); renderGrid(); };
+  });
+}
+
+function renderGrid() {
+  const list = currentStage === "all" ? VCSkills.list() : VCSkills.byStage(currentStage);
+  const grid = document.getElementById("skill-grid");
+  grid.innerHTML = "";
+  list.forEach(s => {
+    const colorMap = {
+      "purple": { bg:"rgba(139,92,246,.08)", brd:"rgba(139,92,246,.4)", txt:"#c4b5fd" },
+      "blue":   { bg:"rgba(79,141,255,.08)",  brd:"rgba(79,141,255,.4)",  txt:"#7cb8ff" },
+      "gold":   { bg:"rgba(212,175,55,.08)",  brd:"rgba(212,175,55,.4)",  txt:"#f1d77a" },
+    };
+    const c = colorMap[s.suiteColor] || colorMap.gold;
+    grid.insertAdjacentHTML("beforeend",
+      '<button class="glass p-5 text-left hover:border-yellow-500/50 transition group" data-skill="' + s.id + '">' +
+      '  <div class="flex items-start justify-between mb-3">' +
+      '    <div class="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"' +
+      '         style="background:' + c.bg + ';border:1px solid ' + c.brd + ';">' + s.icon + '</div>' +
+      '    <div class="flex flex-col items-end gap-1">' +
+      '      <span class="chip" style="background:' + c.bg + ';border-color:' + c.brd + ';color:' + c.txt + ';">' + s.suite + '</span>' +
+      '      <span class="text-[10px] text-dim">~ ' + s.time + '</span>' +
+      '    </div>' +
+      '  </div>' +
+      '  <div class="font-serif-cn font-bold text-lg mb-2">' + s.name + '</div>' +
+      '  <p class="text-mute text-[12.5px] leading-6 line-clamp-3">' + s.desc + '</p>' +
+      '  <div class="hairline rounded-lg p-3 mt-3 text-[11px]">' +
+      '    <div class="flex justify-between"><span class="text-dim">输入</span><span class="text-mute text-right max-w-[60%]">' + s.input + '</span></div>' +
+      '    <div class="flex justify-between mt-1.5"><span class="text-dim">输出</span><span class="text-gold-2 text-right max-w-[60%]">' + s.output + '</span></div>' +
+      '  </div>' +
+      '  <div class="mt-3 text-gold-2 text-xs flex items-center justify-between">' +
+      '    <span>调起 AI 执行</span><span class="group-hover:translate-x-1 transition">→</span>' +
+      '  </div>' +
+      '</button>'
+    );
+  });
+}
+
+renderTabs(); renderGrid();
+</script>
+</body>
+</html>

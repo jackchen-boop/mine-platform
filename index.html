@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>启明资本 · 风险投资平台 | 阿里资产</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="启明资本 · 风险投资平台 — 多模态BP识别、AI智能投资分析、线上路演与机构撮合一体化。" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="assets/theme.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body data-page="home">
+
+<!-- ========== TOP NAV ========== -->
+<header class="top-nav">
+  <div class="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+        <path d="M20 3 L36 12 L36 28 L20 37 L4 28 L4 12 Z" stroke="#d4af37" stroke-width="1.4" fill="rgba(212,175,55,0.06)"/>
+        <path d="M14 24 L20 14 L26 24" stroke="#f1d77a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="20" cy="14" r="1.6" fill="#f1d77a"/>
+      </svg>
+      <div class="leading-tight">
+        <div class="font-serif-cn text-[18px] tracking-wider brand-wordmark font-bold">启明资本</div>
+        <div class="text-[10px] text-dim tracking-[3px] uppercase">QIMING · VC PLATFORM</div>
+      </div>
+    </a>
+
+    <nav class="hidden md:flex items-center gap-1">
+      <a href="index.html"    class="nav-link" data-page="home">首页</a>
+      <a href="roadshow.html" class="nav-link" data-page="roadshow">项目路演</a>
+      <a href="upload.html"   class="nav-link" data-page="upload">BP 上传</a>
+      <a href="analysis.html" class="nav-link" data-page="analysis">AI 智能分析</a>
+      <a href="workshop.html" class="nav-link" data-page="workshop">投研工坊</a>
+      <a href="#partners"     class="nav-link">合作机构</a>
+      <a href="#about"        class="nav-link">关于我们</a>
+    </nav>
+
+    <div id="nav-auth"></div>
+  </div>
+</header>
+
+<!-- ========== HERO ========== -->
+<section class="relative overflow-hidden">
+  <div class="max-w-[1280px] mx-auto px-6 pt-20 pb-16 grid lg:grid-cols-12 gap-12 items-center">
+    <div class="lg:col-span-7">
+      <div class="flex items-center gap-3 mb-7">
+        <span class="chip chip-gold">阿里资产 战略生态</span>
+        <span class="chip"><span class="pulse-dot"></span>2026 Q2 · 平台升级中</span>
+      </div>
+
+      <h1 class="font-serif-cn font-black leading-[1.15] tracking-wide"
+          style="font-size: clamp(40px, 5.4vw, 64px);">
+        以 <span class="brand-wordmark">资本</span> 为舟<br/>
+        以 <span class="brand-wordmark">智能</span> 为楫
+      </h1>
+      <p class="mt-6 text-mute text-[16px] leading-8 max-w-[560px]">
+        启明资本是面向硬科技与新经济的<strong class="text-gold-2">一站式风险投资协同平台</strong>，融合多模态 BP 智能识别、
+        投资机构撮合、AI 投研分析与线上路演，连接优质项目与头部资本。
+      </p>
+
+      <div class="mt-9 flex flex-wrap gap-3">
+        <a href="upload.html"   class="btn btn-gold">上传 BP · AI 一键投研 →</a>
+        <a href="roadshow.html" class="btn btn-ghost">浏览路演项目</a>
+      </div>
+
+      <!-- KPI -->
+      <div class="mt-12 grid grid-cols-4 gap-4">
+        <div class="glass corner-deco p-5">
+          <div class="text-dim text-xs">累计入驻项目</div>
+          <div class="mt-1 stat-num text-3xl"><span data-count="3826">0</span><span class="text-base ml-1">+</span></div>
+          <div class="text-xs text-success mt-1">↑ 12.4% MoM</div>
+        </div>
+        <div class="glass p-5">
+          <div class="text-dim text-xs">合作投资机构</div>
+          <div class="mt-1 stat-num text-3xl"><span data-count="286">0</span></div>
+          <div class="text-xs text-mute mt-1">头部 GP 38 家</div>
+        </div>
+        <div class="glass p-5">
+          <div class="text-dim text-xs">已撮合融资额（亿）</div>
+          <div class="mt-1 stat-num text-3xl">¥<span data-count="427.6" data-decimals="1">0</span></div>
+          <div class="text-xs text-success mt-1">↑ 8.2% YoY</div>
+        </div>
+        <div class="glass corner-deco p-5">
+          <div class="text-dim text-xs">AI 智能分析报告</div>
+          <div class="mt-1 stat-num text-3xl"><span data-count="11240">0</span></div>
+          <div class="text-xs text-mute mt-1">平均响应 6.8s</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HERO art -->
+    <div class="lg:col-span-5 relative">
+      <div class="glass p-6 corner-deco">
+        <div class="flex items-center justify-between mb-4">
+          <div class="text-xs text-dim tracking-widest">LIVE · 资本流动态势</div>
+          <div class="chip chip-blue"><span class="pulse-dot"></span>实时更新</div>
+        </div>
+
+        <!-- Radar / orbit svg -->
+        <svg viewBox="0 0 360 240" class="w-full h-[240px]">
+          <defs>
+            <radialGradient id="rg" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stop-color="#d4af37" stop-opacity=".25"/>
+              <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="lg" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"  stop-color="#4f8dff"/>
+              <stop offset="100%" stop-color="#d4af37"/>
+            </linearGradient>
+          </defs>
+          <rect width="360" height="240" fill="url(#rg)"/>
+          <!-- orbit rings -->
+          <g fill="none" stroke="rgba(212,175,55,0.18)">
+            <ellipse cx="180" cy="120" rx="160" ry="50"/>
+            <ellipse cx="180" cy="120" rx="120" ry="38"/>
+            <ellipse cx="180" cy="120" rx="80"  ry="25"/>
+          </g>
+          <!-- nodes -->
+          <g>
+            <circle cx="60"  cy="120" r="3" fill="#f1d77a"/>
+            <circle cx="120" cy="100" r="4" fill="#4f8dff"/>
+            <circle cx="180" cy="120" r="6" fill="#d4af37"/>
+            <circle cx="240" cy="140" r="4" fill="#8b5cf6"/>
+            <circle cx="300" cy="120" r="3" fill="#2dd4bf"/>
+            <circle cx="180" cy="70"  r="3" fill="#f1d77a"/>
+            <circle cx="180" cy="170" r="3" fill="#f1d77a"/>
+          </g>
+          <!-- chart line -->
+          <path d="M10 200 L40 180 L70 188 L100 160 L130 168 L160 130 L190 142 L220 110 L250 122 L280 80 L310 96 L340 60"
+                stroke="url(#lg)" stroke-width="2" fill="none"/>
+          <!-- ticker labels -->
+          <g font-family="JetBrains Mono" font-size="9" fill="#a8b2c5">
+            <text x="14" y="20">SECTOR FLOW · 2026.05.19</text>
+            <text x="14" y="232">AI · BIO · NEV · SEMI · ROBOT</text>
+          </g>
+        </svg>
+
+        <div class="grid grid-cols-3 gap-3 mt-4">
+          <div class="hairline rounded-lg p-3">
+            <div class="text-[10px] text-dim">AI 大模型</div>
+            <div class="text-gold-2 font-mono">+38.2%</div>
+          </div>
+          <div class="hairline rounded-lg p-3">
+            <div class="text-[10px] text-dim">商业航天</div>
+            <div class="text-gold-2 font-mono">+24.6%</div>
+          </div>
+          <div class="hairline rounded-lg p-3">
+            <div class="text-[10px] text-dim">合成生物</div>
+            <div class="text-gold-2 font-mono">+19.1%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- floating badge -->
+      <div class="absolute -top-4 -right-4 glass p-3 hidden md:block">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+          <div class="text-xs text-mute">本周新增 <span class="text-gold-2 font-mono">132</span> 个项目</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shimmer-line max-w-[1280px] mx-auto"></div>
+</section>
+
+<!-- ========== 平台能力 ========== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-20">
+  <div class="section-title">
+    <div class="bar"></div><h2>平台核心能力</h2>
+    <p>Capabilities · 全链路投资协同</p>
+  </div>
+
+  <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+    <!-- card 1 -->
+    <div class="glass p-6 hover:border-yellow-500/50 transition group">
+      <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
+           style="background:rgba(212,175,55,.10); border:1px solid var(--line);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10" stroke="#f1d77a" stroke-width="1.6" stroke-linecap="round"/><circle cx="19" cy="17" r="2.5" stroke="#f1d77a" stroke-width="1.6"/></svg>
+      </div>
+      <h3 class="font-serif-cn text-[18px] font-bold mb-2">多模态 BP 识别</h3>
+      <p class="text-mute text-[13px] leading-6">PPT / PDF / 视频路演一键解析，自动抽取财务、团队、商业模式与赛道关键信息。</p>
+      <div class="mt-4 text-gold-2 text-xs group-hover:translate-x-1 transition">了解更多 →</div>
+    </div>
+    <!-- card 2 -->
+    <div class="glass p-6 hover:border-yellow-500/50 transition group">
+      <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
+           style="background:rgba(79,141,255,.10); border:1px solid rgba(79,141,255,.3);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 13l4-4 4 4 4-6 6 8" stroke="#7cb8ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 class="font-serif-cn text-[18px] font-bold mb-2">AI 智能投研</h3>
+      <p class="text-mute text-[13px] leading-6">市场空间、竞品图谱、估值建模、风险扫描——分析报告 6 秒生成。</p>
+      <div class="mt-4 text-gold-2 text-xs group-hover:translate-x-1 transition">了解更多 →</div>
+    </div>
+    <!-- card 3 -->
+    <div class="glass p-6 hover:border-yellow-500/50 transition group">
+      <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
+           style="background:rgba(139,92,246,.10); border:1px solid rgba(139,92,246,.3);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#c4b5fd" stroke-width="1.6"/><path d="M3 12h18M12 3v18" stroke="#c4b5fd" stroke-width="1.6"/></svg>
+      </div>
+      <h3 class="font-serif-cn text-[18px] font-bold mb-2">线上路演</h3>
+      <p class="text-mute text-[13px] leading-6">直播 + 录播双模式，机构投资人可异步观看、留存意向、发起一对一约谈。</p>
+      <div class="mt-4 text-gold-2 text-xs group-hover:translate-x-1 transition">了解更多 →</div>
+    </div>
+    <!-- card 4 -->
+    <div class="glass p-6 hover:border-yellow-500/50 transition group">
+      <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
+           style="background:rgba(45,212,191,.10); border:1px solid rgba(45,212,191,.3);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" stroke="#5eead4" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 class="font-serif-cn text-[18px] font-bold mb-2">机构精准撮合</h3>
+      <p class="text-mute text-[13px] leading-6">基于 286 家头部 GP 的偏好画像，赛道、阶段、轮次三维匹配。</p>
+      <div class="mt-4 text-gold-2 text-xs group-hover:translate-x-1 transition">了解更多 →</div>
+    </div>
+    <!-- second row -->
+    <div class="glass p-6"><h3 class="font-serif-cn text-[16px] font-bold mb-2 text-gold-2">数据室 Data Room</h3>
+      <p class="text-mute text-[13px] leading-6">合规分级权限、文件水印、访问审计；尽调全流程留痕。</p></div>
+    <div class="glass p-6"><h3 class="font-serif-cn text-[16px] font-bold mb-2 text-gold-2">协同尽调</h3>
+      <p class="text-mute text-[13px] leading-6">财法税技四线并行，AI 自动生成 DD 清单与风险标记。</p></div>
+    <div class="glass p-6"><h3 class="font-serif-cn text-[16px] font-bold mb-2 text-gold-2">投后赋能</h3>
+      <p class="text-mute text-[13px] leading-6">阿里资产生态资源对接：法律、财税、并购退出全周期支持。</p></div>
+    <div class="glass p-6"><h3 class="font-serif-cn text-[16px] font-bold mb-2 text-gold-2">监管合规</h3>
+      <p class="text-mute text-[13px] leading-6">符合中基协、网络安全等保三级、数据出境合规要求。</p></div>
+  </div>
+</section>
+
+<!-- ========== 热门行业融资项目 ========== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-24">
+  <div class="section-title">
+    <div class="bar"></div><h2>热门行业融资项目</h2>
+    <p>Hot Deals · 本周精选</p>
+  </div>
+
+  <!-- filters -->
+  <div class="flex flex-wrap items-center gap-2 mb-6">
+    <button class="chip chip-gold">全部行业</button>
+    <button class="chip">AI 大模型</button>
+    <button class="chip">芯片半导体</button>
+    <button class="chip">商业航天</button>
+    <button class="chip">合成生物</button>
+    <button class="chip">新能源 / 储能</button>
+    <button class="chip">智能机器人</button>
+    <button class="chip">企业服务</button>
+    <span class="ml-auto text-xs text-dim">融资轮次：</span>
+    <button class="chip chip-blue">A 轮</button>
+    <button class="chip">B 轮</button>
+    <button class="chip">Pre-IPO</button>
+  </div>
+
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+    <!-- project card template -->
+    <div class="glass p-5 hover:border-yellow-500/50 transition">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center font-serif-cn text-lg font-bold"
+               style="background:linear-gradient(135deg,#1a233a,#0a0f1c);border:1px solid var(--line);color:#f1d77a;">星</div>
+          <div>
+            <div class="font-serif-cn font-bold text-[16px]">星瀚智算</div>
+            <div class="text-xs text-dim">XingHan Compute · 上海</div>
+          </div>
+        </div>
+        <span class="chip chip-gold">A+ 轮</span>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="chip">AI 大模型</span>
+        <span class="chip">算力基础设施</span>
+      </div>
+      <p class="text-mute text-[13px] leading-6 mt-3">
+        面向行业大模型的国产化训练与推理一体机，已交付头部金融与运营商客户。
+      </p>
+      <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">融资额</div><div class="text-gold-2 font-mono text-sm">¥3.2 亿</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">估值</div><div class="text-gold-2 font-mono text-sm">¥28 亿</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">AI 评分</div><div class="text-gold-2 font-mono text-sm">8.6</div></div>
+      </div>
+      <div class="bar-track mt-4"><div class="bar-fill" style="width:68%"></div></div>
+      <div class="flex items-center justify-between text-xs text-dim mt-2">
+        <span>融资进度 68%</span><span>14 家机构关注</span>
+      </div>
+    </div>
+
+    <div class="glass p-5 hover:border-yellow-500/50 transition">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center font-serif-cn text-lg font-bold"
+               style="background:linear-gradient(135deg,#0f1c2c,#0a0f1c);border:1px solid rgba(79,141,255,.4);color:#7cb8ff;">芯</div>
+          <div>
+            <div class="font-serif-cn font-bold text-[16px]">凌芯半导体</div>
+            <div class="text-xs text-dim">LingCore Semi · 苏州</div>
+          </div>
+        </div>
+        <span class="chip chip-blue">B 轮</span>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="chip">芯片半导体</span><span class="chip">车规级 MCU</span>
+      </div>
+      <p class="text-mute text-[13px] leading-6 mt-3">
+        车规级高性能 MCU 国产替代，已通过 AEC-Q100 认证，进入吉利、比亚迪供应链。
+      </p>
+      <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">融资额</div><div class="text-gold-2 font-mono text-sm">¥5 亿</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">估值</div><div class="text-gold-2 font-mono text-sm">¥45 亿</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">AI 评分</div><div class="text-gold-2 font-mono text-sm">9.1</div></div>
+      </div>
+      <div class="bar-track mt-4"><div class="bar-fill" style="width:82%"></div></div>
+      <div class="flex items-center justify-between text-xs text-dim mt-2">
+        <span>融资进度 82%</span><span>22 家机构关注</span>
+      </div>
+    </div>
+
+    <div class="glass p-5 hover:border-yellow-500/50 transition">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center font-serif-cn text-lg font-bold"
+               style="background:linear-gradient(135deg,#1a1029,#0a0f1c);border:1px solid rgba(139,92,246,.4);color:#c4b5fd;">航</div>
+          <div>
+            <div class="font-serif-cn font-bold text-[16px]">天衢航天</div>
+            <div class="text-xs text-dim">Tianqu Aerospace · 北京</div>
+          </div>
+        </div>
+        <span class="chip chip-purple">Pre-B</span>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="chip">商业航天</span><span class="chip">液氧甲烷火箭</span>
+      </div>
+      <p class="text-mute text-[13px] leading-6 mt-3">
+        可回收商业运载火箭，首飞成功，年内计划完成 4 次入轨发射。
+      </p>
+      <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">融资额</div><div class="text-gold-2 font-mono text-sm">¥6 亿</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">估值</div><div class="text-gold-2 font-mono text-sm">¥60 亿</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">AI 评分</div><div class="text-gold-2 font-mono text-sm">8.4</div></div>
+      </div>
+      <div class="bar-track mt-4"><div class="bar-fill" style="width:54%"></div></div>
+      <div class="flex items-center justify-between text-xs text-dim mt-2">
+        <span>融资进度 54%</span><span>9 家机构关注</span>
+      </div>
+    </div>
+
+    <div class="glass p-5 hover:border-yellow-500/50 transition">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center font-serif-cn text-lg font-bold"
+               style="background:linear-gradient(135deg,#102414,#0a0f1c);border:1px solid rgba(45,212,191,.4);color:#5eead4;">合</div>
+          <div>
+            <div class="font-serif-cn font-bold text-[16px]">蓝藻生物</div>
+            <div class="text-xs text-dim">BluAlgae Bio · 杭州</div>
+          </div>
+        </div>
+        <span class="chip chip-green">A 轮</span>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="chip">合成生物</span><span class="chip">绿色化工</span>
+      </div>
+      <p class="text-mute text-[13px] leading-6 mt-3">
+        基于工程藻类的可持续蛋白与生物制造平台，绑定头部食品集团 LOI 订单 8 亿。
+      </p>
+      <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">融资额</div><div class="text-gold-2 font-mono text-sm">¥1.8 亿</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">估值</div><div class="text-gold-2 font-mono text-sm">¥15 亿</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">AI 评分</div><div class="text-gold-2 font-mono text-sm">7.9</div></div>
+      </div>
+      <div class="bar-track mt-4"><div class="bar-fill" style="width:46%"></div></div>
+      <div class="flex items-center justify-between text-xs text-dim mt-2">
+        <span>融资进度 46%</span><span>11 家机构关注</span>
+      </div>
+    </div>
+
+    <div class="glass p-5 hover:border-yellow-500/50 transition">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center font-serif-cn text-lg font-bold"
+               style="background:linear-gradient(135deg,#221506,#0a0f1c);border:1px solid var(--line);color:#f1d77a;">机</div>
+          <div>
+            <div class="font-serif-cn font-bold text-[16px]">擎云机器人</div>
+            <div class="text-xs text-dim">Qinyun Robot · 深圳</div>
+          </div>
+        </div>
+        <span class="chip chip-gold">B+ 轮</span>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="chip">具身智能</span><span class="chip">人形机器人</span>
+      </div>
+      <p class="text-mute text-[13px] leading-6 mt-3">
+        通用人形机器人本体 + VLA 大模型自研，工业巡检与汽车装配场景已商业化。
+      </p>
+      <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">融资额</div><div class="text-gold-2 font-mono text-sm">¥4.5 亿</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">估值</div><div class="text-gold-2 font-mono text-sm">¥50 亿</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">AI 评分</div><div class="text-gold-2 font-mono text-sm">8.8</div></div>
+      </div>
+      <div class="bar-track mt-4"><div class="bar-fill" style="width:73%"></div></div>
+      <div class="flex items-center justify-between text-xs text-dim mt-2">
+        <span>融资进度 73%</span><span>18 家机构关注</span>
+      </div>
+    </div>
+
+    <div class="glass p-5 hover:border-yellow-500/50 transition">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center font-serif-cn text-lg font-bold"
+               style="background:linear-gradient(135deg,#0f1c2c,#0a0f1c);border:1px solid rgba(79,141,255,.4);color:#7cb8ff;">储</div>
+          <div>
+            <div class="font-serif-cn font-bold text-[16px]">恒锂储能</div>
+            <div class="text-xs text-dim">HengLi Energy · 宁德</div>
+          </div>
+        </div>
+        <span class="chip chip-blue">Pre-IPO</span>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="chip">新能源</span><span class="chip">工商储</span>
+      </div>
+      <p class="text-mute text-[13px] leading-6 mt-3">
+        工商业储能系统集成商，2025 年出货 4.2GWh，海外营收占比 47%。
+      </p>
+      <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">融资额</div><div class="text-gold-2 font-mono text-sm">¥8 亿</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">估值</div><div class="text-gold-2 font-mono text-sm">¥80 亿</div></div>
+        <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">AI 评分</div><div class="text-gold-2 font-mono text-sm">9.0</div></div>
+      </div>
+      <div class="bar-track mt-4"><div class="bar-fill" style="width:91%"></div></div>
+      <div class="flex items-center justify-between text-xs text-dim mt-2">
+        <span>融资进度 91%</span><span>27 家机构关注</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="text-center mt-10">
+    <a href="roadshow.html" class="btn btn-ghost">查看全部 3,826 个项目 →</a>
+  </div>
+</section>
+
+<!-- ========== AI 智能分析 showcase ========== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-24">
+  <div class="section-title">
+    <div class="bar"></div><h2>AI 智能投研分析</h2>
+    <p>Powered by Multi-Modal Foundation Model</p>
+  </div>
+
+  <div class="grid lg:grid-cols-12 gap-5">
+    <!-- left descriptive -->
+    <div class="lg:col-span-5 glass p-7">
+      <div class="chip chip-gold mb-4">AI · 投研引擎</div>
+      <h3 class="font-serif-cn text-2xl font-bold leading-relaxed">
+        从 BP 到 IC Memo<br/>仅需 <span class="brand-wordmark">6.8 秒</span>
+      </h3>
+      <p class="text-mute text-[14px] leading-7 mt-4">
+        基于多模态基础模型与 14 万份历史投研报告训练，覆盖 32 个细分赛道的市场地图、
+        竞品图谱、估值锚点与风险扫描。投资经理可在分钟级输出可呈交 IC 的投资备忘录。
+      </p>
+
+      <div class="mt-6 space-y-3">
+        <div class="flex items-start gap-3">
+          <div class="w-7 h-7 rounded-md flex items-center justify-center text-sm"
+               style="background:rgba(212,175,55,.12);color:#f1d77a;border:1px solid var(--line);">1</div>
+          <div>
+            <div class="font-bold text-[14px]">多模态解析</div>
+            <div class="text-mute text-[13px]">PPT / PDF / 视频 / 音频 → 结构化要素抽取</div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-7 h-7 rounded-md flex items-center justify-center text-sm"
+               style="background:rgba(79,141,255,.12);color:#7cb8ff;border:1px solid rgba(79,141,255,.3);">2</div>
+          <div>
+            <div class="font-bold text-[14px]">投研知识检索</div>
+            <div class="text-mute text-[13px]">RAG 召回行业研报、对标公司、政策法规</div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-7 h-7 rounded-md flex items-center justify-center text-sm"
+               style="background:rgba(139,92,246,.12);color:#c4b5fd;border:1px solid rgba(139,92,246,.3);">3</div>
+          <div>
+            <div class="font-bold text-[14px]">六维评分</div>
+            <div class="text-mute text-[13px]">赛道、团队、技术、商业、财务、退出</div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-7 h-7 rounded-md flex items-center justify-center text-sm"
+               style="background:rgba(45,212,191,.12);color:#5eead4;border:1px solid rgba(45,212,191,.3);">4</div>
+          <div>
+            <div class="font-bold text-[14px]">报告生成</div>
+            <div class="text-mute text-[13px]">IC Memo · 估值矩阵 · 风险地图</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-7 flex gap-3">
+        <a href="upload.html"   class="btn btn-gold">立即体验 →</a>
+        <a href="analysis.html" class="btn btn-ghost">查看示例报告</a>
+      </div>
+    </div>
+
+    <!-- right preview -->
+    <div class="lg:col-span-7 glass p-0 overflow-hidden">
+      <div class="px-5 py-3 flex items-center justify-between border-b border-white/5">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-red-500/70"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-500/70"></span>
+          <span class="w-3 h-3 rounded-full bg-green-500/70"></span>
+          <span class="text-xs text-dim ml-3 font-mono">qiming-ai · 投研分析终端</span>
+        </div>
+        <span class="chip chip-green"><span class="pulse-dot"></span>Online</span>
+      </div>
+
+      <div class="p-6 grid grid-cols-2 gap-5">
+        <!-- score radar -->
+        <div class="hairline rounded-xl p-4">
+          <div class="text-xs text-dim mb-2">六维评分 · 凌芯半导体</div>
+          <svg viewBox="0 0 200 200" class="w-full">
+            <defs>
+              <linearGradient id="radf" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#d4af37" stop-opacity=".55"/>
+                <stop offset="1" stop-color="#4f8dff" stop-opacity=".25"/>
+              </linearGradient>
+            </defs>
+            <g stroke="rgba(212,175,55,.15)" fill="none">
+              <polygon points="100,20 173,60 173,140 100,180 27,140 27,60"/>
+              <polygon points="100,45 150,72 150,128 100,155 50,128 50,72"/>
+              <polygon points="100,70 127,84 127,116 100,130 73,116 73,84"/>
+            </g>
+            <polygon points="100,28 168,66 162,135 102,170 35,138 32,68"
+                     fill="url(#radf)" stroke="#f1d77a" stroke-width="1.4"/>
+            <g font-family="PingFang SC" font-size="10" fill="#a8b2c5">
+              <text x="100" y="14"  text-anchor="middle">赛道</text>
+              <text x="186" y="60"  text-anchor="middle">团队</text>
+              <text x="186" y="146" text-anchor="middle">技术</text>
+              <text x="100" y="194" text-anchor="middle">商业</text>
+              <text x="14"  y="146" text-anchor="middle">财务</text>
+              <text x="14"  y="60"  text-anchor="middle">退出</text>
+            </g>
+          </svg>
+        </div>
+
+        <!-- valuation -->
+        <div class="hairline rounded-xl p-4">
+          <div class="text-xs text-dim mb-2">估值锚点 · 三种方法</div>
+          <div class="space-y-3 mt-3">
+            <div>
+              <div class="flex justify-between text-xs"><span class="text-mute">PE 可比</span><span class="font-mono text-gold-2">¥38–46 亿</span></div>
+              <div class="bar-track mt-1"><div class="bar-fill" style="width:62%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs"><span class="text-mute">PS 倍数</span><span class="font-mono text-gold-2">¥42–55 亿</span></div>
+              <div class="bar-track mt-1"><div class="bar-fill" style="width:78%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs"><span class="text-mute">DCF 现金流</span><span class="font-mono text-gold-2">¥40–48 亿</span></div>
+              <div class="bar-track mt-1"><div class="bar-fill" style="width:70%"></div></div>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-white/5 text-center">
+            <div class="text-[10px] text-dim">综合估值区间</div>
+            <div class="brand-wordmark font-bold text-2xl mt-1 font-serif-cn">¥40 – 50 亿</div>
+          </div>
+        </div>
+
+        <!-- risk scan -->
+        <div class="hairline rounded-xl p-4 col-span-2">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-xs text-dim">风险扫描</div>
+            <div class="text-xs text-mute">17 项检测 · 3 项预警</div>
+          </div>
+          <div class="grid grid-cols-4 gap-2 text-center">
+            <div class="rounded-lg py-2" style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);">
+              <div class="text-[10px] text-dim">财务合规</div><div class="text-emerald-300 font-mono">PASS</div></div>
+            <div class="rounded-lg py-2" style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);">
+              <div class="text-[10px] text-dim">股权清晰</div><div class="text-emerald-300 font-mono">PASS</div></div>
+            <div class="rounded-lg py-2" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.4);">
+              <div class="text-[10px] text-dim">客户集中度</div><div class="text-amber-300 font-mono">WARN</div></div>
+            <div class="rounded-lg py-2" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.4);">
+              <div class="text-[10px] text-dim">应收账款</div><div class="text-amber-300 font-mono">WARN</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 专家套件矩阵 ========== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-24">
+  <div class="section-title">
+    <div class="bar"></div><h2>专家套件 · AI 投研工坊</h2>
+    <p>3 大套件 · 18 项专业技能 · 一键调用</p>
+  </div>
+
+  <div class="grid lg:grid-cols-12 gap-5">
+    <div class="lg:col-span-4 glass corner-deco p-7">
+      <div class="chip chip-blue mb-3">投研分析</div>
+      <h3 class="font-serif-cn text-2xl font-bold">8 项券商研究院级技能</h3>
+      <p class="text-mute text-[14px] leading-7 mt-3">
+        覆盖研报摘要、深度报告、行业研究、读年报、业绩快评、调研纪要、晨会纪要、可比公司分析。
+      </p>
+      <div class="flex flex-wrap gap-2 mt-5">
+        <button class="skill-btn" data-skill="equity-research:深度报告"><span class="skill-btn-icon">📕</span>深度报告</button>
+        <button class="skill-btn" data-skill="equity-research:行业研究"><span class="skill-btn-icon">🏭</span>行业研究</button>
+        <button class="skill-btn" data-skill="equity-research:读年报"><span class="skill-btn-icon">📘</span>读年报</button>
+      </div>
+    </div>
+
+    <div class="lg:col-span-4 glass corner-deco p-7">
+      <div class="chip chip-gold mb-3">投行业务</div>
+      <h3 class="font-serif-cn text-2xl font-bold">6 项 IPO/并购级技能</h3>
+      <p class="text-mute text-[14px] leading-7 mt-3">
+        覆盖 IPO 全流程：财务建模、路演材料、招股书、问询回复、并购方案、债券募集。
+      </p>
+      <div class="flex flex-wrap gap-2 mt-5">
+        <button class="skill-btn" data-skill="investment-banking:财务建模"><span class="skill-btn-icon">🧮</span>财务建模</button>
+        <button class="skill-btn" data-skill="investment-banking:路演材料"><span class="skill-btn-icon">🎬</span>路演材料</button>
+        <button class="skill-btn" data-skill="investment-banking:招股书"><span class="skill-btn-icon">📜</span>招股书</button>
+      </div>
+    </div>
+
+    <div class="lg:col-span-4 glass corner-deco p-7">
+      <div class="chip chip-purple mb-3">股权投资</div>
+      <h3 class="font-serif-cn text-2xl font-bold">6 项 PE/VC 级技能</h3>
+      <p class="text-mute text-[14px] leading-7 mt-3">
+        覆盖项目全周期：筛项目、尽调清单、投决备忘录、测收益、审条款、退出分析。
+      </p>
+      <div class="flex flex-wrap gap-2 mt-5">
+        <button class="skill-btn" data-skill="pe-vc-investment:筛项目"><span class="skill-btn-icon">🎯</span>筛项目</button>
+        <button class="skill-btn" data-skill="pe-vc-investment:投决备忘录"><span class="skill-btn-icon">🗂️</span>投决备忘录</button>
+        <button class="skill-btn" data-skill="pe-vc-investment:测收益"><span class="skill-btn-icon">📈</span>测收益</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center mt-8">
+    <a href="workshop.html" class="btn btn-gold">进入 AI 投研工坊 · 调用全部 18 项技能 →</a>
+  </div>
+</section>
+
+<!-- ========== 头部合作机构 ========== -->
+<section id="partners" class="max-w-[1280px] mx-auto px-6 pt-24">
+  <div class="section-title">
+    <div class="bar"></div><h2>头部合作投资机构</h2>
+    <p>286 家 LP / GP · 覆盖一线美元 + 人民币基金</p>
+  </div>
+
+  <!-- featured GP -->
+  <div class="grid md:grid-cols-3 gap-5">
+    <div class="glass p-6">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-serif-cn text-[18px] font-bold text-gold-2">红杉中国 · Sequoia</div>
+        <span class="chip chip-gold">头部 GP</span>
+      </div>
+      <div class="grid grid-cols-3 gap-3 mt-3 text-center">
+        <div><div class="text-[10px] text-dim">已投阶段</div><div class="text-mute text-sm">A–C</div></div>
+        <div><div class="text-[10px] text-dim">关注赛道</div><div class="text-mute text-sm">12</div></div>
+        <div><div class="text-[10px] text-dim">平台投资</div><div class="text-gold-2 font-mono">17 单</div></div>
+      </div>
+    </div>
+    <div class="glass p-6">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-serif-cn text-[18px] font-bold text-gold-2">高瓴资本 · Hillhouse</div>
+        <span class="chip chip-gold">头部 GP</span>
+      </div>
+      <div class="grid grid-cols-3 gap-3 mt-3 text-center">
+        <div><div class="text-[10px] text-dim">已投阶段</div><div class="text-mute text-sm">B–PreIPO</div></div>
+        <div><div class="text-[10px] text-dim">关注赛道</div><div class="text-mute text-sm">9</div></div>
+        <div><div class="text-[10px] text-dim">平台投资</div><div class="text-gold-2 font-mono">12 单</div></div>
+      </div>
+    </div>
+    <div class="glass p-6">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-serif-cn text-[18px] font-bold text-gold-2">中金资本 · CICC</div>
+        <span class="chip chip-gold">国资 LP</span>
+      </div>
+      <div class="grid grid-cols-3 gap-3 mt-3 text-center">
+        <div><div class="text-[10px] text-dim">基金规模</div><div class="text-mute text-sm">¥1200 亿</div></div>
+        <div><div class="text-[10px] text-dim">关注赛道</div><div class="text-mute text-sm">14</div></div>
+        <div><div class="text-[10px] text-dim">平台投资</div><div class="text-gold-2 font-mono">21 单</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- logo wall -->
+  <div class="glass mt-6 p-6">
+    <div class="text-xs text-dim tracking-widest mb-4">PARTNERS · 部分合作机构</div>
+    <div class="grid grid-cols-3 md:grid-cols-6 gap-x-6 gap-y-5 items-center text-center">
+      <div class="font-serif-cn text-[15px] text-mute hover:text-gold-2 transition">深创投</div>
+      <div class="font-serif-cn text-[15px] text-mute hover:text-gold-2 transition">IDG 资本</div>
+      <div class="font-serif-cn text-[15px] text-mute hover:text-gold-2 transition">启明创投</div>
+      <div class="font-serif-cn text-[15px] text-mute hover:text-gold-2 transition">经纬创投</div>
+      <div class="font-serif-cn text-[15px] text-mute hover:text-gold-2 transition">真格基金</div>
+      <div class="font-serif-cn text-[15px] text-mute hover:text-gold-2 transition">君联资本</div>
+      <div class="font-serif-cn text-[15px] text-mute hover:text-gold-2 transition">毅达资本</div>
+      <div class="font-serif-cn text-[15px] text-mute hover:text-gold-2 transition">达晨财智</div>
+      <div class="font-serif-cn text-[15px] text-mute hover:text-gold-2 transition">华兴资本</div>
+      <div class="font-serif-cn text-[15px] text-mute hover:text-gold-2 transition">国投创合</div>
+      <div class="font-serif-cn text-[15px] text-mute hover:text-gold-2 transition">招银国际</div>
+      <div class="font-serif-cn text-[15px] text-mute hover:text-gold-2 transition">中信建投</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CTA ========== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-24">
+  <div class="glass corner-deco p-12 text-center relative overflow-hidden">
+    <div class="absolute inset-0 -z-1 opacity-30"
+         style="background: radial-gradient(600px 200px at 50% 0%, rgba(212,175,55,.25), transparent);"></div>
+    <h2 class="font-serif-cn text-3xl md:text-4xl font-black brand-wordmark">让优质项目，被对的资本看见</h2>
+    <p class="text-mute mt-4 max-w-xl mx-auto">无论您是寻求融资的创业者，还是寻找下一独角兽的投资人，启明资本都为您提供专业、智能、可信赖的协同平台。</p>
+    <div class="mt-7 flex justify-center gap-3">
+      <a href="upload.html" class="btn btn-gold">提交项目 BP</a>
+      <a href="auth.html?tab=register" class="btn btn-ghost">机构入驻申请</a>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer id="about" class="site-footer mt-20">
+  <div class="max-w-[1280px] mx-auto px-6 grid md:grid-cols-4 gap-10">
+    <div>
+      <div class="flex items-center gap-3 mb-3">
+        <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+          <path d="M20 3 L36 12 L36 28 L20 37 L4 28 L4 12 Z" stroke="#d4af37" stroke-width="1.4" fill="rgba(212,175,55,0.06)"/>
+          <path d="M14 24 L20 14 L26 24" stroke="#f1d77a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="font-serif-cn text-base brand-wordmark font-bold">启明资本</div>
+      </div>
+      <p class="text-[12px] leading-6">
+        启明资本是<span class="text-gold-2">阿里资产</span>旗下专业风险投资协同平台，致力于以 AI 与数据连接优质项目与头部资本。
+      </p>
+    </div>
+    <div>
+      <div class="text-mute font-bold mb-3 text-sm">平台</div>
+      <ul class="space-y-2 text-[13px]">
+        <li><a class="hover:text-gold-2" href="roadshow.html">项目路演</a></li>
+        <li><a class="hover:text-gold-2" href="upload.html">BP 上传</a></li>
+        <li><a class="hover:text-gold-2" href="analysis.html">AI 智能分析</a></li>
+        <li><a class="hover:text-gold-2" href="#partners">合作机构</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="text-mute font-bold mb-3 text-sm">资源</div>
+      <ul class="space-y-2 text-[13px]">
+        <li><a class="hover:text-gold-2" href="#">投研报告库</a></li>
+        <li><a class="hover:text-gold-2" href="#">行业白皮书</a></li>
+        <li><a class="hover:text-gold-2" href="#">融资指南</a></li>
+        <li><a class="hover:text-gold-2" href="#">媒体报道</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="text-mute font-bold mb-3 text-sm">联系我们</div>
+      <ul class="space-y-2 text-[13px]">
+        <li>contact@qiming-vc.com</li>
+        <li>+86 0571-8888-XXXX</li>
+        <li>杭州 · 上海 · 北京 · 深圳</li>
+      </ul>
+      <div class="mt-3 flex gap-2 text-[11px]">
+        <span class="chip">中基协备案</span>
+        <span class="chip">等保三级</span>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-[1280px] mx-auto px-6 mt-10 pt-6 border-t border-white/5 flex justify-between text-[12px] text-dim">
+    <span>© 2026 阿里资产 · 启明资本（仅供 Demo 演示）</span>
+    <span>沪ICP备XXXXXXXX号 · 版本 v0.1.0-mvp</span>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+<script src="assets/skills.js"></script>
+</body>
+</html>

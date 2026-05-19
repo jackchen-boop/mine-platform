@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>BP 上传与多模态识别 · 启明资本</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="assets/theme.css" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body data-page="upload">
+
+<header class="top-nav">
+  <div class="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+        <path d="M20 3 L36 12 L36 28 L20 37 L4 28 L4 12 Z" stroke="#d4af37" stroke-width="1.4" fill="rgba(212,175,55,0.06)"/>
+        <path d="M14 24 L20 14 L26 24" stroke="#f1d77a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="leading-tight">
+        <div class="font-serif-cn text-[18px] tracking-wider brand-wordmark font-bold">启明资本</div>
+        <div class="text-[10px] text-dim tracking-[3px] uppercase">QIMING · VC PLATFORM</div>
+      </div>
+    </a>
+    <nav class="hidden md:flex items-center gap-1">
+      <a href="index.html"    class="nav-link" data-page="home">首页</a>
+      <a href="roadshow.html" class="nav-link" data-page="roadshow">项目路演</a>
+      <a href="upload.html"   class="nav-link" data-page="upload">BP 上传</a>
+      <a href="analysis.html" class="nav-link" data-page="analysis">AI 智能分析</a>
+      <a href="workshop.html" class="nav-link" data-page="workshop">投研工坊</a>
+    </nav>
+    <div id="nav-auth"></div>
+  </div>
+</header>
+
+<section class="max-w-[1280px] mx-auto px-6 pt-12">
+  <div class="flex items-end justify-between flex-wrap gap-3">
+    <div>
+      <div class="chip chip-gold mb-3">AI · 多模态识别</div>
+      <h1 class="font-serif-cn text-3xl md:text-4xl font-black brand-wordmark">商业计划书智能解析</h1>
+      <p class="text-mute text-sm mt-2">支持 PPT / PDF / Word / 路演视频 / 路演音频，自动结构化抽取核心要素。</p>
+    </div>
+    <div class="text-xs text-dim">
+      <div>已处理 BP <span class="text-gold-2 font-mono"><span data-count="11240">0</span></span> 份</div>
+      <div>平均识别耗时 <span class="text-gold-2 font-mono">6.8s</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="max-w-[1280px] mx-auto px-6 pt-8 pb-20 grid lg:grid-cols-12 gap-6">
+
+  <!-- LEFT: upload area -->
+  <div class="lg:col-span-7 space-y-5">
+
+    <div class="glass corner-deco p-6">
+      <!-- step indicator -->
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <span class="w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center"
+                style="background:linear-gradient(120deg,#f1d77a,#b88a1f);color:#1a120a;">1</span>
+          <span class="text-sm">上传材料</span>
+        </div>
+        <div class="flex-1 h-px mx-3 bg-gradient-to-r from-yellow-500/40 to-white/10"></div>
+        <div class="flex items-center gap-3">
+          <span class="w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center hairline">2</span>
+          <span class="text-sm text-mute">智能识别</span>
+        </div>
+        <div class="flex-1 h-px mx-3 bg-white/10"></div>
+        <div class="flex items-center gap-3">
+          <span class="w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center hairline">3</span>
+          <span class="text-sm text-mute">生成报告</span>
+        </div>
+      </div>
+
+      <!-- dropzone -->
+      <div id="dropzone"
+           class="rounded-2xl flex flex-col items-center justify-center text-center py-14 px-6 cursor-pointer transition"
+           style="border:1.5px dashed var(--gold-1); background:radial-gradient(closest-side, rgba(212,175,55,.07), transparent 70%);">
+        <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="30" stroke="#d4af37" stroke-width="1" stroke-dasharray="3 4" opacity=".5"/>
+          <path d="M22 36 L32 24 L42 36 M32 24 V44" stroke="#f1d77a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="18" y="46" width="28" height="2" rx="1" fill="#f1d77a"/>
+        </svg>
+        <div class="font-serif-cn text-lg font-bold mt-4">拖拽文件到此处，或点击选择</div>
+        <div class="text-mute text-xs mt-2">支持 .ppt / .pptx / .pdf / .docx / .mp4 / .mp3 · 单文件 ≤ 200MB</div>
+        <button class="btn btn-gold mt-5" onclick="simulateUpload()">选择文件</button>
+        <input type="file" id="file-input" class="hidden" />
+
+        <div class="flex gap-2 mt-6 text-xs">
+          <span class="chip">🔒 端到端加密</span>
+          <span class="chip">📄 阅后即焚</span>
+          <span class="chip">🛡️ 等保三级</span>
+        </div>
+      </div>
+
+      <!-- modality picks -->
+      <div class="mt-6">
+        <div class="text-xs text-dim mb-3">识别模态（可同时启用）：</div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <label class="modality-card glass-soft p-4 rounded-xl cursor-pointer active">
+            <input type="checkbox" class="hidden" checked />
+            <div class="text-2xl mb-1">📄</div>
+            <div class="text-sm font-bold">文档解析</div>
+            <div class="text-[11px] text-dim mt-1">PDF / Word / PPT</div>
+          </label>
+          <label class="modality-card glass-soft p-4 rounded-xl cursor-pointer active">
+            <input type="checkbox" class="hidden" checked />
+            <div class="text-2xl mb-1">🖼️</div>
+            <div class="text-sm font-bold">图表 OCR</div>
+            <div class="text-[11px] text-dim mt-1">财务图表数字化</div>
+          </label>
+          <label class="modality-card glass-soft p-4 rounded-xl cursor-pointer">
+            <input type="checkbox" class="hidden" />
+            <div class="text-2xl mb-1">🎬</div>
+            <div class="text-sm font-bold">视频路演</div>
+            <div class="text-[11px] text-dim mt-1">关键帧+口播</div>
+          </label>
+          <label class="modality-card glass-soft p-4 rounded-xl cursor-pointer">
+            <input type="checkbox" class="hidden" />
+            <div class="text-2xl mb-1">🎤</div>
+            <div class="text-sm font-bold">语音转写</div>
+            <div class="text-[11px] text-dim mt-1">访谈/电话会</div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 已上传文件列表 -->
+    <div class="glass p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-sm font-bold">已上传材料</div>
+        <span class="text-xs text-dim">共 <span id="file-count">0</span> 个</span>
+      </div>
+      <div id="file-list" class="space-y-2 text-sm">
+        <div id="empty-tip" class="text-dim text-center py-6 text-xs">暂无文件，请先上传 BP 材料</div>
+      </div>
+    </div>
+
+    <!-- API 接入状态 -->
+    <div class="glass p-5" style="border-color:rgba(79,141,255,.3);">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm font-bold text-blue">⚙️ AI 引擎接入状态（开发模式）</div>
+        <span class="chip chip-blue">DEV</span>
+      </div>
+      <p class="text-mute text-xs leading-6 mt-2">
+        当前为前端 Demo 演示，已预留以下后端接口位，待对接真实多模态大模型：
+      </p>
+      <div class="mt-3 space-y-1.5 font-mono text-[12px]">
+        <div class="flex"><span class="text-blue mr-2 w-12">POST</span><span class="text-gold-2">/api/v1/bp/upload</span><span class="text-dim ml-auto">— 文件上传 + 病毒扫描</span></div>
+        <div class="flex"><span class="text-blue mr-2 w-12">POST</span><span class="text-gold-2">/api/v1/bp/parse</span><span class="text-dim ml-auto">— 多模态结构化抽取</span></div>
+        <div class="flex"><span class="text-blue mr-2 w-12">POST</span><span class="text-gold-2">/api/v1/ai/analyze</span><span class="text-dim ml-auto">— 调用大模型生成报告</span></div>
+        <div class="flex"><span class="text-blue mr-2 w-12">GET </span><span class="text-gold-2">/api/v1/job/:id/status</span><span class="text-dim ml-auto">— 异步任务状态轮询</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: parse preview -->
+  <div class="lg:col-span-5">
+    <div class="glass p-0 overflow-hidden sticky top-24">
+      <div class="px-5 py-3 flex items-center justify-between border-b border-white/5">
+        <div class="text-sm font-bold">实时识别预览</div>
+        <span id="parse-status" class="chip">⏸️ 等待文件</span>
+      </div>
+
+      <div class="p-5">
+        <!-- progress -->
+        <div class="hairline rounded-xl p-4 mb-4">
+          <div class="flex justify-between text-xs mb-2"><span class="text-mute">解析进度</span><span id="prog-text" class="font-mono text-gold-2">0%</span></div>
+          <div class="bar-track"><div id="prog-bar" class="bar-fill" style="width:0%;transition:width .25s ease;"></div></div>
+          <div class="grid grid-cols-3 gap-2 mt-3 text-[11px] text-center">
+            <div id="step-1" class="step-pill">文档分页</div>
+            <div id="step-2" class="step-pill">要素抽取</div>
+            <div id="step-3" class="step-pill">知识检索</div>
+          </div>
+        </div>
+
+        <!-- extracted card -->
+        <div id="extracted" class="space-y-3 opacity-30">
+          <div class="text-xs text-dim">已抽取核心要素：</div>
+
+          <div class="hairline rounded-xl p-4">
+            <div class="flex items-center justify-between"><div class="text-xs text-dim">公司名称</div><span class="chip" style="font-size:10px;padding:2px 8px;">置信度 98%</span></div>
+            <div class="font-serif-cn text-base font-bold mt-1" id="ex-name">—</div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="hairline rounded-xl p-3">
+              <div class="text-[10px] text-dim">所属赛道</div>
+              <div class="text-gold-2 text-sm mt-1" id="ex-sector">—</div>
+            </div>
+            <div class="hairline rounded-xl p-3">
+              <div class="text-[10px] text-dim">融资轮次</div>
+              <div class="text-gold-2 text-sm mt-1" id="ex-round">—</div>
+            </div>
+            <div class="hairline rounded-xl p-3">
+              <div class="text-[10px] text-dim">本轮融资</div>
+              <div class="text-gold-2 text-sm mt-1 font-mono" id="ex-amt">—</div>
+            </div>
+            <div class="hairline rounded-xl p-3">
+              <div class="text-[10px] text-dim">估值</div>
+              <div class="text-gold-2 text-sm mt-1 font-mono" id="ex-val">—</div>
+            </div>
+          </div>
+
+          <div class="hairline rounded-xl p-4">
+            <div class="text-[10px] text-dim mb-2">核心团队</div>
+            <div class="flex flex-wrap gap-2 text-xs" id="ex-team"></div>
+          </div>
+
+          <div class="hairline rounded-xl p-4">
+            <div class="text-[10px] text-dim mb-2">关键财务（万元）</div>
+            <div class="grid grid-cols-3 gap-2 text-center text-xs" id="ex-fin"></div>
+          </div>
+
+          <div class="hairline rounded-xl p-4">
+            <div class="text-[10px] text-dim mb-2">商业模式摘要</div>
+            <div class="text-mute text-[12px] leading-6" id="ex-bm">—</div>
+          </div>
+
+          <a href="analysis.html" class="btn btn-gold w-full justify-center" id="goto-analysis" style="display:none;padding:12px;">
+            生成 AI 投研报告 →
+          </a>
+
+          <!-- 一键唤起技能 -->
+          <div id="skill-actions" style="display:none;" class="hairline rounded-xl p-4 mt-3">
+            <div class="text-xs text-dim mb-3 flex items-center justify-between">
+              <span>📌 一键调用专家套件</span>
+              <a href="workshop.html" class="text-gold-2 hover:underline">查看全部 18 项 →</a>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button class="skill-btn" data-skill="pe-vc-investment:筛项目"
+                      data-context="公司：凌芯半导体；赛道：车规级 MCU；轮次：B 轮 ¥5 亿；估值 ¥45 亿；25E 营收 ¥4.28 亿。">
+                <span class="skill-btn-icon">🎯</span>筛项目</button>
+              <button class="skill-btn" data-skill="pe-vc-investment:尽调清单"
+                      data-context="目标公司：凌芯半导体（车规级 MCU）；行业：芯片半导体；阶段：B 轮。">
+                <span class="skill-btn-icon">📋</span>尽调清单</button>
+              <button class="skill-btn" data-skill="equity-research:可比公司分析"
+                      data-context="标的：凌芯半导体；可比池：兆易创新、芯海科技、纳芯微、士兰微。">
+                <span class="skill-btn-icon">📊</span>可比公司</button>
+              <button class="skill-btn" data-skill="investment-banking:财务建模"
+                      data-context="凌芯半导体 23-24 历史营收 8420/21360 万元，毛利 28.6%/34.2%；25-27E 增长假设：100%/77%/57%。">
+                <span class="skill-btn-icon">🧮</span>财务建模</button>
+              <button class="skill-btn" data-skill="pe-vc-investment:测收益"
+                      data-context="投资金额 ¥1.2 亿，本轮估值 ¥45 亿；4 年退出，预期上市估值 ¥150-300 亿。">
+                <span class="skill-btn-icon">📈</span>测收益</button>
+              <button class="skill-btn" data-skill="pe-vc-investment:投决备忘录"
+                      data-context="项目：凌芯半导体 B 轮 ¥5 亿；亮点见 BP 解析；风险见 AI 报告。">
+                <span class="skill-btn-icon">🗂️</span>投决备忘录</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="max-w-[1280px] mx-auto px-6 flex justify-between text-[12px] text-dim">
+    <span>© 2026 阿里资产 · 启明资本（仅供 Demo 演示）</span>
+    <span>沪ICP备XXXXXXXX号</span>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+<script src="assets/skills.js"></script>
+<script>
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("file-input");
+dropzone.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", () => simulateUpload(fileInput.files[0]?.name));
+dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.style.background = "rgba(212,175,55,.08)"; });
+dropzone.addEventListener("dragleave", () => dropzone.style.background = "");
+dropzone.addEventListener("drop", e => {
+  e.preventDefault(); dropzone.style.background = "";
+  if (e.dataTransfer.files.length) simulateUpload(e.dataTransfer.files[0].name);
+});
+
+document.querySelectorAll(".modality-card").forEach(card => {
+  card.addEventListener("click", () => {
+    card.classList.toggle("active");
+    card.querySelector("input").checked = !card.querySelector("input").checked;
+  });
+});
+
+let fileCount = 0;
+function simulateUpload(name) {
+  name = name || "凌芯半导体_B轮商业计划书_v3.2.pdf";
+  fileCount++;
+  document.getElementById("file-count").textContent = fileCount;
+  const empty = document.getElementById("empty-tip");
+  if (empty) empty.remove();
+
+  const id = "f" + Date.now();
+  document.getElementById("file-list").insertAdjacentHTML("beforeend",
+    '<div id="' + id + '" class="hairline rounded-lg px-4 py-3 flex items-center justify-between">' +
+    '  <div class="flex items-center gap-3">' +
+    '    <div class="w-9 h-9 rounded-md flex items-center justify-center text-xs font-bold"' +
+    '         style="background:rgba(212,175,55,.1);border:1px solid var(--line);color:#f1d77a;">PDF</div>' +
+    '    <div>' +
+    '      <div class="text-sm">' + name + '</div>' +
+    '      <div class="text-[11px] text-dim">12.4 MB · 上传完成</div>' +
+    '    </div>' +
+    '  </div>' +
+    '  <span class="chip chip-green"><span class="pulse-dot"></span>已识别</span>' +
+    '</div>'
+  );
+
+  runParse();
+}
+
+function runParse() {
+  document.getElementById("parse-status").outerHTML =
+    '<span id="parse-status" class="chip" style="background:rgba(79,141,255,.1);border-color:rgba(79,141,255,.4);color:#7cb8ff;"><span class="pulse-dot"></span>解析中</span>';
+  document.getElementById("extracted").style.opacity = 1;
+  let p = 0;
+  const bar = document.getElementById("prog-bar");
+  const txt = document.getElementById("prog-text");
+  const t = setInterval(() => {
+    p += Math.random() * 8 + 4; if (p > 100) p = 100;
+    bar.style.width = p + "%"; txt.textContent = Math.floor(p) + "%";
+    if (p > 30) document.getElementById("step-1").classList.add("done");
+    if (p > 65) document.getElementById("step-2").classList.add("done");
+    if (p > 95) document.getElementById("step-3").classList.add("done");
+    if (p >= 100) {
+      clearInterval(t); fillExtract();
+      document.getElementById("parse-status").outerHTML =
+        '<span id="parse-status" class="chip chip-green"><span class="pulse-dot"></span>识别完成</span>';
+      document.getElementById("goto-analysis").style.display = "inline-flex";
+      document.getElementById("skill-actions").style.display  = "block";
+    }
+  }, 220);
+}
+
+function fillExtract() {
+  document.getElementById("ex-name").textContent   = "凌芯半导体科技（苏州）有限公司";
+  document.getElementById("ex-sector").textContent = "芯片半导体 · 车规级 MCU";
+  document.getElementById("ex-round").textContent  = "B 轮 · 含老股转让";
+  document.getElementById("ex-amt").textContent    = "¥5.0 亿";
+  document.getElementById("ex-val").textContent    = "¥45 亿（投后）";
+  document.getElementById("ex-team").innerHTML =
+    '<span class="chip">CEO 王立 · 前 NXP 资深架构师</span>' +
+    '<span class="chip">CTO 陈浩 · 中科院微电子所</span>' +
+    '<span class="chip">CFO 周敏 · 前安永合伙人</span>';
+  document.getElementById("ex-fin").innerHTML =
+    '<div class="hairline rounded py-2"><div class="text-[10px] text-dim">23年营收</div><div class="text-gold-2 font-mono">8,420</div></div>' +
+    '<div class="hairline rounded py-2"><div class="text-[10px] text-dim">24年营收</div><div class="text-gold-2 font-mono">21,360</div></div>' +
+    '<div class="hairline rounded py-2"><div class="text-[10px] text-dim">25年E营收</div><div class="text-gold-2 font-mono">42,800</div></div>';
+  document.getElementById("ex-bm").innerHTML =
+    "面向新能源车<strong class='text-gold-2'>车规级 MCU</strong>市场，提供 ASIL-B/D 等级控制芯片及配套软件栈，已通过 AEC-Q100 认证，2025 年导入<strong class='text-gold-2'>吉利、比亚迪、零跑</strong>三大主机厂供应链。";
+}
+</script>
+
+<style>
+  .modality-card { transition: all .2s ease; }
+  .modality-card:hover { border-color: var(--line); }
+  .modality-card.active {
+    border-color: var(--gold-1);
+    background: rgba(212,175,55,0.08);
+  }
+  .step-pill {
+    padding: 5px 10px; border-radius: 999px;
+    border: 1px solid var(--line-soft); color: var(--text-3);
+    transition: all .25s ease;
+  }
+  .step-pill.done {
+    background: rgba(212,175,55,0.1);
+    border-color: var(--gold-1); color: var(--gold-2);
+  }
+</style>
+</body>
+</html>

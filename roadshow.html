@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>项目路演 · 启明资本</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="assets/theme.css" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body data-page="roadshow">
+
+<!-- ===== NAV (same as home) ===== -->
+<header class="top-nav">
+  <div class="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+        <path d="M20 3 L36 12 L36 28 L20 37 L4 28 L4 12 Z" stroke="#d4af37" stroke-width="1.4" fill="rgba(212,175,55,0.06)"/>
+        <path d="M14 24 L20 14 L26 24" stroke="#f1d77a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="20" cy="14" r="1.6" fill="#f1d77a"/>
+      </svg>
+      <div class="leading-tight">
+        <div class="font-serif-cn text-[18px] tracking-wider brand-wordmark font-bold">启明资本</div>
+        <div class="text-[10px] text-dim tracking-[3px] uppercase">QIMING · VC PLATFORM</div>
+      </div>
+    </a>
+    <nav class="hidden md:flex items-center gap-1">
+      <a href="index.html"    class="nav-link" data-page="home">首页</a>
+      <a href="roadshow.html" class="nav-link" data-page="roadshow">项目路演</a>
+      <a href="upload.html"   class="nav-link" data-page="upload">BP 上传</a>
+      <a href="analysis.html" class="nav-link" data-page="analysis">AI 智能分析</a>
+      <a href="workshop.html" class="nav-link" data-page="workshop">投研工坊</a>
+      <a href="index.html#partners" class="nav-link">合作机构</a>
+    </nav>
+    <div id="nav-auth"></div>
+  </div>
+</header>
+
+<!-- ===== Page header ===== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-12 pb-8">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <div class="chip chip-gold mb-3">LIVE · 路演大厅</div>
+      <h1 class="font-serif-cn text-3xl md:text-4xl font-black brand-wordmark">项目线上路演</h1>
+      <p class="text-mute text-sm mt-2">本周正在路演的优质项目 · 共 <span class="font-mono text-gold-2">128</span> 场，机构投资人专属。</p>
+    </div>
+    <div id="auth-tip"></div>
+  </div>
+</section>
+
+<!-- ===== Live roadshow strip ===== -->
+<section class="max-w-[1280px] mx-auto px-6">
+  <div class="glass p-5">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <span class="pulse-dot"></span>
+        <span class="font-bold">正在直播</span>
+        <span class="text-xs text-dim">· 5 场进行中</span>
+      </div>
+      <a href="#" class="text-xs text-gold-2">查看全部直播 →</a>
+    </div>
+    <div class="grid md:grid-cols-3 gap-4">
+      <!-- live card -->
+      <div class="hairline rounded-xl overflow-hidden">
+        <div class="relative aspect-video"
+             style="background: radial-gradient(at 30% 20%, rgba(212,175,55,.25), transparent 60%), linear-gradient(135deg,#0d1322,#1a233a);">
+          <div class="absolute top-3 left-3 chip" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.5);color:#fca5a5;">
+            <span class="w-2 h-2 rounded-full bg-red-400 inline-block mr-1"></span>LIVE
+          </div>
+          <div class="absolute top-3 right-3 chip">观看 <span class="font-mono text-gold-2 ml-1">2,148</span></div>
+          <div class="absolute bottom-3 left-3 right-3">
+            <div class="font-serif-cn text-base font-bold">凌芯半导体 · B 轮路演</div>
+            <div class="text-xs text-mute mt-1">CEO 王立 · 主讲 / 主持：王 sir（华兴）</div>
+          </div>
+          <button class="absolute inset-0 m-auto w-14 h-14 rounded-full flex items-center justify-center"
+                  style="background:rgba(212,175,55,.85);">
+            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#0a0f1c" d="M8 5v14l11-7z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="hairline rounded-xl overflow-hidden">
+        <div class="relative aspect-video"
+             style="background: radial-gradient(at 70% 30%, rgba(79,141,255,.25), transparent 60%), linear-gradient(135deg,#0d1322,#1a233a);">
+          <div class="absolute top-3 left-3 chip" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.5);color:#fca5a5;">
+            <span class="w-2 h-2 rounded-full bg-red-400 inline-block mr-1"></span>LIVE
+          </div>
+          <div class="absolute top-3 right-3 chip">观看 <span class="font-mono text-gold-2 ml-1">986</span></div>
+          <div class="absolute bottom-3 left-3 right-3">
+            <div class="font-serif-cn text-base font-bold">擎云机器人 · B+ 路演</div>
+            <div class="text-xs text-mute mt-1">CTO 李晨 · 现场 Demo</div>
+          </div>
+          <button class="absolute inset-0 m-auto w-14 h-14 rounded-full flex items-center justify-center"
+                  style="background:rgba(212,175,55,.85);">
+            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#0a0f1c" d="M8 5v14l11-7z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="hairline rounded-xl overflow-hidden">
+        <div class="relative aspect-video"
+             style="background: radial-gradient(at 50% 50%, rgba(139,92,246,.25), transparent 60%), linear-gradient(135deg,#0d1322,#1a233a);">
+          <div class="absolute top-3 left-3 chip">19:30 开始</div>
+          <div class="absolute top-3 right-3 chip">已预约 <span class="font-mono text-gold-2 ml-1">312</span></div>
+          <div class="absolute bottom-3 left-3 right-3">
+            <div class="font-serif-cn text-base font-bold">天衢航天 · Pre-B 路演</div>
+            <div class="text-xs text-mute mt-1">19:30 · 创始人董博士</div>
+          </div>
+          <button class="absolute inset-0 m-auto w-14 h-14 rounded-full flex items-center justify-center"
+                  style="background:rgba(255,255,255,.08);border:1px solid var(--line);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#f1d77a" stroke-width="1.6"/><path d="M12 7v5l3 2" stroke="#f1d77a" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Filters ===== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-10">
+  <div class="glass p-5">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="text-xs text-dim mr-2">行业：</span>
+      <button class="chip chip-gold">全部</button>
+      <button class="chip">AI 大模型</button>
+      <button class="chip">芯片半导体</button>
+      <button class="chip">商业航天</button>
+      <button class="chip">合成生物</button>
+      <button class="chip">智能机器人</button>
+      <button class="chip">新能源</button>
+      <button class="chip">企业服务</button>
+
+      <span class="text-xs text-dim ml-4 mr-2">轮次：</span>
+      <button class="chip">天使</button>
+      <button class="chip chip-blue">A</button>
+      <button class="chip">B</button>
+      <button class="chip">C</button>
+      <button class="chip">Pre-IPO</button>
+
+      <span class="text-xs text-dim ml-4 mr-2">地区：</span>
+      <button class="chip">长三角</button>
+      <button class="chip">大湾区</button>
+      <button class="chip">京津冀</button>
+
+      <div class="ml-auto flex items-center gap-2">
+        <input class="input" style="width:240px;padding:8px 12px;" placeholder="🔍 搜索项目 / 行业 / 关键词" />
+        <button class="btn btn-ghost">高级筛选</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Project list ===== -->
+<section class="max-w-[1280px] mx-auto px-6 pt-8 pb-20">
+  <div class="flex items-center justify-between mb-5">
+    <div class="text-mute text-sm">为您找到 <span class="text-gold-2 font-mono">128</span> 个路演项目</div>
+    <div class="flex gap-2">
+      <button class="chip chip-gold">综合排序</button>
+      <button class="chip">融资进度</button>
+      <button class="chip">AI 评分</button>
+      <button class="chip">最新发布</button>
+    </div>
+  </div>
+
+  <div id="project-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+  <div class="text-center mt-10">
+    <button class="btn btn-ghost">加载更多项目</button>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer class="site-footer">
+  <div class="max-w-[1280px] mx-auto px-6 flex justify-between text-[12px] text-dim">
+    <span>© 2026 阿里资产 · 启明资本（仅供 Demo 演示）</span>
+    <span>沪ICP备XXXXXXXX号</span>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+<script src="assets/skills.js"></script>
+<script>
+// ============== Mock data ==============
+const projects = [
+  { code:"星", name:"星瀚智算",  ind:"AI 大模型",     loc:"上海", round:"A+", amt:"3.2 亿",  val:"28 亿", score:8.6, prog:68, fans:14, hot:true,  desc:"行业大模型训练推理一体机，国产化算力。" },
+  { code:"芯", name:"凌芯半导体", ind:"芯片半导体",   loc:"苏州", round:"B",  amt:"5 亿",    val:"45 亿", score:9.1, prog:82, fans:22, hot:true,  desc:"车规级 MCU，AEC-Q100 认证。" },
+  { code:"航", name:"天衢航天",   ind:"商业航天",     loc:"北京", round:"Pre-B", amt:"6 亿", val:"60 亿", score:8.4, prog:54, fans:9,  hot:false, desc:"可回收商业运载火箭，已首飞成功。" },
+  { code:"合", name:"蓝藻生物",   ind:"合成生物",     loc:"杭州", round:"A",  amt:"1.8 亿",  val:"15 亿", score:7.9, prog:46, fans:11, hot:false, desc:"工程藻类可持续蛋白与生物制造。" },
+  { code:"机", name:"擎云机器人", ind:"具身智能",     loc:"深圳", round:"B+", amt:"4.5 亿",  val:"50 亿", score:8.8, prog:73, fans:18, hot:true,  desc:"通用人形机器人 + VLA 大模型。" },
+  { code:"储", name:"恒锂储能",   ind:"新能源",       loc:"宁德", round:"Pre-IPO", amt:"8 亿", val:"80 亿", score:9.0, prog:91, fans:27, hot:true,  desc:"工商业储能集成商，海外占比 47%。" },
+  { code:"医", name:"晨曦医疗",   ind:"医疗器械",     loc:"上海", round:"A",  amt:"2 亿",    val:"18 亿", score:7.6, prog:58, fans:8,  hot:false, desc:"心血管介入手术机器人。" },
+  { code:"链", name:"安链科技",   ind:"企业服务",     loc:"杭州", round:"B",  amt:"3 亿",    val:"30 亿", score:8.0, prog:64, fans:13, hot:false, desc:"供应链金融 SaaS，连接 1.2 万家中小企业。" },
+  { code:"能", name:"光擎科技",   ind:"新能源",       loc:"无锡", round:"A+", amt:"3.5 亿",  val:"32 亿", score:8.2, prog:60, fans:15, hot:false, desc:"钙钛矿组件量产，转换效率 26.8%。" },
+];
+
+const isLoggedIn = !!VCPlat.getUser();
+
+// auth tip
+const tip = document.getElementById("auth-tip");
+if (!isLoggedIn) {
+  tip.innerHTML =
+    '<div class="glass p-4 flex items-center gap-3" style="border-color:rgba(245,158,11,.4);">' +
+    '  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 11V8a6 6 0 1 1 12 0v3" stroke="#fbbf24" stroke-width="1.6"/><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fbbf24" stroke-width="1.6"/></svg>' +
+    '  <div class="text-sm">' +
+    '    <div class="text-amber-300 font-bold">您当前为<strong>访客模式</strong>，关键数据已脱敏</div>' +
+    '    <div class="text-mute text-xs">注册成为认证投资人后，可解锁全量项目数据、参与路演与发起约谈。</div>' +
+    '  </div>' +
+    '  <a href="auth.html?tab=register" class="btn btn-gold ml-3">立即注册解锁</a>' +
+    '</div>';
+} else {
+  tip.innerHTML =
+    '<div class="glass p-4 flex items-center gap-3">' +
+    '  <span class="chip chip-green"><span class="pulse-dot"></span>已认证</span>' +
+    '  <div class="text-sm text-mute">您已是<strong class="text-gold-2">' + (VCPlat.getUser().role || "投资者") + '</strong>，可查看全部 <span class="font-mono text-gold-2">128</span> 个路演项目。</div>' +
+    '</div>';
+}
+
+// mask helper
+function mask(text) {
+  if (isLoggedIn) return text;
+  return '<span class="font-mono text-dim" style="filter:blur(3px);user-select:none;">' + text + '</span>';
+}
+
+function badgeColor(round) {
+  if (round.startsWith("A")) return "chip-gold";
+  if (round.startsWith("B")) return "chip-blue";
+  if (round.startsWith("Pre-IPO")) return "chip-purple";
+  return "";
+}
+
+// render cards
+const grid = document.getElementById("project-grid");
+projects.forEach(function (p, i) {
+  const locked = !isLoggedIn && i >= 3; // 访客只能看前 3 个完整数据示意（其余脱敏）
+  grid.insertAdjacentHTML("beforeend",
+    '<div class="glass p-5 hover:border-yellow-500/50 transition relative">' +
+    (locked
+      ? '<div class="absolute inset-0 z-10 rounded-[14px] flex flex-col items-center justify-center text-center backdrop-blur-sm" style="background:rgba(5,7,13,0.55);">' +
+        '  <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M6 11V8a6 6 0 1 1 12 0v3" stroke="#f1d77a" stroke-width="1.6"/><rect x="4" y="11" width="16" height="10" rx="2" stroke="#f1d77a" stroke-width="1.6"/></svg>' +
+        '  <div class="mt-3 text-gold-2 font-bold">注册查看完整信息</div>' +
+        '  <a href="auth.html?tab=register" class="btn btn-gold mt-3" style="padding:8px 14px;">立即注册</a>' +
+        '</div>'
+      : '') +
+    '  <div class="flex items-start justify-between">' +
+    '    <div class="flex items-center gap-3">' +
+    '      <div class="w-12 h-12 rounded-lg flex items-center justify-center font-serif-cn text-lg font-bold"' +
+    '           style="background:linear-gradient(135deg,#1a233a,#0a0f1c);border:1px solid var(--line);color:#f1d77a;">'+ p.code +'</div>' +
+    '      <div>' +
+    '        <div class="font-serif-cn font-bold text-[16px]">' + p.name + '</div>' +
+    '        <div class="text-xs text-dim">' + p.ind + ' · ' + p.loc + '</div>' +
+    '      </div>' +
+    '    </div>' +
+    '    <div class="flex flex-col items-end gap-1">' +
+    '      <span class="chip ' + badgeColor(p.round) + '">' + p.round + '</span>' +
+    (p.hot ? '<span class="chip" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4);color:#fca5a5;">🔥 热门</span>' : '') +
+    '    </div>' +
+    '  </div>' +
+    '  <p class="text-mute text-[13px] leading-6 mt-3">' + p.desc + '</p>' +
+    '  <div class="grid grid-cols-3 gap-2 mt-4 text-center">' +
+    '    <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">融资额</div><div class="text-gold-2 font-mono text-sm">' + mask("¥" + p.amt) + '</div></div>' +
+    '    <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">估值</div><div class="text-gold-2 font-mono text-sm">' + mask("¥" + p.val) + '</div></div>' +
+    '    <div class="hairline rounded-lg py-2"><div class="text-[10px] text-dim">AI 评分</div><div class="text-gold-2 font-mono text-sm">' + p.score + '</div></div>' +
+    '  </div>' +
+    '  <div class="bar-track mt-4"><div class="bar-fill" style="width:' + p.prog + '%"></div></div>' +
+    '  <div class="flex items-center justify-between text-xs text-dim mt-2">' +
+    '    <span>融资进度 ' + p.prog + '%</span><span>' + p.fans + ' 家机构关注</span>' +
+    '  </div>' +
+    '  <div class="flex gap-2 mt-4">' +
+    '    <button class="btn btn-ghost flex-1" style="padding:8px 12px;font-size:13px;">查看详情</button>' +
+    '    <button class="btn btn-gold" style="padding:8px 12px;font-size:13px;">发起约谈</button>' +
+    '  </div>' +
+    (locked ? '' :
+    '  <div class="flex gap-1 mt-2 flex-wrap">' +
+    '    <button class="skill-btn" style="padding:5px 10px;font-size:11px;" data-skill="pe-vc-investment:筛项目"' +
+    '            data-context="公司：' + p.name + '；行业：' + p.ind + '；轮次：' + p.round + '；融资 ¥' + p.amt + '；估值 ¥' + p.val + '。">' +
+    '      <span class="skill-btn-icon">🎯</span>筛项目</button>' +
+    '    <button class="skill-btn" style="padding:5px 10px;font-size:11px;" data-skill="equity-research:深度报告"' +
+    '            data-context="目标公司：' + p.name + '（' + p.ind + '）。请按券商体例撰写 30+ 页深度研究报告。">' +
+    '      <span class="skill-btn-icon">📕</span>深度研究</button>' +
+    '    <button class="skill-btn" style="padding:5px 10px;font-size:11px;" data-skill="pe-vc-investment:投决备忘录"' +
+    '            data-context="项目：' + p.name + '；轮次：' + p.round + '；融资 ¥' + p.amt + '；估值 ¥' + p.val + '；AI 评分 ' + p.score + '。">' +
+    '      <span class="skill-btn-icon">🗂️</span>IC Memo</button>' +
+    '  </div>') +
+    '</div>'
+  );
+});
+</script>
+</body>
+</html>

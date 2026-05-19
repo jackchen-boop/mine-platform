@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# editors
+.vscode/
+.idea/
+
+# logs
+*.log
+npm-debug.log*
+
+# deploy-tool caches
+.vercel
+.netlify
+node_modules/
+
+# secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.json
