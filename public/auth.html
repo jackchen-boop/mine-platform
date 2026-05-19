@@ -197,6 +197,12 @@ if (location.search.includes("expired=1")) {
   msg.textContent = "登录已过期，请重新登录";
   document.body.appendChild(msg);
   setTimeout(() => msg.remove(), 3000);
+} else if (location.search.includes("needlogin=1")) {
+  const msg = document.createElement("div");
+  msg.className = "fixed top-20 left-1/2 -translate-x-1/2 z-50 glass px-6 py-3 text-sm text-blue-300 border border-blue-500/40 rounded-xl";
+  msg.textContent = "该功能需要登录后使用";
+  document.body.appendChild(msg);
+  setTimeout(() => msg.remove(), 3000);
 }
 
 // 已登录则跳转

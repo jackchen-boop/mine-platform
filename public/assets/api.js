@@ -56,13 +56,19 @@
     });
 
     if (resp.status === 401) {
-      // Token 过期，清除并跳转登录
+      // 解析错误信息，区分"请先登录"和"Token 过期"
+      let errMsg = '请先登录';
+      try { const d = await resp.json(); errMsg = d.error || errMsg; } catch {}
+
       VCPlat.setToken(null);
       VCPlat.setUser(null);
+
+      // 只有在非登录页时才跳转
       if (!location.pathname.includes('auth.html')) {
-        location.href = '/auth.html?expired=1';
+        const param = errMsg.includes('过期') ? 'expired=1' : 'needlogin=1';
+        location.href = '/auth.html?' + param;
       }
-      throw new Error('登录已过期');
+      throw new Error(errMsg);
     }
 
     const data = await resp.json().catch(() => ({}));
