@@ -1,8 +1,8 @@
 /* ============================================================
    专家套件 · 技能注册表 + 调用弹窗组件
    - 技能数据来源：equity-research / investment-banking / pe-vc-investment
-   - 在前端 Demo 中通过弹窗收集输入参数，
-     生成可粘贴到 QoderWork 主对话窗执行的 Prompt
+   - 登录用户：通过 /api/skill-run 调用真实 MiniMax AI（SSE 流式）
+   - 未登录：展示登录提示
 ============================================================ */
 (function () {
   // ---------- 技能数据 ----------
@@ -149,14 +149,8 @@
     const s = SKILLS.find(x => x.id === skillId);
     if (!s) return alert("未找到技能：" + skillId);
 
-    // 构造默认 Prompt
     const ctx = contextHint || "";
-    const prompt =
-      "/" + s.id.split(":")[1] + "\n\n" +
-      "请基于以下输入执行《" + s.name + "》技能：\n\n" +
-      (ctx ? "【上下文】\n" + ctx + "\n\n" : "") +
-      "【期望输出】" + s.output + "\n" +
-      "【输出格式】结构化 Markdown，关键数据加粗，结尾附结论与下一步建议。";
+    const isLoggedIn = typeof VCPlat !== 'undefined' && VCPlat.isLoggedIn();
 
     const wrap = document.createElement("div");
     wrap.className = "skill-modal-wrap";
@@ -183,19 +177,25 @@
       '    <div class="hairline rounded-lg p-3"><div class="text-[11px] text-dim">输出</div><div class="text-sm mt-1 text-gold-2">' + s.output + '</div></div>' +
       '  </div>' +
 
-      '  <label class="label">Prompt（已预填，可直接编辑）</label>' +
-      '  <textarea id="skill-prompt" class="input font-mono text-[12px]" style="min-height:200px;line-height:1.6;">' + prompt + '</textarea>' +
+      '  <label class="label">补充上下文（可直接编辑）</label>' +
+      '  <textarea id="skill-ctx" class="input font-mono text-[12px]" style="min-height:100px;line-height:1.6;">' + ctx + '</textarea>' +
 
-      '  <div class="grid grid-cols-2 gap-3 mt-4">' +
-      '    <button id="skill-copy"  class="btn btn-gold  justify-center">📋 复制 Prompt</button>' +
-      '    <button id="skill-mock"  class="btn btn-ghost justify-center">▶ 在 Demo 中模拟运行</button>' +
+      (isLoggedIn
+        ? '  <button id="skill-run" class="btn-ai mt-4 w-full justify-center">' +
+          '    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0L9.5 5.5L15 7L9.5 8.5L8 14L6.5 8.5L1 7L6.5 5.5L8 0Z"/></svg>' +
+          '    用 MiniMax AI 执行此技能' +
+          '  </button>'
+        : '  <a href="/auth.html" class="btn btn-gold mt-4 w-full justify-center" style="display:flex;">请先登录以使用 AI 技能</a>') +
+
+      '  <div id="skill-ai-wrap" class="mt-4 hairline rounded-xl p-4" style="display:none;">' +
+      '    <div class="flex items-center justify-between mb-3">' +
+      '      <div class="ai-status" id="skill-ai-status"><span class="dot"></span><span id="skill-ai-status-text">连接中…</span></div>' +
+      '      <button id="skill-ai-clear" class="text-[11px] text-dim hover:text-gold">清空</button>' +
+      '    </div>' +
+      '    <div id="skill-ai-output" class="ai-stream"></div>' +
       '  </div>' +
-      '  <p class="text-xs text-dim mt-3 leading-6">' +
-      '    本 Demo 不直接调用大模型。点击「复制 Prompt」后，回到 QoderWork 主对话窗粘贴即可让 AI 真实执行该技能；' +
-      '    或点击「模拟运行」查看示意输出（仅用于演示工作流）。' +
-      '  </p>' +
-      '  <div id="skill-mock-result" class="mt-4"></div>' +
       '</div>';
+
     document.body.appendChild(wrap);
 
     function close() { wrap.remove(); }
@@ -205,39 +205,51 @@
       if (e.key === "Escape") { close(); document.removeEventListener("keydown", esc); }
     });
 
-    wrap.querySelector("#skill-copy").onclick = async function () {
-      const txt = wrap.querySelector("#skill-prompt").value;
-      try {
-        await navigator.clipboard.writeText(txt);
-        this.innerHTML = "✓ 已复制，前往 QoderWork 粘贴即可";
-        this.style.background = "linear-gradient(120deg,#5eead4,#10b981)";
-      } catch (e) {
-        wrap.querySelector("#skill-prompt").select(); document.execCommand("copy");
-        this.innerHTML = "✓ 已选中 + 复制";
-      }
-    };
+    wrap.querySelector("#skill-ai-clear") && (wrap.querySelector("#skill-ai-clear").onclick = function () {
+      wrap.querySelector("#skill-ai-output").innerHTML = "";
+    });
 
-    wrap.querySelector("#skill-mock").onclick = function () {
-      const box = wrap.querySelector("#skill-mock-result");
-      box.innerHTML = '<div class="hairline rounded-xl p-4"><div class="flex items-center gap-2 mb-2"><span class="pulse-dot"></span><span class="text-sm font-bold">运行中…</span></div><div class="bar-track"><div class="bar-fill" id="mb" style="width:0%;transition:width .2s ease;"></div></div></div>';
-      let p = 0;
-      const t = setInterval(() => {
-        p += Math.random() * 12 + 6; if (p > 100) p = 100;
-        const el = wrap.querySelector("#mb"); if (el) el.style.width = p + "%";
-        if (p >= 100) { clearInterval(t); box.innerHTML = mockOutput(s); }
-      }, 180);
-    };
-  }
+    if (!isLoggedIn) return;
 
-  function mockOutput(s) {
-    const samples = {
-      "筛项目": '<div class="hairline rounded-xl p-5"><div class="text-xs text-dim mb-2">📄 筛项目结果（示例）</div><div class="font-serif-cn text-base font-bold text-gold-2">凌芯半导体 · 综合评级 A（83 分）</div><div class="grid grid-cols-3 gap-2 mt-3 text-center text-xs"><div class="hairline rounded p-2"><div class="text-dim">赛道</div><div class="text-gold-2">9.4</div></div><div class="hairline rounded p-2"><div class="text-dim">团队</div><div class="text-gold-2">9.0</div></div><div class="hairline rounded p-2"><div class="text-dim">技术</div><div class="text-gold-2">9.2</div></div></div><div class="text-xs text-mute mt-3 leading-6">✓ 红线快筛全部通过 · ⚠ 客户集中度需关注 · 建议进入尽调阶段</div></div>',
-      "可比公司分析": '<div class="hairline rounded-xl p-5"><div class="text-xs text-dim mb-2">📊 可比公司估值矩阵</div><table class="w-full text-xs font-mono"><tr class="text-dim border-b border-white/5"><td class="py-2">公司</td><td class="text-right">PE(25E)</td><td class="text-right">PS(25E)</td><td class="text-right">市值(亿)</td></tr><tr class="border-b border-white/5"><td class="py-1.5">兆易创新</td><td class="text-right text-gold-2">68x</td><td class="text-right text-gold-2">12x</td><td class="text-right">820</td></tr><tr class="border-b border-white/5"><td class="py-1.5">芯海科技</td><td class="text-right text-gold-2">82x</td><td class="text-right text-gold-2">15x</td><td class="text-right">95</td></tr><tr><td class="py-1.5">纳芯微</td><td class="text-right text-gold-2">76x</td><td class="text-right text-gold-2">14x</td><td class="text-right">218</td></tr></table><div class="mt-3 text-sm">隐含估值区间：<span class="text-gold-2 font-bold">¥38–46 亿</span>，本轮 ¥45 亿位于区间上沿</div></div>',
-      "测收益": '<div class="hairline rounded-xl p-5"><div class="text-xs text-dim mb-2">📈 IRR / MOIC 测算</div><div class="grid grid-cols-3 gap-3 text-center"><div class="hairline rounded p-3"><div class="text-dim text-xs">基准情景</div><div class="text-gold-2 font-mono text-lg">IRR 32%</div><div class="text-xs text-mute">MOIC 3.6x · 5 年</div></div><div class="hairline rounded p-3"><div class="text-dim text-xs">乐观情景</div><div class="text-gold-2 font-mono text-lg">IRR 48%</div><div class="text-xs text-mute">MOIC 5.8x · 5 年</div></div><div class="hairline rounded p-3"><div class="text-dim text-xs">保守情景</div><div class="text-gold-2 font-mono text-lg">IRR 18%</div><div class="text-xs text-mute">MOIC 2.0x · 5 年</div></div></div></div>',
-      "退出分析": '<div class="hairline rounded-xl p-5"><div class="text-xs text-dim mb-2">🚪 退出路径对比</div><div class="space-y-2 text-xs"><div class="flex justify-between hairline rounded px-3 py-2"><span>科创板 IPO</span><span class="text-gold-2 font-mono">3-4 年 · 推荐 ★★★★★</span></div><div class="flex justify-between hairline rounded px-3 py-2"><span>港股 IPO</span><span class="font-mono text-mute">2-3 年 · ★★★</span></div><div class="flex justify-between hairline rounded px-3 py-2"><span>并购退出</span><span class="font-mono text-mute">1-2 年 · ★★★</span></div><div class="flex justify-between hairline rounded px-3 py-2"><span>S 基金转让</span><span class="font-mono text-mute">0.5 年 · ★★</span></div></div></div>',
+    wrap.querySelector("#skill-run").onclick = async function () {
+      const btn = this;
+      const context = wrap.querySelector("#skill-ctx").value.trim();
+      const aiWrap = wrap.querySelector("#skill-ai-wrap");
+      const out = wrap.querySelector("#skill-ai-output");
+      const statusBox = wrap.querySelector("#skill-ai-status");
+      const statusTxt = wrap.querySelector("#skill-ai-status-text");
+
+      btn.disabled = true;
+      aiWrap.style.display = "block";
+      out.innerHTML = '<span class="ai-cursor"></span>';
+      statusBox.classList.remove("success", "error");
+      statusTxt.textContent = "连接 MiniMax 中…";
+
+      let raw = "";
+      let firstChunk = true;
+      await VCPlat.streamAI({
+        endpoint: "/api/skill-run",
+        payload: { skill: s.id, input: context || s.desc },
+        onChunk: (delta) => {
+          if (firstChunk) { statusTxt.textContent = "AI 流式输出中…"; firstChunk = false; }
+          raw += delta;
+          out.innerHTML = VCPlat.mdToHtml(raw) + '<span class="ai-cursor"></span>';
+          out.parentElement.scrollTop = out.parentElement.scrollHeight;
+        },
+        onUsage: (u) => console.log("[skill usage]", u),
+        onDone: () => {
+          out.innerHTML = VCPlat.mdToHtml(raw);
+          statusBox.classList.add("success");
+          statusTxt.textContent = "执行完成";
+          btn.disabled = false;
+        },
+        onError: (e) => {
+          statusBox.classList.add("error");
+          statusTxt.textContent = "调用失败：" + e.message;
+          btn.disabled = false;
+        }
+      });
     };
-    const html = samples[s.name] || '<div class="hairline rounded-xl p-5 text-mute text-sm">✅ 已生成《' + s.name + '》示例输出。在生产环境中，此处将渲染由真实大模型产出的完整内容。</div>';
-    return html;
   }
 
   // ---------- 暴露 ----------

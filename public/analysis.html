@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>AI 智能分析 · 启明资本</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="assets/theme.css" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body data-page="analysis">
+
+<header class="top-nav">
+  <div class="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+        <path d="M20 3 L36 12 L36 28 L20 37 L4 28 L4 12 Z" stroke="#d4af37" stroke-width="1.4" fill="rgba(212,175,55,0.06)"/>
+        <path d="M14 24 L20 14 L26 24" stroke="#f1d77a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="leading-tight">
+        <div class="font-serif-cn text-[18px] tracking-wider brand-wordmark font-bold">启明资本</div>
+        <div class="text-[10px] text-dim tracking-[3px] uppercase">QIMING · VC PLATFORM</div>
+      </div>
+    </a>
+    <nav class="hidden md:flex items-center gap-1">
+      <a href="index.html"    class="nav-link" data-page="home">首页</a>
+      <a href="roadshow.html" class="nav-link" data-page="roadshow">项目路演</a>
+      <a href="upload.html"   class="nav-link" data-page="upload">BP 上传</a>
+      <a href="analysis.html" class="nav-link" data-page="analysis">AI 智能分析</a>
+      <a href="workshop.html" class="nav-link" data-page="workshop">投研工坊</a>
+    </nav>
+    <div id="nav-auth"></div>
+  </div>
+</header>
+
+<!-- ========== 主容器 ========== -->
+<div id="app-container" class="max-w-[1280px] mx-auto px-6 pt-10 pb-20">
+
+  <!-- State 1: BP 选择列表 -->
+  <div id="state-list" style="display:none;">
+    <div class="glass corner-deco p-7 mb-6">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="chip chip-gold">AI 智能投研分析</span>
+      </div>
+      <h1 class="font-serif-cn text-3xl md:text-4xl font-black leading-tight">选择 BP 开始分析</h1>
+      <p class="text-mute text-sm mt-2">选择一份已上传的商业计划书，AI 将为您生成专业的投资分析报告。</p>
+
+      <!-- Admin Tab 切换 -->
+      <div id="admin-tabs" style="display:none;" class="flex gap-2 mt-5">
+        <button id="tab-mine" onclick="switchTab('mine')" class="btn btn-gold btn-sm">我的 BP</button>
+        <button id="tab-all" onclick="switchTab('all')" class="btn btn-ghost btn-sm">全部 BP</button>
+      </div>
+
+      <!-- 上传按钮 -->
+      <div class="mt-5">
+        <button onclick="showUploadModal()" class="btn btn-gold">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 inline -mt-0.5 mr-1"><path d="M8 1v9M4 5l4-4 4 4M1 11v2a2 2 0 002 2h10a2 2 0 002-2v-2"/></svg>
+          上传新 BP
+        </button>
+      </div>
+    </div>
+
+    <!-- BP 卡片网格 -->
+    <div id="bp-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+    <!-- 空状态 -->
+    <div id="empty-state" style="display:none;" class="glass p-12 text-center">
+      <div class="text-6xl mb-4 opacity-30">📄</div>
+      <div class="font-serif-cn text-xl font-bold mb-2">您还未上传 BP</div>
+      <div class="text-mute text-sm mb-5">请先上传商业计划书，再进行 AI 智能分析</div>
+      <button onclick="showUploadModal()" class="btn btn-gold">上传 BP</button>
+    </div>
+  </div>
+
+  <!-- 上传弹窗 -->
+  <div id="upload-modal" style="display:none;" class="fixed inset-0 z-50 flex items-center justify-center" onclick="if(event.target===this)hideUploadModal()">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="relative glass corner-deco p-8 w-full max-w-lg mx-4">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="font-serif-cn text-xl font-bold">上传商业计划书</h2>
+        <button onclick="hideUploadModal()" class="text-dim hover:text-white text-xl">&times;</button>
+      </div>
+
+      <!-- 拖拽/选择上传区 -->
+      <div id="upload-drop-zone" class="hairline rounded-xl p-8 text-center cursor-pointer hover:border-gold-2/50 transition-colors"
+           onclick="document.getElementById('upload-file-input').click()"
+           ondragover="event.preventDefault();this.classList.add('border-gold-2/50')"
+           ondragleave="this.classList.remove('border-gold-2/50')"
+           ondrop="event.preventDefault();this.classList.remove('border-gold-2/50');handleUploadFiles(event.dataTransfer.files)">
+        <div class="text-4xl mb-3 opacity-30">📁</div>
+        <div class="text-sm text-mute mb-1">点击选择文件或拖拽到此处</div>
+        <div class="text-xs text-dim">支持 PDF、PPT、PPTX、DOC、DOCX、TXT</div>
+        <input id="upload-file-input" type="file" accept=".pdf,.ppt,.pptx,.doc,.docx,.txt" style="display:none" onchange="handleUploadFiles(this.files)" />
+      </div>
+
+      <!-- 上传进度 -->
+      <div id="upload-progress" style="display:none;" class="mt-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:rgba(212,175,55,.1);">📄</div>
+          <div class="flex-1 min-w-0">
+            <div id="upload-filename" class="text-sm font-bold truncate"></div>
+            <div id="upload-status" class="text-xs text-dim mt-1">上传中...</div>
+          </div>
+        </div>
+        <div class="mt-3 h-1.5 rounded-full overflow-hidden" style="background:rgba(255,255,255,.06);">
+          <div id="upload-bar" class="h-full rounded-full transition-all duration-300" style="width:0%;background:linear-gradient(90deg,#f1d77a,#b88a1f);"></div>
+        </div>
+      </div>
+
+      <!-- 上传成功 -->
+      <div id="upload-success" style="display:none;" class="mt-4 glass p-4 text-center">
+        <div class="text-emerald-300 text-lg mb-2">&#10003; 上传成功</div>
+        <div id="upload-result-info" class="text-xs text-mute mb-3"></div>
+        <button id="upload-analyze-btn" class="btn btn-gold btn-sm" onclick="startAnalysisFromUpload()">立即 AI 分析</button>
+        <button class="btn btn-ghost btn-sm ml-2" onclick="hideUploadModal();loadBPList()">稍后分析</button>
+      </div>
+
+      <!-- 上传失败 -->
+      <div id="upload-error" style="display:none;" class="mt-4 glass p-4 text-center">
+        <div class="text-red-400 text-sm" id="upload-error-msg"></div>
+        <button class="btn btn-ghost btn-sm mt-3" onclick="resetUploadState()">重试</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: 查看报告 -->
+  <div id="state-report" style="display:none;">
+    <div class="glass corner-deco p-7">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-3 mb-3">
+            <span class="chip chip-gold">AI 智能投研报告</span>
+            <span id="report-time-chip" class="chip"></span>
+          </div>
+          <h1 id="report-title" class="font-serif-cn text-3xl md:text-4xl font-black leading-tight"></h1>
+          <div id="report-meta" class="flex flex-wrap items-center gap-3 mt-3 text-sm text-mute"></div>
+        </div>
+        <div id="report-score-area" class="flex items-center gap-5" style="display:none;">
+          <div class="text-right">
+            <div class="text-[11px] text-dim tracking-widest">AI 综合评分</div>
+            <div id="report-score" class="font-serif-cn text-5xl brand-wordmark font-black"></div>
+          </div>
+          <svg width="92" height="92" viewBox="0 0 100 100" class="-rotate-90">
+            <circle cx="50" cy="50" r="44" stroke="rgba(212,175,55,.15)" stroke-width="6" fill="none"/>
+            <circle id="score-ring" cx="50" cy="50" r="44" stroke="url(#sg)" stroke-width="6" fill="none"
+                    stroke-dasharray="276" stroke-dashoffset="276" stroke-linecap="round"/>
+            <defs><linearGradient id="sg" x1="0" x2="1"><stop offset="0" stop-color="#f1d77a"/><stop offset="1" stop-color="#b88a1f"/></linearGradient></defs>
+          </svg>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mt-6 flex-wrap">
+        <button id="btn-regen" class="btn-ai" onclick="startAnalysis(currentBpId)">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0L9.5 5.5L15 7L9.5 8.5L8 14L6.5 8.5L1 7L6.5 5.5L8 0Z"/></svg>
+          重新生成 AI 报告
+        </button>
+        <a href="upload.html" class="btn btn-ghost">上传新 BP</a>
+        <button onclick="goToList()" class="btn btn-ghost">返回 BP 列表</button>
+      </div>
+    </div>
+
+    <!-- 报告正文 -->
+    <div id="report-content" class="mt-6 glass p-7 prose-ai"></div>
+  </div>
+
+  <!-- State 3: 流式分析 -->
+  <div id="state-analyze" style="display:none;">
+    <div class="glass corner-deco p-7">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="chip chip-gold">AI 智能投研分析</span>
+        <div class="ai-status" id="analyze-status"><span class="dot"></span><span id="analyze-status-text">连接 MiniMax 中…</span></div>
+      </div>
+      <h1 id="analyze-title" class="font-serif-cn text-2xl font-black leading-tight"></h1>
+      <div id="analyze-meta" class="flex flex-wrap items-center gap-3 mt-2 text-sm text-mute"></div>
+
+      <div class="flex gap-2 mt-5 flex-wrap">
+        <button onclick="goToList()" class="btn btn-ghost">返回列表</button>
+      </div>
+    </div>
+
+    <div class="mt-6 glass p-7">
+      <div id="analyze-output" class="ai-stream"></div>
+    </div>
+  </div>
+
+  <!-- 未登录提示 -->
+  <div id="state-login" style="display:none;" class="glass p-12 text-center">
+    <div class="text-6xl mb-4 opacity-30">🔒</div>
+    <div class="font-serif-cn text-xl font-bold mb-2">请先登录</div>
+    <div class="text-mute text-sm mb-5">AI 智能分析需要登录后才能使用</div>
+    <a href="auth.html" class="btn btn-gold">前往登录</a>
+  </div>
+</div>
+
+<footer class="site-footer mt-20">
+  <div class="max-w-[1280px] mx-auto px-6 flex justify-between text-[12px] text-dim">
+    <span>&copy; 2026 启明资本 &middot; QIMING VC PLATFORM（仅供 Demo 演示）</span>
+    <span>沪ICP备XXXXXXXX号</span>
+  </div>
+</footer>
+
+<script src="assets/api.js"></script>
+<script>
+/* ===== 全局状态 ===== */
+let currentBpId = null;
+let currentTab = 'mine';
+
+const urlParams = new URLSearchParams(location.search);
+const paramBpId = urlParams.get('bpId');
+const paramAction = urlParams.get('action');
+const paramView = urlParams.get('view');
+
+/* ===== 页面初始化 ===== */
+(function init() {
+  if (!VCPlat.isLoggedIn()) {
+    showState('login');
+    return;
+  }
+
+  // 管理员显示 Tab
+  if (VCPlat.isAdmin()) {
+    document.getElementById('admin-tabs').style.display = 'flex';
+  }
+
+  if (paramBpId && paramAction === 'analyze') {
+    // 直接开始分析
+    startAnalysis(parseInt(paramBpId));
+  } else if (paramBpId && paramView === 'report') {
+    // 查看报告
+    viewReport(parseInt(paramBpId));
+  } else {
+    // 显示 BP 列表
+    loadBPList();
+  }
+})();
+
+/* ===== 状态切换 ===== */
+function showState(state) {
+  document.getElementById('state-list').style.display = state === 'list' ? 'block' : 'none';
+  document.getElementById('state-report').style.display = state === 'report' ? 'block' : 'none';
+  document.getElementById('state-analyze').style.display = state === 'analyze' ? 'block' : 'none';
+  document.getElementById('state-login').style.display = state === 'login' ? 'block' : 'none';
+}
+
+/* ===== Tab 切换 ===== */
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tab-mine').className = tab === 'mine' ? 'btn btn-gold btn-sm' : 'btn btn-ghost btn-sm';
+  document.getElementById('tab-all').className = tab === 'all' ? 'btn btn-gold btn-sm' : 'btn btn-ghost btn-sm';
+  loadBPList();
+}
+
+/* ===== State 1: 加载 BP 列表 ===== */
+async function loadBPList() {
+  showState('list');
+  const grid = document.getElementById('bp-grid');
+  const empty = document.getElementById('empty-state');
+  grid.innerHTML = '<div class="text-center text-dim py-10">加载中...</div>';
+  empty.style.display = 'none';
+
+  try {
+    const endpoint = (VCPlat.isAdmin() && currentTab === 'all') ? '/api/bp/list-all' : '/api/bp/list';
+    const data = await VCPlat.api(endpoint);
+    const uploads = data.uploads || [];
+
+    if (uploads.length === 0) {
+      grid.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+
+    grid.innerHTML = uploads.map(bp => {
+      const hasReport = !!bp.report_id;
+      const textInfo = bp.text_length > 0 ? `已提取 ${(bp.text_length / 1000).toFixed(1)}k 字` : '未提取文本';
+      const statusChip = hasReport
+        ? '<span class="chip" style="color:#6ee7b7;border-color:rgba(110,231,183,.3);">&#10003; 已分析</span>'
+        : '<span class="chip" style="color:#fbbf24;border-color:rgba(251,191,36,.3);">&#9203; 待分析</span>';
+      const userInfo = bp.user_name ? `<div class="text-xs text-dim mt-2">上传者：${bp.user_name}${bp.user_email ? ' (' + bp.user_email + ')' : ''}</div>` : '';
+      const dateStr = bp.created_at ? new Date(bp.created_at).toLocaleDateString('zh-CN') : '';
+
+      return `
+        <div class="glass p-5 flex flex-col">
+          <div class="flex items-start justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg" style="background:rgba(212,175,55,.1);">📄</div>
+              <div>
+                <div class="font-bold text-sm truncate max-w-[200px]" title="${bp.original_filename}">${bp.original_filename}</div>
+                <div class="text-xs text-dim">${dateStr} &middot; ${formatSize(bp.file_size)}</div>
+              </div>
+            </div>
+            ${statusChip}
+          </div>
+          <div class="text-xs text-mute mb-3">${textInfo}${bp.parse_status === 'done' ? ' &middot; AI 已解析' : ''}</div>
+          ${userInfo}
+          <div class="mt-auto pt-3 flex gap-2 flex-wrap">
+            ${hasReport
+              ? `<button class="btn btn-gold btn-sm flex-1" onclick="viewReport(${bp.id})">查看报告</button>
+                 <button class="btn btn-ghost btn-sm" onclick="startAnalysis(${bp.id})">重新分析</button>`
+              : bp.text_length > 0
+                ? `<button class="btn btn-gold btn-sm flex-1" onclick="startAnalysis(${bp.id})">开始 AI 分析</button>`
+                : `<button class="btn btn-ghost btn-sm flex-1 opacity-50" disabled title="该 BP 未提取到文本">无法分析</button>`
+            }
+            <button class="btn btn-ghost btn-sm" onclick="renameBP(${bp.id}, '${bp.original_filename.replace(/'/g, "\\'")}')" title="重命名">&#9998;</button>
+            <button class="btn btn-ghost btn-sm text-red-400 hover:text-red-300" onclick="deleteBP(${bp.id}, '${bp.original_filename.replace(/'/g, "\\'")}')" title="删除">&#10005;</button>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    grid.innerHTML = `<div class="text-center text-red-400 py-10">加载失败：${e.message}</div>`;
+  }
+}
+
+/* ===== State 2: 查看报告 ===== */
+async function viewReport(bpId) {
+  currentBpId = bpId;
+  showState('report');
+
+  try {
+    const data = await VCPlat.api('/api/bp/' + bpId);
+    const report = data.report;
+    const bpName = data.original_filename || 'BP 文档';
+
+    // 填充头部
+    document.getElementById('report-title').textContent = bpName;
+    document.getElementById('report-time-chip').textContent = report
+      ? new Date(report.created_at).toLocaleString('zh-CN') + ' 生成'
+      : '未生成';
+
+    // 元数据
+    const metaEl = document.getElementById('report-meta');
+    const parts = [bpName];
+    if (data.text_length) parts.push(`文本 ${(data.text_length / 1000).toFixed(1)}k 字`);
+    metaEl.innerHTML = parts.map(t => `<span>${t}</span>`).join('<span class="text-dim">|</span>');
+
+    if (report && report.content) {
+      // 显示评分
+      const scoreArea = document.getElementById('report-score-area');
+      const scoreEl = document.getElementById('report-score');
+      const ringEl = document.getElementById('score-ring');
+
+      // 尝试从报告中提取评分
+      const scoreMatch = report.content.match(/(\d{1,3})\s*[\/／]\s*100/);
+      const aiScore = report.ai_score || (scoreMatch ? parseInt(scoreMatch[1]) / 10 : null);
+
+      if (aiScore) {
+        scoreArea.style.display = 'flex';
+        scoreEl.textContent = aiScore.toFixed(1);
+        const pct = Math.min(aiScore / 10, 1);
+        const circumference = 2 * Math.PI * 44; // ~276
+        ringEl.setAttribute('stroke-dashoffset', String(circumference * (1 - pct)));
+      } else {
+        scoreArea.style.display = 'none';
+      }
+
+      // 渲染报告正文
+      document.getElementById('report-content').innerHTML = VCPlat.mdToHtml(report.content);
+    } else {
+      document.getElementById('report-score-area').style.display = 'none';
+      document.getElementById('report-content').innerHTML = `
+        <div class="text-center py-10">
+          <div class="text-mute mb-4">该 BP 尚未生成 AI 分析报告</div>
+          <button class="btn btn-gold" onclick="startAnalysis(${bpId})">开始 AI 分析</button>
+        </div>`;
+    }
+  } catch (e) {
+    document.getElementById('report-content').innerHTML = `<div class="text-red-400 py-10 text-center">加载失败：${e.message}</div>`;
+  }
+}
+
+/* ===== State 3: 开始 AI 分析 ===== */
+async function startAnalysis(bpId) {
+  currentBpId = bpId;
+  showState('analyze');
+
+  // 更新 URL（不刷新页面）
+  const newUrl = new URL(location);
+  newUrl.searchParams.set('bpId', bpId);
+  newUrl.searchParams.set('action', 'analyze');
+  history.pushState({}, '', newUrl);
+
+  try {
+    // 先获取 BP 元数据
+    const data = await VCPlat.api('/api/bp/' + bpId);
+    const bpName = data.original_filename || 'BP 文档';
+
+    document.getElementById('analyze-title').textContent = bpName;
+    const parts = [bpName];
+    if (data.text_length) parts.push(`文本 ${(data.text_length / 1000).toFixed(1)}k 字`);
+    document.getElementById('analyze-meta').innerHTML = parts.map(t => `<span>${t}</span>`).join('<span class="text-dim">|</span>');
+  } catch (e) {
+    document.getElementById('analyze-title').textContent = 'AI 投资分析';
+  }
+
+  // 流式输出
+  const output = document.getElementById('analyze-output');
+  const statusBox = document.getElementById('analyze-status');
+  const statusTxt = document.getElementById('analyze-status-text');
+  output.innerHTML = '<span class="ai-cursor"></span>';
+  statusBox.classList.remove('success', 'error');
+  statusTxt.textContent = '连接 MiniMax 中…';
+
+  let raw = '';
+  let firstChunk = true;
+
+  await VCPlat.streamAI({
+    endpoint: '/api/ai-analyze',
+    payload: { bpUploadId: bpId },
+    onChunk: (delta) => {
+      if (firstChunk) { statusTxt.textContent = 'AI 流式输出中…'; firstChunk = false; }
+      raw += delta;
+      output.innerHTML = VCPlat.mdToHtml(raw) + '<span class="ai-cursor"></span>';
+      output.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    },
+    onUsage: (u) => console.log('[MiniMax usage]', u),
+    onDone: () => {
+      output.innerHTML = VCPlat.mdToHtml(raw);
+      statusBox.classList.add('success');
+      statusTxt.textContent = '报告生成完成';
+
+      // 添加"查看报告"按钮
+      const doneBar = document.createElement('div');
+      doneBar.className = 'mt-6 pt-5 border-t border-white/5 text-center';
+      doneBar.innerHTML = `
+        <div class="text-gold-2 font-serif-cn text-lg font-bold mb-3">✓ 分析完成</div>
+        <button class="btn btn-gold" onclick="viewReport(${bpId})">查看完整报告</button>
+        <button class="btn btn-ghost ml-2" onclick="goToList()">返回列表</button>
+      `;
+      output.parentElement.appendChild(doneBar);
+
+      // 更新 URL 为报告查看模式
+      const newUrl = new URL(location);
+      newUrl.searchParams.set('bpId', bpId);
+      newUrl.searchParams.set('action', 'analyze');
+      newUrl.searchParams.set('view', 'report');
+      history.replaceState({}, '', newUrl);
+    },
+    onError: (e) => {
+      statusBox.classList.add('error');
+      statusTxt.textContent = '调用失败：' + e.message;
+      output.innerHTML += `<div class="text-red-400 mt-4">错误：${e.message}</div>`;
+    }
+  });
+}
+
+/* ===== 工具函数 ===== */
+function goToList() {
+  const newUrl = new URL(location);
+  newUrl.searchParams.delete('bpId');
+  newUrl.searchParams.delete('action');
+  newUrl.searchParams.delete('view');
+  history.pushState({}, '', newUrl);
+  loadBPList();
+}
+
+function formatSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+/* ===== 内嵌上传功能 ===== */
+let lastUploadedBpId = null;
+
+function showUploadModal() {
+  document.getElementById('upload-modal').style.display = 'flex';
+  resetUploadState();
+}
+
+function hideUploadModal() {
+  document.getElementById('upload-modal').style.display = 'none';
+}
+
+function resetUploadState() {
+  document.getElementById('upload-progress').style.display = 'none';
+  document.getElementById('upload-success').style.display = 'none';
+  document.getElementById('upload-error').style.display = 'none';
+  document.getElementById('upload-drop-zone').style.display = 'block';
+  document.getElementById('upload-file-input').value = '';
+}
+
+async function handleUploadFiles(files) {
+  if (!files || !files.length) return;
+  const file = files[0];
+
+  // 检查文件类型
+  const ext = file.name.split('.').pop().toLowerCase();
+  const allowed = ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'txt'];
+  if (!allowed.includes(ext)) {
+    document.getElementById('upload-error').style.display = 'block';
+    document.getElementById('upload-error-msg').textContent = '不支持的文件类型 .' + ext + '，仅支持：' + allowed.join(', ');
+    return;
+  }
+
+  // 显示进度
+  document.getElementById('upload-drop-zone').style.display = 'none';
+  document.getElementById('upload-progress').style.display = 'block';
+  document.getElementById('upload-filename').textContent = file.name;
+  document.getElementById('upload-status').textContent = '上传中...';
+  document.getElementById('upload-bar').style.width = '30%';
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const resp = await fetch('/api/bp/upload', {
+      method: 'POST',
+      headers: VCPlat.authHeaders(),
+      body: formData
+    });
+
+    document.getElementById('upload-bar').style.width = '90%';
+
+    if (!resp.ok) {
+      let detail = '';
+      try { detail = (await resp.json()).error || ''; } catch {}
+      throw new Error(detail || '上传失败 (' + resp.status + ')');
+    }
+
+    const result = await resp.json();
+    lastUploadedBpId = result.id;
+
+    document.getElementById('upload-bar').style.width = '100%';
+    document.getElementById('upload-progress').style.display = 'none';
+    document.getElementById('upload-success').style.display = 'block';
+
+    const infoParts = [];
+    if (result.hasText) infoParts.push('已提取 ' + (result.textLength / 1000).toFixed(1) + 'k 字');
+    else infoParts.push('未提取到文本');
+    if (result.pageCount) infoParts.push(result.pageCount + ' 页');
+    document.getElementById('upload-result-info').textContent = infoParts.join(' · ');
+
+    // 如果没提取到文本，提示用户
+    if (!result.hasText) {
+      document.getElementById('upload-analyze-btn').textContent = '该 BP 无文本，暂不可分析';
+      document.getElementById('upload-analyze-btn').disabled = true;
+      document.getElementById('upload-analyze-btn').className = 'btn btn-ghost btn-sm opacity-50';
+    } else {
+      document.getElementById('upload-analyze-btn').textContent = '立即 AI 分析';
+      document.getElementById('upload-analyze-btn').disabled = false;
+      document.getElementById('upload-analyze-btn').className = 'btn btn-gold btn-sm';
+    }
+  } catch (e) {
+    document.getElementById('upload-progress').style.display = 'none';
+    document.getElementById('upload-error').style.display = 'block';
+    document.getElementById('upload-error-msg').textContent = e.message;
+  }
+}
+
+function startAnalysisFromUpload() {
+  if (!lastUploadedBpId) return;
+  hideUploadModal();
+  startAnalysis(lastUploadedBpId);
+}
+
+/* ===== BP 管理操作 ===== */
+async function renameBP(bpId, currentName) {
+  const newName = prompt('请输入新的文件名：', currentName);
+  if (!newName || newName.trim() === currentName) return;
+  try {
+    await VCPlat.api('/api/bp/' + bpId, { method: 'PATCH', body: { name: newName.trim() } });
+    loadBPList();
+  } catch (e) {
+    alert('重命名失败：' + e.message);
+  }
+}
+
+async function deleteBP(bpId, name) {
+  if (!confirm(`确认删除「${name}」？\n\n该操作将同时删除关联的 AI 分析报告，且不可恢复。`)) return;
+  try {
+    await VCPlat.api('/api/bp/' + bpId, { method: 'DELETE' });
+    loadBPList();
+  } catch (e) {
+    alert('删除失败：' + e.message);
+  }
+}
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 /* ============================================================
-   阿里资产 · 风险投资平台 — 深色科技金融主题
+   启明资本 · 风险投资平台 — 深色科技金融主题
    Dark Tech Finance Theme — Shared Stylesheet
 ============================================================ */
 
@@ -289,3 +289,84 @@ html, body {
   padding: 36px 0; margin-top: 60px;
   color: var(--text-3); font-size: 13px;
 }
+
+/* ===== AI 流式输出 markdown 渲染样式 ===== */
+.ai-stream {
+  font-size: 14px; line-height: 1.85; color: var(--text-1);
+}
+.ai-stream h1, .ai-stream h2, .ai-stream h3, .ai-stream h4 {
+  color: var(--gold-2); font-weight: 600; margin: 1.2em 0 0.6em;
+  letter-spacing: 0.02em;
+}
+.ai-stream h1 { font-size: 22px; border-left: 3px solid var(--gold-1); padding-left: 12px; }
+.ai-stream h2 { font-size: 18px; border-bottom: 1px solid var(--line-soft); padding-bottom: 8px; }
+.ai-stream h3 { font-size: 16px; color: var(--text-1); }
+.ai-stream h4 { font-size: 14px; color: var(--text-2); }
+.ai-stream p { margin: 0.6em 0; color: var(--text-2); }
+.ai-stream strong { color: var(--gold-2); font-weight: 600; }
+.ai-stream code {
+  background: rgba(212,175,55,0.1); color: var(--gold-2);
+  padding: 2px 6px; border-radius: 3px; font-size: 12.5px;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+}
+.ai-stream ul, .ai-stream ol { margin: 0.6em 0 0.6em 1.4em; color: var(--text-2); }
+.ai-stream li { margin: 0.3em 0; }
+.ai-stream .md-table {
+  width: 100%; border-collapse: collapse; margin: 1em 0;
+  background: rgba(255,255,255,0.02); font-size: 13px;
+}
+.ai-stream .md-table th {
+  background: rgba(212,175,55,0.08); color: var(--gold-2);
+  padding: 10px 12px; text-align: left; font-weight: 600;
+  border-bottom: 1px solid var(--line);
+}
+.ai-stream .md-table td {
+  padding: 9px 12px; border-bottom: 1px solid var(--line-soft);
+  color: var(--text-2);
+}
+.ai-stream .md-table tr:hover td { background: rgba(212,175,55,0.04); }
+
+/* 流式光标 */
+.ai-cursor::after {
+  content: '▋'; color: var(--gold-1);
+  animation: blink 0.9s step-end infinite;
+  margin-left: 2px;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* AI 状态条 */
+.ai-status {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: 999px;
+  background: rgba(79,141,255,0.1); border: 1px solid rgba(79,141,255,0.3);
+  color: #a8c4ff; font-size: 12.5px; font-weight: 500;
+}
+.ai-status.success {
+  background: rgba(64,200,140,0.1); border-color: rgba(64,200,140,0.3); color: #6ce0a4;
+}
+.ai-status.error {
+  background: rgba(232,90,90,0.12); border-color: rgba(232,90,90,0.4); color: #ff9b9b;
+}
+.ai-status .dot {
+  width: 7px; height: 7px; border-radius: 50%; background: currentColor;
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+.ai-status.success .dot, .ai-status.error .dot { animation: none; }
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.4; }
+}
+
+/* AI 触发主按钮 */
+.btn-ai {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 8px;
+  background: linear-gradient(135deg, #4f8dff 0%, #8b5cf6 100%);
+  color: #fff; font-weight: 600; font-size: 13.5px;
+  border: 0; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(79,141,255,0.35);
+  transition: transform .15s, box-shadow .2s;
+}
+.btn-ai:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(79,141,255,0.5); }
+.btn-ai:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-ai svg { width: 14px; height: 14px; }

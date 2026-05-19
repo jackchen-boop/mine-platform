@@ -83,7 +83,7 @@
         </svg>
         <div class="font-serif-cn text-lg font-bold mt-4">拖拽文件到此处，或点击选择</div>
         <div class="text-mute text-xs mt-2">支持 .ppt / .pptx / .pdf / .docx / .mp4 / .mp3 · 单文件 ≤ 200MB</div>
-        <button class="btn btn-gold mt-5" onclick="simulateUpload()">选择文件</button>
+        <button class="btn btn-gold mt-5" onclick="document.getElementById('file-input').click()">选择文件</button>
         <input type="file" id="file-input" class="hidden" />
 
         <div class="flex gap-2 mt-6 text-xs">
@@ -136,20 +136,26 @@
       </div>
     </div>
 
-    <!-- API 接入状态 -->
-    <div class="glass p-5" style="border-color:rgba(79,141,255,.3);">
-      <div class="flex items-center justify-between mb-2">
-        <div class="text-sm font-bold text-blue">⚙️ AI 引擎接入状态（开发模式）</div>
-        <span class="chip chip-blue">DEV</span>
+    <!-- API 接入状态：真 AI 解析交互区 -->
+    <div class="glass p-5" id="ai-parse-card" style="border-color:rgba(79,141,255,.3);">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-sm font-bold text-blue">⚡ MiniMax AI · BP 智能解析</div>
+        <span class="chip chip-blue" id="ai-engine-tag">LIVE</span>
       </div>
-      <p class="text-mute text-xs leading-6 mt-2">
-        当前为前端 Demo 演示，已预留以下后端接口位，待对接真实多模态大模型：
+      <p class="text-mute text-xs leading-6 mt-1 mb-3">
+        粘贴 BP 摘要 / 公司介绍 / 项目描述（≥ 50 字），AI 将抽取 8 个核心要素并给出投资官初步判断。
       </p>
-      <div class="mt-3 space-y-1.5 font-mono text-[12px]">
-        <div class="flex"><span class="text-blue mr-2 w-12">POST</span><span class="text-gold-2">/api/v1/bp/upload</span><span class="text-dim ml-auto">— 文件上传 + 病毒扫描</span></div>
-        <div class="flex"><span class="text-blue mr-2 w-12">POST</span><span class="text-gold-2">/api/v1/bp/parse</span><span class="text-dim ml-auto">— 多模态结构化抽取</span></div>
-        <div class="flex"><span class="text-blue mr-2 w-12">POST</span><span class="text-gold-2">/api/v1/ai/analyze</span><span class="text-dim ml-auto">— 调用大模型生成报告</span></div>
-        <div class="flex"><span class="text-blue mr-2 w-12">GET </span><span class="text-gold-2">/api/v1/job/:id/status</span><span class="text-dim ml-auto">— 异步任务状态轮询</span></div>
+      <textarea id="bp-text" rows="6"
+                class="input w-full text-[13px] leading-6"
+                style="resize:vertical; min-height:120px;"
+                placeholder="例：凌芯半导体科技（苏州）有限公司，成立于 2019 年，专注车规级 MCU 芯片研发。创始人王立曾任 NXP 资深架构师，CTO 陈浩来自中科院微电子所。2024 年营收 2.13 亿元，毛利率 34.2%；2025 年预计营收 4.28 亿元。本轮 B 轮拟融资 5 亿元，投后估值 45 亿元；已通过 AEC-Q100 认证，进入吉利、比亚迪、零跑供应链..."></textarea>
+      <div class="flex items-center gap-3 mt-3">
+        <button id="ai-parse-btn" class="btn-ai">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0L9.5 5.5L15 7L9.5 8.5L8 14L6.5 8.5L1 7L6.5 5.5L8 0Z"/></svg>
+          用 AI 解析
+        </button>
+        <span id="ai-parse-status" class="text-xs text-dim"></span>
+        <button id="ai-parse-sample" class="text-xs text-dim hover:text-gold ml-auto">填入示例</button>
       </div>
     </div>
   </div>
@@ -163,6 +169,14 @@
       </div>
 
       <div class="p-5">
+        <!-- AI 流式输出区（默认隐藏，点"用 AI 解析"后展开） -->
+        <div id="ai-output-wrap" style="display:none;" class="hairline rounded-xl p-4 mb-4">
+          <div class="flex items-center justify-between mb-3">
+            <div class="ai-status" id="ai-output-status"><span class="dot"></span><span id="ai-output-status-text">连接 MiniMax 中…</span></div>
+            <button id="ai-output-clear" class="text-[11px] text-dim hover:text-gold">清空</button>
+          </div>
+          <div id="ai-output" class="ai-stream"></div>
+        </div>
         <!-- progress -->
         <div class="hairline rounded-xl p-4 mb-4">
           <div class="flex justify-between text-xs mb-2"><span class="text-mute">解析进度</span><span id="prog-text" class="font-mono text-gold-2">0%</span></div>
@@ -217,7 +231,7 @@
             <div class="text-mute text-[12px] leading-6" id="ex-bm">—</div>
           </div>
 
-          <a href="analysis.html" class="btn btn-gold w-full justify-center" id="goto-analysis" style="display:none;padding:12px;">
+          <a href="#" class="btn btn-gold w-full justify-center" id="goto-analysis" style="display:none;padding:12px;">
             生成 AI 投研报告 →
           </a>
 
@@ -256,23 +270,25 @@
 
 <footer class="site-footer">
   <div class="max-w-[1280px] mx-auto px-6 flex justify-between text-[12px] text-dim">
-    <span>© 2026 阿里资产 · 启明资本（仅供 Demo 演示）</span>
+    <span>© 2026 启明资本 · QIMING VC PLATFORM（仅供 Demo 演示）</span>
     <span>沪ICP备XXXXXXXX号</span>
   </div>
 </footer>
 
-<script src="assets/app.js"></script>
+<script src="assets/api.js"></script>
 <script src="assets/skills.js"></script>
 <script>
 const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("file-input");
 dropzone.addEventListener("click", () => fileInput.click());
-fileInput.addEventListener("change", () => simulateUpload(fileInput.files[0]?.name));
+fileInput.addEventListener("change", () => {
+  if (fileInput.files[0]) doUploadFile(fileInput.files[0]);
+});
 dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.style.background = "rgba(212,175,55,.08)"; });
 dropzone.addEventListener("dragleave", () => dropzone.style.background = "");
 dropzone.addEventListener("drop", e => {
   e.preventDefault(); dropzone.style.background = "";
-  if (e.dataTransfer.files.length) simulateUpload(e.dataTransfer.files[0].name);
+  if (e.dataTransfer.files.length) doUploadFile(e.dataTransfer.files[0]);
 });
 
 document.querySelectorAll(".modality-card").forEach(card => {
@@ -282,72 +298,151 @@ document.querySelectorAll(".modality-card").forEach(card => {
   });
 });
 
-let fileCount = 0;
-function simulateUpload(name) {
-  name = name || "凌芯半导体_B轮商业计划书_v3.2.pdf";
-  fileCount++;
-  document.getElementById("file-count").textContent = fileCount;
+// 真实文件上传
+let lastBpId = null;
+async function doUploadFile(file) {
   const empty = document.getElementById("empty-tip");
   if (empty) empty.remove();
 
-  const id = "f" + Date.now();
+  const itemId = "f" + Date.now();
+  const ext = file.name.split('.').pop().toUpperCase() || 'FILE';
+  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
   document.getElementById("file-list").insertAdjacentHTML("beforeend",
-    '<div id="' + id + '" class="hairline rounded-lg px-4 py-3 flex items-center justify-between">' +
+    '<div id="' + itemId + '" class="hairline rounded-lg px-4 py-3 flex items-center justify-between">' +
     '  <div class="flex items-center gap-3">' +
     '    <div class="w-9 h-9 rounded-md flex items-center justify-center text-xs font-bold"' +
-    '         style="background:rgba(212,175,55,.1);border:1px solid var(--line);color:#f1d77a;">PDF</div>' +
+    '         style="background:rgba(212,175,55,.1);border:1px solid var(--line);color:#f1d77a;">' + ext + '</div>' +
     '    <div>' +
-    '      <div class="text-sm">' + name + '</div>' +
-    '      <div class="text-[11px] text-dim">12.4 MB · 上传完成</div>' +
+    '      <div class="text-sm">' + file.name + '</div>' +
+    '      <div class="text-[11px] text-dim" id="' + itemId + '-status">' + sizeMB + ' MB · 上传中…</div>' +
     '    </div>' +
     '  </div>' +
-    '  <span class="chip chip-green"><span class="pulse-dot"></span>已识别</span>' +
+    '  <span class="chip" style="background:rgba(79,141,255,.1);border-color:rgba(79,141,255,.4);color:#7cb8ff;" id="' + itemId + '-chip"><span class="pulse-dot"></span>上传中</span>' +
     '</div>'
   );
 
-  runParse();
-}
+  if (!VCPlat.isLoggedIn()) {
+    document.getElementById(itemId + '-status').textContent = sizeMB + ' MB · 请先登录';
+    document.getElementById(itemId + '-chip').outerHTML = '<a href="auth.html" class="chip" style="color:#fca5a5;border-color:rgba(239,68,68,.4);">请登录</a>';
+    return;
+  }
 
-function runParse() {
-  document.getElementById("parse-status").outerHTML =
-    '<span id="parse-status" class="chip" style="background:rgba(79,141,255,.1);border-color:rgba(79,141,255,.4);color:#7cb8ff;"><span class="pulse-dot"></span>解析中</span>';
-  document.getElementById("extracted").style.opacity = 1;
-  let p = 0;
-  const bar = document.getElementById("prog-bar");
-  const txt = document.getElementById("prog-text");
-  const t = setInterval(() => {
-    p += Math.random() * 8 + 4; if (p > 100) p = 100;
-    bar.style.width = p + "%"; txt.textContent = Math.floor(p) + "%";
-    if (p > 30) document.getElementById("step-1").classList.add("done");
-    if (p > 65) document.getElementById("step-2").classList.add("done");
-    if (p > 95) document.getElementById("step-3").classList.add("done");
-    if (p >= 100) {
-      clearInterval(t); fillExtract();
-      document.getElementById("parse-status").outerHTML =
-        '<span id="parse-status" class="chip chip-green"><span class="pulse-dot"></span>识别完成</span>';
-      document.getElementById("goto-analysis").style.display = "inline-flex";
-      document.getElementById("skill-actions").style.display  = "block";
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = VCPlat.getToken();
+    const resp = await fetch('/api/bp/upload', {
+      method: 'POST',
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+      body: formData
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || '上传失败 ' + resp.status);
     }
-  }, 220);
+    const result = await resp.json();
+    lastBpId = result.id || result.bp?.id;
+    document.getElementById("file-count").textContent =
+      parseInt(document.getElementById("file-count").textContent || '0') + 1;
+    document.getElementById(itemId + '-status').textContent = sizeMB + ' MB · 上传完成';
+    document.getElementById(itemId + '-chip').outerHTML =
+      '<span class="chip chip-green" id="' + itemId + '-chip"><span class="pulse-dot"></span>已上传</span>';
+
+    // 如果提取到文本，自动填入 AI 解析区
+    if (result.hasText && result.textLength > 50) {
+      try {
+        const detail = await VCPlat.api('/api/bp/' + lastBpId);
+        const extractedText = detail.bp?.extracted_text || detail.extractedText || '';
+        if (extractedText.length > 50) {
+          document.getElementById('bp-text').value = extractedText.slice(0, 8000);
+        }
+      } catch (e) { /* 忽略 */ }
+    }
+  } catch (e) {
+    document.getElementById(itemId + '-status').textContent = sizeMB + ' MB · 上传失败：' + e.message;
+    document.getElementById(itemId + '-chip').outerHTML =
+      '<span class="chip" style="color:#fca5a5;border-color:rgba(239,68,68,.4);">失败</span>';
+  }
 }
 
-function fillExtract() {
-  document.getElementById("ex-name").textContent   = "凌芯半导体科技（苏州）有限公司";
-  document.getElementById("ex-sector").textContent = "芯片半导体 · 车规级 MCU";
-  document.getElementById("ex-round").textContent  = "B 轮 · 含老股转让";
-  document.getElementById("ex-amt").textContent    = "¥5.0 亿";
-  document.getElementById("ex-val").textContent    = "¥45 亿（投后）";
-  document.getElementById("ex-team").innerHTML =
-    '<span class="chip">CEO 王立 · 前 NXP 资深架构师</span>' +
-    '<span class="chip">CTO 陈浩 · 中科院微电子所</span>' +
-    '<span class="chip">CFO 周敏 · 前安永合伙人</span>';
-  document.getElementById("ex-fin").innerHTML =
-    '<div class="hairline rounded py-2"><div class="text-[10px] text-dim">23年营收</div><div class="text-gold-2 font-mono">8,420</div></div>' +
-    '<div class="hairline rounded py-2"><div class="text-[10px] text-dim">24年营收</div><div class="text-gold-2 font-mono">21,360</div></div>' +
-    '<div class="hairline rounded py-2"><div class="text-[10px] text-dim">25年E营收</div><div class="text-gold-2 font-mono">42,800</div></div>';
-  document.getElementById("ex-bm").innerHTML =
-    "面向新能源车<strong class='text-gold-2'>车规级 MCU</strong>市场，提供 ASIL-B/D 等级控制芯片及配套软件栈，已通过 AEC-Q100 认证，2025 年导入<strong class='text-gold-2'>吉利、比亚迪、零跑</strong>三大主机厂供应链。";
-}
+/* ===== 真 AI 解析：调用 /api/bp/parse ===== */
+const SAMPLE_BP =
+  "公司名称：凌芯半导体科技（苏州）有限公司。成立于 2019 年，专注车规级 MCU 芯片研发。" +
+  "创始人 CEO 王立，前 NXP 资深架构师，10 年汽车电子经验；CTO 陈浩，中科院微电子所博士；CFO 周敏，前安永合伙人。" +
+  "2023 年营收 8420 万元，2024 年营收 2.136 亿元，毛利率分别为 28.6% / 34.2%，2025 年预计营收 4.28 亿元。" +
+  "已通过 AEC-Q100 车规认证，进入吉利、比亚迪、零跑供应链；累计交付 ASIL-B/D 等级控制芯片 1200 万颗。" +
+  "本轮 B 轮拟融资 5 亿元（含老股转让），投后估值 45 亿元，资金主要用于 7nm 工艺流片与海外团队组建。" +
+  "竞争对手主要是兆易创新、芯海科技、纳芯微、士兰微等本土厂商。";
+
+document.getElementById("ai-parse-sample").addEventListener("click", () => {
+  document.getElementById("bp-text").value = SAMPLE_BP;
+});
+
+document.getElementById("ai-output-clear").addEventListener("click", () => {
+  document.getElementById("ai-output").innerHTML = "";
+  document.getElementById("ai-output-wrap").style.display = "none";
+});
+
+document.getElementById("ai-parse-btn").addEventListener("click", async () => {
+  const txt = document.getElementById("bp-text").value.trim();
+  if (txt.length < 50) {
+    alert("请粘贴至少 50 字的 BP 内容");
+    return;
+  }
+  const btn = document.getElementById("ai-parse-btn");
+  const statusInline = document.getElementById("ai-parse-status");
+  const wrap = document.getElementById("ai-output-wrap");
+  const out = document.getElementById("ai-output");
+  const statusBox = document.getElementById("ai-output-status");
+  const statusTxt = document.getElementById("ai-output-status-text");
+
+  btn.disabled = true;
+  statusInline.textContent = "调用中…";
+  wrap.style.display = "block";
+  out.innerHTML = '<span class="ai-cursor"></span>';
+  statusBox.classList.remove("success", "error");
+  statusTxt.textContent = "连接 MiniMax 中…";
+  document.getElementById("parse-status").outerHTML =
+    '<span id="parse-status" class="chip" style="background:rgba(79,141,255,.1);border-color:rgba(79,141,255,.4);color:#7cb8ff;"><span class="pulse-dot"></span>AI 解析中</span>';
+
+  let raw = "";
+  let firstChunk = true;
+  await VCPlat.streamAI({
+    endpoint: "/api/bp/parse",
+    payload: { pastedText: txt, bpId: lastBpId },
+    onChunk: (delta) => {
+      if (firstChunk) {
+        statusTxt.textContent = "AI 流式输出中…";
+        firstChunk = false;
+      }
+      raw += delta;
+      out.innerHTML = VCPlat.mdToHtml(raw) + '<span class="ai-cursor"></span>';
+      out.parentElement.scrollTop = out.parentElement.scrollHeight;
+    },
+    onUsage: (u) => {
+      console.log("[MiniMax usage]", u);
+    },
+    onDone: () => {
+      out.innerHTML = VCPlat.mdToHtml(raw);
+      statusBox.classList.add("success");
+      statusTxt.textContent = "解析完成";
+      statusInline.textContent = "✓ 完成";
+      btn.disabled = false;
+      document.getElementById("parse-status").outerHTML =
+        '<span id="parse-status" class="chip chip-green"><span class="pulse-dot"></span>AI 识别完成</span>';
+      document.getElementById("goto-analysis").style.display = "inline-flex";
+      if (lastBpId) document.getElementById("goto-analysis").href = "analysis.html?bpId=" + lastBpId + "&action=analyze";
+      document.getElementById("skill-actions").style.display = "block";
+      document.getElementById("extracted").style.opacity = 1;
+    },
+    onError: (e) => {
+      statusBox.classList.add("error");
+      statusTxt.textContent = "调用失败：" + e.message;
+      statusInline.textContent = "× 失败";
+      btn.disabled = false;
+    }
+  });
+});
 </script>
 
 <style>

@@ -1,26 +1,27 @@
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-Thumbs.db
-
-# editors
-.vscode/
-.idea/
-
-# logs
-*.log
-npm-debug.log*
-
-# deploy-tool caches
-.vercel
-.netlify
+# 依赖
 node_modules/
 
-# secrets — NEVER commit
+# 环境变量（含 API Key，禁止提交）
 .env
-.env.*
-!.env.example
-*.key
-*.pem
-secrets.json
+
+# 数据库文件
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# 用户上传文件
+public/uploads/*
+!public/uploads/.gitkeep
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+logs/
+
+# 构建产物（如有）
+dist/
+build/

@@ -49,7 +49,7 @@
           <li class="flex gap-3"><span class="text-gold-2">◆</span><span class="text-mute">解锁 3,800+ 路演项目的<strong class="text-gold-2">完整数据室</strong></span></li>
           <li class="flex gap-3"><span class="text-gold-2">◆</span><span class="text-mute">参与<strong class="text-gold-2">实时路演直播</strong>与一对一闭门会议</span></li>
           <li class="flex gap-3"><span class="text-gold-2">◆</span><span class="text-mute">使用<strong class="text-gold-2">AI 智能投研引擎</strong>生成 IC Memo</span></li>
-          <li class="flex gap-3"><span class="text-gold-2">◆</span><span class="text-mute">基于<strong class="text-gold-2">阿里资产生态</strong>对接法律、财税与并购退出资源</span></li>
+          <li class="flex gap-3"><span class="text-gold-2">◆</span><span class="text-mute">协同<strong class="text-gold-2">头部生态资源</strong>对接法律、财税与并购退出资源</span></li>
         </ul>
 
         <div class="mt-10 pt-6 border-t border-white/5 grid grid-cols-3 gap-4 text-center">
@@ -166,13 +166,12 @@
 
 <footer class="site-footer mt-10">
   <div class="max-w-[1180px] mx-auto px-6 flex justify-between text-[12px] text-dim">
-    <span>© 2026 阿里资产 · 启明资本（仅供 Demo 演示）</span>
+    <span>© 2026 启明资本 · QIMING VC PLATFORM（仅供 Demo 演示）</span>
     <span>沪ICP备XXXXXXXX号</span>
   </div>
 </footer>
 
-<script src="assets/app.js"></script>
-<script src="assets/skills.js"></script>
+<script src="assets/api.js"></script>
 <script>
 const tabLogin = document.getElementById("tab-login");
 const tabReg   = document.getElementById("tab-register");
@@ -192,31 +191,93 @@ tabLogin.onclick = () => switchTab("login");
 tabReg.onclick   = () => switchTab("register");
 
 if (location.search.includes("tab=register")) switchTab("register");
+if (location.search.includes("expired=1")) {
+  const msg = document.createElement("div");
+  msg.className = "fixed top-20 left-1/2 -translate-x-1/2 z-50 glass px-6 py-3 text-sm text-amber-300 border border-amber-500/40 rounded-xl";
+  msg.textContent = "登录已过期，请重新登录";
+  document.body.appendChild(msg);
+  setTimeout(() => msg.remove(), 3000);
+}
+
+// 已登录则跳转
+if (VCPlat.isLoggedIn()) location.href = "/dashboard.html";
 
 // role pick
-let role = "投资机构";
+let selectedRole = "investor";
+const roleMap = { "投资机构": "investor", "个人投资者": "investor", "创业者": "entrepreneur" };
 document.querySelectorAll(".role-card").forEach(b => {
   b.addEventListener("click", () => {
     document.querySelectorAll(".role-card").forEach(x=>x.classList.remove("active"));
     b.classList.add("active");
-    role = b.dataset.role;
+    selectedRole = roleMap[b.dataset.role] || "investor";
   });
 });
 
-function doLogin() {
-  const acc = document.getElementById("login-account").value || "demo@qiming-vc.com";
-  VCPlat.setUser({ name: acc.split("@")[0] || "投资人", role: "投资机构", account: acc });
-  alert("登录成功，已为您解锁全部项目数据。");
-  location.href = "roadshow.html";
+function showError(id, msg) {
+  let el = document.getElementById(id);
+  if (!el) { el = document.createElement("div"); el.id = id; el.className = "mt-3 text-red-400 text-sm"; }
+  el.textContent = msg;
+  return el;
 }
-function doRegister() {
-  const name = document.getElementById("reg-name").value || "新用户";
-  if (!document.getElementById("reg-agree").checked) {
-    alert("请先同意用户协议与合格投资人声明。"); return;
+
+async function doLogin() {
+  const email = document.getElementById("login-account").value.trim();
+  const pass  = document.getElementById("login-pass").value;
+  if (!email || !pass) { alert("请填写邮箱和密码"); return; }
+
+  const btn = document.querySelector("#form-login .btn-gold");
+  const origText = btn.textContent;
+  btn.textContent = "登录中..."; btn.disabled = true;
+  try {
+    const data = await VCPlat.api("/api/auth/login", {
+      method: "POST", body: { email, password: pass }
+    });
+    if (!data.token || !data.user) {
+      throw new Error("服务器返回数据异常");
+    }
+    VCPlat.saveAuth(data);
+    // 管理员跳管理后台，普通用户跳用户看板
+    const redirect = new URLSearchParams(location.search).get("redirect")
+      || (data.user.role === 'admin' ? '/admin.html' : '/dashboard.html');
+    location.href = redirect;
+  } catch (e) {
+    btn.textContent = origText; btn.disabled = false;
+    alert("登录失败：" + (e.message || "未知错误"));
   }
-  VCPlat.setUser({ name: name, role: role });
-  alert("注册成功！欢迎加入启明资本。");
-  location.href = "roadshow.html";
+}
+
+async function doRegister() {
+  const name  = document.getElementById("reg-name").value.trim();
+  const phone = document.getElementById("reg-phone").value.trim();
+  const org   = document.getElementById("reg-org").value.trim();
+  const email = document.getElementById("reg-email").value.trim();
+  const pass  = document.getElementById("reg-pass").value;
+  const agree = document.getElementById("reg-agree").checked;
+
+  if (!name || !email || !pass) { alert("请填写姓名、邮箱和密码"); return; }
+  if (pass.length < 8) { alert("密码至少 8 位"); return; }
+  if (!agree) { alert("请先同意用户协议与合格投资人声明"); return; }
+
+  const btn = document.querySelector("#form-register .btn-gold");
+  const origText = btn.textContent;
+  btn.textContent = "注册中..."; btn.disabled = true;
+  try {
+    const data = await VCPlat.api("/api/auth/register", {
+      method: "POST", body: { name, phone, organization: org, email, password: pass, role: selectedRole }
+    });
+    if (data.token) {
+      VCPlat.saveAuth(data);
+      location.href = "/dashboard.html";
+    } else {
+      // 注册成功但没自动登录，跳转登录页
+      alert("注册成功！请使用新账号登录");
+      switchTab("login");
+      btn.textContent = origText; btn.disabled = false;
+    }
+  } catch (e) {
+    btn.textContent = origText; btn.disabled = false;
+    alert("注册失败：" + (e.message || "未知错误"));
+  }
 }
 </script>
 
