@@ -3,6 +3,7 @@ import { Router } from 'express';
 import db from '../db/connection.js';
 import { requireAuth } from '../middleware/auth.js';
 import { streamToResponseWithSave } from '../services/minimax.js';
+import { SKILL_PROMPTS } from '../services/skillPrompts.js';
 
 const router = Router();
 
@@ -53,15 +54,31 @@ router.post('/ai-analyze', requireAuth, async (req, res, next) => {
       ? `${contextText}\n\n额外分析要求：${customPrompt}`
       : contextText;
 
-    const systemPrompt = `你是一位拥有 20 年经验的顶级 VC 投资总监，擅长 PE/VC 投资分析、行业研究和风险评估。
-请对以下商业计划书（BP）进行全面的智能投资分析，输出结构化的 markdown 报告，包括：
-1. 项目综合评估（总分 100 分，含六维评分）
-2. 市场分析（市场空间、增长驱动、竞争格局）
-3. 团队评估（背景、执行力、互补性）
-4. 商业模式分析（盈利模式、护城河、可扩展性）
-5. 财务分析（当前状况、预测、关键指标）
-6. 风险矩阵（前 5 大风险及缓释方案）
-7. 投资建议（推荐/观察/PASS，附理由和下一步行动）`;
+    const systemPrompt = SKILL_PROMPTS['pe-vc:筛项目'].system + `
+
+---
+在完成上述筛选备忘录后，请继续输出以下补充分析：
+
+## 深度投资分析
+
+### 市场分析
+- 市场规模（TAM/SAM/SOM）与增速
+- 核心增长驱动因素
+- 竞争格局与差异化壁垒
+
+### 团队评估
+- 创始团队背景与行业经验
+- 执行力与互补性评分
+
+### 财务分析
+- 历史营收与增速趋势
+- 关键财务指标（毛利率 / 现金流 / 烧钱率）
+- 估值合理性（对比同赛道可比公司）
+
+### 投资建议
+- 综合评级：强烈推荐 / 推荐 / 观察 / PASS
+- 关键决策依据（3条）
+- 建议下一步行动`;
 
     await streamToResponseWithSave(
       res,
