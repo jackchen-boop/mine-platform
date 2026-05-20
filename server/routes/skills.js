@@ -10,10 +10,20 @@ const router = Router();
 // POST /api/skill-run — 运行指定技能（SSE 流式）
 router.post('/skill-run', requireAuth, async (req, res, next) => {
   try {
-    const { skill, input, projectId } = req.body;
+    const { skill, input, projectId, uploadId } = req.body;
 
     if (!skill) return res.status(400).json({ error: '请指定技能 key' });
-    if (!input) return res.status(400).json({ error: '请提供输入内容' });
+
+    // uploadId 优先：从 skill_uploads 读取文本作为输入
+    let finalInput = input;
+    if (uploadId) {
+      const row = db.prepare('SELECT extracted_text, user_id FROM skill_uploads WHERE id = ?').get(uploadId);
+      if (!row) return res.status(404).json({ error: '上传记录不存在或已过期' });
+      if (row.user_id !== req.user.id) return res.status(403).json({ error: '无权访问此上传记录' });
+      finalInput = row.extracted_text || '';
+    }
+
+    if (!finalInput) return res.status(400).json({ error: '请提供输入内容或上传文件' });
 
     const skillKey = resolveSkillKey(skill);
     if (!skillKey || !SKILL_PROMPTS[skillKey]) {
@@ -26,7 +36,7 @@ router.post('/skill-run', requireAuth, async (req, res, next) => {
       res,
       {
         system: skillDef.system,
-        user: input,
+        user: finalInput,
         temperature: skillDef.temp || 0.4,
         maxTokens: 6000
       },
@@ -39,7 +49,7 @@ router.post('/skill-run', requireAuth, async (req, res, next) => {
             req.user.id,
             projectId || null,
             skillKey,
-            JSON.stringify({ skill, input: input.slice(0, 500) }),
+            JSON.stringify({ skill, input: finalInput.slice(0, 500), uploadId: uploadId || null }),
             fullText,
             model,
             usageData ? JSON.stringify(usageData) : null,

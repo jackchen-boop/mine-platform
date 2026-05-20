@@ -17,6 +17,7 @@ import projectRoutes from './server/routes/projects.js';
 import bpRoutes from './server/routes/bp.js';
 import analysisRoutes from './server/routes/analysis.js';
 import skillRoutes from './server/routes/skills.js';
+import skillUploadRoutes from './server/routes/skillUpload.js';
 import roadshowRoutes from './server/routes/roadshow.js';
 import followRoutes from './server/routes/follows.js';
 import reportRoutes from './server/routes/reports.js';
@@ -91,6 +92,7 @@ app.use('/api/projects',  projectRoutes);
 app.use('/api/bp',        bpRoutes);
 app.use('/api',           analysisRoutes);   // POST /api/ai-analyze
 app.use('/api',           skillRoutes);      // POST /api/skill-run
+app.use('/api',           skillUploadRoutes); // POST /api/skill-upload, /api/skill-validate
 app.use('/api/roadshow',  roadshowRoutes);
 app.use('/api/follows',   followRoutes);
 app.use('/api/reports',   reportRoutes);

@@ -135,6 +135,18 @@ export function initSchema() {
       updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
     );
 
+    -- 技能文件上传临时缓存（非 BP，2小时过期）
+    CREATE TABLE IF NOT EXISTS skill_uploads (
+      id              TEXT PRIMARY KEY,
+      user_id         INTEGER NOT NULL REFERENCES users(id),
+      skill_key       TEXT    NOT NULL,
+      extracted_text  TEXT,
+      file_count      INTEGER DEFAULT 1,
+      file_meta       TEXT,
+      supplement      TEXT,
+      created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+
     -- 索引
     CREATE INDEX IF NOT EXISTS idx_projects_sector   ON projects(sector);
     CREATE INDEX IF NOT EXISTS idx_projects_round    ON projects(round);

@@ -35,3 +35,6 @@ const multerInstance = multer({
 
 // 单文件上传中间件（字段名 'file'）
 export const uploadSingle = (req, res, next) => multerInstance.single('file')(req, res, next);
+
+// 多文件上传中间件（字段名 'files'，最多10个）
+export const uploadMultiple = (req, res, next) => multerInstance.array('files', 10)(req, res, next);

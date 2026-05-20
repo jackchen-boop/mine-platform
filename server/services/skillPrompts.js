@@ -1,4 +1,4 @@
-// 18 个专家技能的 system prompt — 移植自 netlify/functions/_lib/skill-prompts.mjs
+// 18 个专家技能的 system prompt + requiredInfo（校验信息充分性用）
 
 export const SKILL_PROMPTS = {
   // ===== pe-vc-investment 套件 =====
@@ -33,21 +33,42 @@ export const SKILL_PROMPTS = {
 ## 5. 结论
 - 一句话推荐：强烈推荐 / 推荐 / 观察 / PASS
 - 下一步：尽调清单 / 创始人面访 / 直接 PASS`,
-    temp: 0.4
+    temp: 0.4,
+    requiredInfo: [
+      { key: 'company_name', label: '公司名称', required: true },
+      { key: 'sector', label: '行业/赛道', required: true },
+      { key: 'round', label: '融资轮次/金额', required: true },
+      { key: 'team', label: '核心团队信息', required: true },
+      { key: 'product', label: '产品/解决方案', required: false },
+      { key: 'financial', label: '财务数据', required: false },
+      { key: 'market', label: '市场规模', required: false },
+      { key: 'valuation', label: '估值信息', required: false },
+    ]
   },
 
   'pe-vc:尽调清单': {
     title: '结构化尽调清单',
     system: `你是 PE/VC 尽调负责人。基于项目所属赛道与阶段，输出结构化尽调清单（markdown 表格），按 财务/法律/业务/技术 四大块展开，含优先级（P0/P1/P2）和负责方（投资团队/外部律所/外部会计师/标的公司）。
 针对硬科技项目额外增加专项（专利、产品、客户、供应链）。`,
-    temp: 0.3
+    temp: 0.3,
+    requiredInfo: [
+      { key: 'company_industry', label: '公司行业/赛道', required: true },
+      { key: 'stage', label: '融资阶段', required: true },
+      { key: 'special_concerns', label: '特殊关注点', required: false },
+      { key: 'compliance_issues', label: '合规问题', required: false },
+    ]
   },
 
   'pe-vc:审条款': {
     title: '条款审查报告',
     system: `你是顶级投资律师。输入是 TS / SPA / SHA 文本片段。逐条评估每个条款的风险等级（高/中/低）、对投资人是否友好、谈判建议，并对照九民纪要做合规检查（重点：业绩对赌、回购、股权代持、清算优先权）。
 按 markdown 表格输出，最后给出 3 条最关键的谈判优先级建议。`,
-    temp: 0.3
+    temp: 0.3,
+    requiredInfo: [
+      { key: 'ts_or_spa', label: 'TS/SPA/SHA 条款文本', required: true },
+      { key: 'deal_terms', label: '交易核心条款（估值/金额/持股）', required: true },
+      { key: 'protective_provisions', label: '投资人保护条款', required: false },
+    ]
   },
 
   'pe-vc:投决备忘录': {
@@ -60,7 +81,14 @@ export const SKILL_PROMPTS = {
 ## 四、关键风险与缓释（前 5 大风险）
 ## 五、交易条款摘要（10 项关键条款）
 ## 六、投资建议（同意 / 缓议 / 否决，理由）`,
-    temp: 0.4
+    temp: 0.4,
+    requiredInfo: [
+      { key: 'project_info', label: '项目基本信息', required: true },
+      { key: 'dd_findings', label: '尽调要点', required: true },
+      { key: 'valuation', label: '估值数据', required: false },
+      { key: 'deal_terms', label: '交易条款', required: false },
+      { key: 'risks', label: '风险发现', required: false },
+    ]
   },
 
   'pe-vc:测收益': {
@@ -71,7 +99,13 @@ export const SKILL_PROMPTS = {
 3. 25 格敏感性分析（退出估值 × 退出年限）
 4. GP/LP 瀑布分配（含 8% 优先回报 + 20% Carry + GP Catchup）
 所有计算过程透明展示，给出最终 LP Net IRR 区间。`,
-    temp: 0.3
+    temp: 0.3,
+    requiredInfo: [
+      { key: 'investment_amount', label: '投资金额/估值', required: true },
+      { key: 'exit_assumption', label: '退出假设（年限/预期估值）', required: true },
+      { key: 'vam_terms', label: '业绩对赌条款', required: false },
+      { key: 'preferred_return', label: '优先回报率', required: false },
+    ]
   },
 
   'pe-vc:退出分析': {
@@ -79,7 +113,13 @@ export const SKILL_PROMPTS = {
     system: `你是 PE 退出负责人。基于被投公司现状，对比五种退出路径（IPO / 并购 / S 基金转让 / 创始人回购 / 清算）。
 每条路径输出：可行性评分 / 预计时间 / 预计估值 / 流程成本 / 关键卡点 / 行动清单。
 最后给出推荐路径排序与基金到期前的退出时间表。`,
-    temp: 0.4
+    temp: 0.4,
+    requiredInfo: [
+      { key: 'company_status', label: '被投公司现状', required: true },
+      { key: 'fund_expiry', label: '基金到期约束', required: true },
+      { key: 'share_ratio', label: '持股比例', required: false },
+      { key: 'exit_preference', label: '退出偏好', required: false },
+    ]
   },
 
   // ===== equity-research 套件 =====
@@ -92,56 +132,104 @@ export const SKILL_PROMPTS = {
 4. 财务分析（三表趋势 / 关键指标 / 同业对比）
 5. 估值分析（DCF + 可比公司，给出目标价区间）
 正式券商体例，避免空话套话。`,
-    temp: 0.4
+    temp: 0.4,
+    requiredInfo: [
+      { key: 'company_name', label: '公司名称', required: true },
+      { key: 'public_info', label: '公开资料/BP', required: false },
+      { key: 'financial', label: '财务数据', required: false },
+      { key: 'industry', label: '行业背景', required: false },
+    ]
   },
 
   'equity:行业研究': {
     title: '行业全景研究报告',
     system: `输出行业全景报告：市场规模/增速/CAGR、产业链上中下游、竞争格局（CR3/CR5/HHI）、政策驱动、技术拐点、龙头公司画像、投资机会与风险。所有数据要标注来源 / 假设。`,
-    temp: 0.4
+    temp: 0.4,
+    requiredInfo: [
+      { key: 'industry_name', label: '行业名称/细分赛道', required: true },
+      { key: 'market_size', label: '市场规模数据', required: false },
+      { key: 'policy', label: '政策动态', required: false },
+      { key: 'tech_trend', label: '技术趋势', required: false },
+    ]
   },
 
   'equity:可比公司分析': {
     title: '可比公司估值矩阵',
     system: `筛选 5-8 家可比公司（业务相近、规模相当、地域可比），构建估值倍数矩阵（PE / PB / PS / EV/EBITDA / EV/Revenue），输出中位数、均值、调整后估值倍数，最终给出目标公司的隐含估值区间。`,
-    temp: 0.3
+    temp: 0.3,
+    requiredInfo: [
+      { key: 'target_company', label: '标的公司信息', required: true },
+      { key: 'comparable_pool', label: '同行业可比池', required: false },
+      { key: 'financial', label: '财务数据', required: false },
+    ]
   },
 
   'equity:晨会纪要': {
     title: '晨会汇报材料',
     system: `输出晨会材料：1）市场回顾（A 股/港股/美股关键指数 + 核心驱动）2）重要事件（政策 / 宏观数据 / 行业突发）3）公司动态（核心覆盖股的最新进展）4）投资观点（今日看多/看空 + 仓位建议）。`,
-    temp: 0.4
+    temp: 0.4,
+    requiredInfo: [
+      { key: 'coverage_list', label: '覆盖标的清单', required: true },
+      { key: 'market_events', label: '当日新闻/事件', required: false },
+      { key: 'market_data', label: '市场数据', required: false },
+    ]
   },
 
   'equity:研报摘要': {
     title: '多份研报核心观点对比',
     system: `提取 1-10 份券商研报的核心观点：评级、目标价、盈利预测、推荐逻辑。多份时构建观点分歧矩阵，识别共识 vs 分歧。`,
-    temp: 0.3
+    temp: 0.3,
+    requiredInfo: [
+      { key: 'research_content', label: '研报正文/核心观点', required: true },
+      { key: 'rating', label: '评级/目标价', required: false },
+      { key: 'earnings_forecast', label: '盈利预测', required: false },
+    ]
   },
 
   'equity:读年报': {
     title: 'A 股年报投资备忘录',
-    system: `从 A 股年报中提取：核心财务数据（营收 / 净利润 / 毛利率 / 现金流）、经营分析、未来战略、风险提示、关联交易、股东变动、分红政策。结构化为投资备忘录。`,
-    temp: 0.3
+    system: `从 A 股年报中提取：核心财务数据（营收 / 净利润 / 毛利率 / 现流）、经营分析、未来战略、风险提示、关联交易、股东变动、分红政策。结构化为投资备忘录。`,
+    temp: 0.3,
+    requiredInfo: [
+      { key: 'annual_report', label: '年报PDF正文', required: true },
+      { key: 'historical_comparison', label: '历史对比数据', required: false },
+      { key: 'peer_data', label: '同行数据', required: false },
+    ]
   },
 
   'equity:调研纪要': {
     title: '标准化调研纪要',
     system: `把调研笔记整理为标准化纪要：参会信息 / 核心信息 / 关键数据点 / Q&A 实录 / 投资要点 / 行动建议。`,
-    temp: 0.4
+    temp: 0.4,
+    requiredInfo: [
+      { key: 'research_notes', label: '调研笔记/电话会转写', required: true },
+      { key: 'company_background', label: '公司背景信息', required: false },
+    ]
   },
 
   'equity:业绩快评': {
     title: '业绩点评报告',
     system: `输出业绩快评：1）超预期 / 符合 / 低于预期判断 2）核心驱动因素拆解 3）单季度趋势分析 4）同比 / 环比 5）业绩驱动可持续性 6）盈利预测调整 7）评级与目标价调整。`,
-    temp: 0.4
+    temp: 0.4,
+    requiredInfo: [
+      { key: 'earnings_announcement', label: '业绩公告/快报/预告', required: true },
+      { key: 'market_expectation', label: '市场预期数据', required: false },
+      { key: 'historical_performance', label: '历史业绩', required: false },
+    ]
   },
 
   // ===== investment-banking 套件 =====
   'ib:招股书': {
     title: '招股说明书章节初稿',
     system: `撰写注册制招股书章节，自动适配科创板 / 创业板 / 主板 / 北交所差异化要求。包含发行人基本情况、行业概况、业务、技术、财务、管理层讨论、风险因素、募资用途。严格按交易所信披格式准则。`,
-    temp: 0.3
+    temp: 0.3,
+    requiredInfo: [
+      { key: 'company_info', label: '公司基本信息', required: true },
+      { key: 'target_board', label: '目标上市板块', required: true },
+      { key: 'financial', label: '财务数据', required: false },
+      { key: 'business_desc', label: '业务描述', required: false },
+      { key: 'compliance', label: '合规情况', required: false },
+    ]
   },
 
   'ib:财务建模': {
@@ -153,7 +241,11 @@ export const SKILL_PROMPTS = {
 4. DCF 估值（WACC 假设 / 永续增长率 / 敏感性分析）
 5. 可比公司估值
 所有假设清晰列出。`,
-    temp: 0.3
+    temp: 0.3,
+    requiredInfo: [
+      { key: 'historical_financial', label: '历史3年财报数据', required: true },
+      { key: 'business_assumptions', label: '业务假设/增长率', required: false },
+    ]
   },
 
   'ib:路演材料': {
@@ -163,26 +255,48 @@ export const SKILL_PROMPTS = {
 - 逐页演讲稿（每页 200-300 字）
 - Q&A 预案（10 个最可能被问的问题 + 标准回答）
 适配 IPO / 债券 / 并购 / 定增四种场景。`,
-    temp: 0.5
+    temp: 0.5,
+    requiredInfo: [
+      { key: 'project_info', label: '项目基本信息', required: true },
+      { key: 'roadshow_type', label: '路演类型', required: true },
+      { key: 'financial_highlights', label: '财务亮点', required: false },
+      { key: 'competitive_advantage', label: '竞争优势', required: false },
+    ]
   },
 
   'ib:问询回复': {
     title: '交易所问询函回复',
     system: `逐条回复交易所问询，每条结构：1）问题摘录 2）事实陈述 3）合理性论证 4）同行业对比 5）核查意见 6）招股书更新位置标注。
 按问询函轮次差异化论证深度（首轮浅，二轮深）。`,
-    temp: 0.3
+    temp: 0.3,
+    requiredInfo: [
+      { key: 'inquiry_letter', label: '交易所问询函全文', required: true },
+      { key: 'company_materials', label: '公司资料/回复素材', required: false },
+    ]
   },
 
   'ib:并购方案': {
     title: '并购重组报告书',
     system: `输出重组报告书初稿：交易方案 / 标的资产评估 / 定价依据 / 业绩承诺设计 / 交易影响测算（备考 EPS / 摊薄 / 控制权）。适配发行股份购买资产 / 现金收购 / 吸收合并 / 借壳上市等。`,
-    temp: 0.3
+    temp: 0.3,
+    requiredInfo: [
+      { key: 'deal_background', label: '交易背景/方案', required: true },
+      { key: 'target_info', label: '标的公司信息', required: true },
+      { key: 'pricing_basis', label: '定价依据', required: false },
+      { key: 'earnings_commitment', label: '业绩承诺', required: false },
+    ]
   },
 
   'ib:债券募集': {
     title: '债券募集说明书',
     system: `输出募集说明书初稿，含偿债能力分析、信用增进措施、风险因素、募资用途、发行人基本情况。适配公司债 / 中票 / 可转债 / 永续债 / 绿色债券 / ABS。`,
-    temp: 0.3
+    temp: 0.3,
+    requiredInfo: [
+      { key: 'issuer_info', label: '发行人信息', required: true },
+      { key: 'bond_type', label: '债券品种', required: true },
+      { key: 'repayment_ability', label: '偿债能力数据', required: false },
+      { key: 'credit_enhancement', label: '增信措施', required: false },
+    ]
   }
 };
 

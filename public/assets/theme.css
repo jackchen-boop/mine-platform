@@ -419,3 +419,101 @@ html, body {
   .admin-sidebar-hide { display: none !important; }
   .admin-content-hide { display: none !important; }
 }
+
+/* ============================================================
+   技能弹窗 · 文件上传区 & 校验结果
+============================================================ */
+
+/* 文件拖放区 */
+.skill-dropzone {
+  border: 1.5px dashed var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(212, 175, 55, 0.03);
+}
+.skill-dropzone:hover,
+.skill-dropzone:focus,
+.skill-dropzone.drag-over {
+  border-color: var(--gold-1);
+  background: rgba(212, 175, 55, 0.07);
+  outline: none;
+}
+
+/* 已选文件列表 */
+.skill-file-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+.skill-file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  font-size: 13px;
+}
+.skill-file-item > span:first-child {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-1);
+}
+.skill-file-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-3);
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.skill-file-remove:hover {
+  color: var(--danger);
+  background: rgba(239,68,68,0.1);
+}
+
+/* 校验通过 */
+.skill-validate-pass {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* 校验失败 / 信息不足 */
+.skill-validate-fail {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fcd34d;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.skill-validate-fail ul {
+  color: var(--text-2);
+  margin-top: 4px;
+  padding-left: 18px;
+}
+.skill-validate-fail li {
+  font-size: 12px;
+  margin-top: 2px;
+}
