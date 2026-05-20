@@ -187,14 +187,14 @@
         ? // ── 已登录：文件上传区 ──────────────────────────
           '  <div id="skill-upload-section">' +
           '    <label class="label">上传相关文件（PDF / PPTX / DOCX / TXT，最多 10 个）</label>' +
+          '    <input type="file" id="skill-file-input" multiple accept=".pdf,.pptx,.ppt,.docx,.doc,.txt" style="display:none">' +
           '    <div id="skill-dropzone" class="skill-dropzone" role="button" tabindex="0" aria-label="点击或拖放文件">' +
-          '      <input type="file" id="skill-file-input" multiple accept=".pdf,.pptx,.ppt,.docx,.doc,.txt" style="display:none">' +
           '      <div id="skill-drop-hint" style="pointer-events:none;">' +
           '        <div style="font-size:32px;margin-bottom:8px;">📁</div>' +
           '        <div style="font-size:14px;color:var(--gold-2);">点击选择文件，或拖放至此</div>' +
           '        <div style="font-size:12px;color:var(--dim);margin-top:4px;">支持 PDF · PPTX · DOCX · TXT</div>' +
           '      </div>' +
-          '      <div id="skill-file-list" class="skill-file-list"></div>' +
+          '      <div id="skill-file-list" class="skill-file-list" style="pointer-events:auto;"></div>' +
           '    </div>' +
           '    <div id="skill-validate-result" style="display:none;margin-top:12px;"></div>' +
           '    <div style="display:flex;gap:10px;margin-top:14px;">' +
@@ -259,13 +259,19 @@
 
     dropzone.addEventListener("click", function (e) {
       if (e.target.closest(".skill-file-remove")) return;
+      e.stopPropagation();
       fileInput.click();
     });
     dropzone.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" || e.key === " ") fileInput.click();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
     });
-    dropzone.addEventListener("dragover", function (e) { e.preventDefault(); dropzone.classList.add("drag-over"); });
-    dropzone.addEventListener("dragleave", function () { dropzone.classList.remove("drag-over"); });
+    // 拖拽：必须在 dropzone 上阻止默认行为才能触发 drop
+    dropzone.addEventListener("dragenter", function (e) { e.preventDefault(); dropzone.classList.add("drag-over"); });
+    dropzone.addEventListener("dragover",  function (e) { e.preventDefault(); dropzone.classList.add("drag-over"); });
+    dropzone.addEventListener("dragleave", function (e) {
+      // 只在离开 dropzone 本身时移除高亮（不是移动到子元素时）
+      if (!dropzone.contains(e.relatedTarget)) dropzone.classList.remove("drag-over");
+    });
     dropzone.addEventListener("drop", function (e) {
       e.preventDefault();
       dropzone.classList.remove("drag-over");
