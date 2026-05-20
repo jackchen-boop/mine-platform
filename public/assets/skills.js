@@ -187,7 +187,15 @@
         ? // ── 已登录：文件上传区 ──────────────────────────
           '  <div id="skill-upload-section">' +
           '    <label class="label">上传相关文件（PDF / PPTX / DOCX / TXT，最多 10 个）</label>' +
-          '    <div id="skill-dropzone" class="skill-dropzone" role="button" tabindex="0" aria-label="点击或拖放文件">' +
+          '    <label id="skill-dropzone" class="skill-dropzone" tabindex="0" aria-label="点击或拖放文件">' +
+          '      <input type="file" id="skill-file-input" multiple accept=".pdf,.pptx,.ppt,.docx,.doc,.txt" style="display:none">' +
+          '      <div id="skill-drop-hint" style="pointer-events:none;">' +
+          '        <div style="font-size:32px;margin-bottom:8px;">📁</div>' +
+          '        <div style="font-size:14px;color:var(--gold-2);">点击选择文件，或拖放至此</div>' +
+          '        <div style="font-size:12px;color:var(--dim);margin-top:4px;">支持 PDF · PPTX · DOCX · TXT</div>' +
+          '      </div>' +
+          '      <div id="skill-file-list" class="skill-file-list" style="pointer-events:auto;"></div>' +
+          '    </label>' +
           '      <div id="skill-drop-hint" style="pointer-events:none;">' +
           '        <div style="font-size:32px;margin-bottom:8px;">📁</div>' +
           '        <div style="font-size:14px;color:var(--gold-2);">点击选择文件，或拖放至此</div>' +
@@ -220,23 +228,8 @@
 
     document.body.appendChild(wrap);
 
-    // fileInput 提前创建并挂到 body（绕开 overflow:auto 容器对 .click() 的拦截）
-    // 仅登录用户需要，但提前声明便于 close() 清理
-    let fileInput = null;
-    if (isLoggedIn) {
-      fileInput = document.createElement("input");
-      fileInput.type = "file";
-      fileInput.multiple = true;
-      fileInput.accept = ".pdf,.pptx,.ppt,.docx,.doc,.txt";
-      fileInput.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px;";
-      document.body.appendChild(fileInput);
-    }
-
     // ── 关闭逻辑 ─────────────────────────────────────────
-    function close() {
-      wrap.remove();
-      if (fileInput && fileInput.parentNode) fileInput.parentNode.removeChild(fileInput);
-    }
+    function close() { wrap.remove(); }
     wrap.querySelector(".skill-modal-mask").onclick = close;
     wrap.querySelector(".skill-modal-close").onclick = close;
     document.addEventListener("keydown", function esc(e) {
@@ -246,7 +239,9 @@
     if (!isLoggedIn) return;
 
     // ── 文件选择逻辑 ─────────────────────────────────────
+    // dropzone 是 <label>，fileInput 在其内部，浏览器原生关联，无需 JS .click()
     const dropzone = wrap.querySelector("#skill-dropzone");
+    const fileInput = wrap.querySelector("#skill-file-input");
     const fileList  = wrap.querySelector("#skill-file-list");
     const dropHint  = wrap.querySelector("#skill-drop-hint");
     const uploadBtn = wrap.querySelector("#skill-upload-btn");
@@ -270,10 +265,10 @@
       uploadBtn.disabled = false;
     }
 
+    // dropzone 是 <label>，原生关联 fileInput，点击自动弹出文件选择
+    // 只需阻止 .skill-file-remove 按钮的点击冒泡到 label（防止误触发）
     dropzone.addEventListener("click", function (e) {
-      if (e.target.closest(".skill-file-remove")) return;
-      e.stopPropagation();
-      fileInput.click();
+      if (e.target.closest(".skill-file-remove")) e.preventDefault();
     });
     dropzone.addEventListener("keydown", function (e) {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
