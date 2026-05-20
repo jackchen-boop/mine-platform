@@ -214,5 +214,23 @@ export const SKILL_ALIAS = {
 export function resolveSkillKey(key) {
   if (SKILL_PROMPTS[key]) return key;
   if (SKILL_ALIAS[key]) return SKILL_ALIAS[key];
+  // 支持前端传来的 "pe-vc-investment:xxx" / "equity-research:xxx" / "investment-banking:xxx" 格式
+  const prefixMap = {
+    'pe-vc-investment': 'pe-vc',
+    'equity-research': 'equity',
+    'investment-banking': 'ib',
+  };
+  const colonIdx = key.indexOf(':');
+  if (colonIdx !== -1) {
+    const prefix = key.slice(0, colonIdx);
+    const name = key.slice(colonIdx + 1);
+    const mappedPrefix = prefixMap[prefix];
+    if (mappedPrefix) {
+      const mapped = `${mappedPrefix}:${name}`;
+      if (SKILL_PROMPTS[mapped]) return mapped;
+    }
+    // 也尝试只用名称部分走别名查找
+    if (SKILL_ALIAS[name]) return SKILL_ALIAS[name];
+  }
   return null;
 }
