@@ -175,7 +175,7 @@
             <div class="ai-status" id="ai-output-status"><span class="dot"></span><span id="ai-output-status-text">连接 MiniMax 中…</span></div>
             <button id="ai-output-clear" class="text-[11px] text-dim hover:text-gold">清空</button>
           </div>
-          <div id="ai-output" class="ai-stream"></div>
+          <div id="ai-output" class="ai-stream" style="max-height:260px;overflow-y:auto;"></div>
         </div>
         <!-- progress -->
         <div class="hairline rounded-xl p-4 mb-4">
@@ -402,6 +402,84 @@ document.getElementById("ai-output-clear").addEventListener("click", () => {
   document.getElementById("ai-output-wrap").style.display = "none";
 });
 
+/* ===== 全局进度 Toast ===== */
+let toastEl = null;
+function showToast(msg, type = 'loading') {
+  if (!toastEl) {
+    toastEl = document.createElement('div');
+    toastEl.id = 'upload-toast';
+    toastEl.style.cssText = [
+      'position:fixed;top:76px;left:50%;transform:translateX(-50%);z-index:9999',
+      'display:flex;align-items:center;gap:10px',
+      'padding:10px 20px;border-radius:12px;font-size:13px',
+      'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)',
+      'box-shadow:0 8px 32px rgba(0,0,0,.45)',
+      'transition:opacity .3s ease',
+      'min-width:260px;max-width:420px',
+    ].join(';');
+    document.body.appendChild(toastEl);
+  }
+  const colors = {
+    loading: { bg:'rgba(17,24,39,.88)', border:'rgba(79,141,255,.4)', dot:'#7cb8ff', text:'#c8d8f0' },
+    success: { bg:'rgba(6,20,12,.88)',  border:'rgba(34,197,94,.4)',  dot:'#4ade80', text:'#bbf7d0' },
+    error:   { bg:'rgba(30,8,8,.88)',   border:'rgba(239,68,68,.4)', dot:'#f87171', text:'#fecaca' },
+  };
+  const c = colors[type] || colors.loading;
+  const spinner = type === 'loading'
+    ? `<svg width="14" height="14" viewBox="0 0 14 14" style="animation:spin .8s linear infinite;flex-shrink:0">
+         <circle cx="7" cy="7" r="5.5" stroke="${c.dot}" stroke-width="2" fill="none" stroke-dasharray="22" stroke-dashoffset="8"/>
+       </svg>`
+    : `<span style="width:10px;height:10px;border-radius:50%;background:${c.dot};flex-shrink:0;display:inline-block;"></span>`;
+  toastEl.style.background = c.bg;
+  toastEl.style.border = `1px solid ${c.border}`;
+  toastEl.style.color = c.text;
+  toastEl.style.opacity = '1';
+  toastEl.innerHTML = spinner + `<span>${msg}</span>`;
+}
+function hideToast(delay = 2000) {
+  if (!toastEl) return;
+  setTimeout(() => { if (toastEl) toastEl.style.opacity = '0'; }, delay);
+}
+
+/* ===== 进度条步骤推进 ===== */
+function setProgress(pct, step) {
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-text').textContent = pct + '%';
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById('step-' + i).classList.toggle('done', i <= step);
+  }
+}
+
+/* ===== 解析完成后填充核心要素 ===== */
+function fillExtracted(json) {
+  if (!json) return;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '—'; };
+  set('ex-name', json.company_name);
+  set('ex-sector', [json.sector, json.sub_sector].filter(Boolean).join(' · '));
+  set('ex-round', json.stage);
+  set('ex-amt', json.amount_seeking);
+  set('ex-val', json.valuation);
+  set('ex-bm', json.business_model || json.summary);
+
+  const teamEl = document.getElementById('ex-team');
+  if (teamEl && Array.isArray(json.team) && json.team.length) {
+    teamEl.innerHTML = json.team.slice(0, 4).map(m =>
+      `<span class="chip text-[11px]">${m.name || ''} · ${m.role || ''}</span>`
+    ).join('');
+  }
+
+  const finEl = document.getElementById('ex-fin');
+  if (finEl && json.financials) {
+    const f = json.financials;
+    finEl.innerHTML = [
+      f.revenue  ? `<div><div class="text-gold-2 font-mono font-bold">${f.revenue}</div><div class="text-dim mt-0.5">营收</div></div>` : '',
+      f.growth_rate ? `<div><div class="text-gold-2 font-mono font-bold">${f.growth_rate}</div><div class="text-dim mt-0.5">增速</div></div>` : '',
+      f.burn_rate ? `<div><div class="text-gold-2 font-mono font-bold">${f.burn_rate}</div><div class="text-dim mt-0.5">月烧</div></div>` : '',
+    ].filter(Boolean).join('');
+  }
+  document.getElementById('extracted').style.opacity = '1';
+}
+
 document.getElementById("ai-parse-btn").addEventListener("click", async () => {
   const txt = document.getElementById("bp-text").value.trim();
   if (txt.length < 10 && !lastBpId) {
@@ -428,19 +506,30 @@ async function runAIParse({ pastedText, bpId }) {
   document.getElementById("parse-status").outerHTML =
     '<span id="parse-status" class="chip" style="background:rgba(79,141,255,.1);border-color:rgba(79,141,255,.4);color:#7cb8ff;"><span class="pulse-dot"></span>AI 解析中</span>';
 
+  // 启动 Toast + 进度条
+  showToast('正在连接 AI 解析引擎…');
+  setProgress(10, 1);
+
   let raw = "";
   let firstChunk = true;
+  let chunkCount = 0;
   await VCPlat.streamAI({
     endpoint: "/api/bp/parse",
     payload: { pastedText: pastedText, bpId: bpId },
     onChunk: (delta) => {
       if (firstChunk) {
         statusTxt.textContent = "AI 流式输出中…";
+        showToast('AI 正在解析 BP 内容…');
+        setProgress(40, 2);
         firstChunk = false;
       }
+      chunkCount++;
+      // 每 20 个 chunk 把进度推到 80%
+      if (chunkCount === 20) setProgress(70, 2);
+      if (chunkCount === 50) setProgress(85, 3);
       raw += delta;
       out.innerHTML = VCPlat.mdToHtml(raw) + '<span class="ai-cursor"></span>';
-      out.parentElement.scrollTop = out.parentElement.scrollHeight;
+      out.scrollTop = out.scrollHeight;
     },
     onUsage: (u) => {
       console.log("[MiniMax usage]", u);
@@ -451,24 +540,36 @@ async function runAIParse({ pastedText, bpId }) {
       statusTxt.textContent = "解析完成";
       statusInline.textContent = "✓ 完成";
       btn.disabled = false;
+      setProgress(100, 3);
+      showToast('BP 解析完成 ✓', 'success');
+      hideToast(2500);
       document.getElementById("parse-status").outerHTML =
         '<span id="parse-status" class="chip chip-green"><span class="pulse-dot"></span>AI 识别完成</span>';
       document.getElementById("goto-analysis").style.display = "inline-flex";
       if (lastBpId) document.getElementById("goto-analysis").href = "analysis.html?bpId=" + lastBpId + "&action=analyze";
       document.getElementById("skill-actions").style.display = "block";
-      document.getElementById("extracted").style.opacity = 1;
+
+      // 从输出中提取 JSON 填充核心要素
+      try {
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        if (jsonMatch) fillExtracted(JSON.parse(jsonMatch[0]));
+      } catch (e) { /* JSON 解析失败时跳过 */ }
     },
     onError: (e) => {
       statusBox.classList.add("error");
       statusTxt.textContent = "调用失败：" + e.message;
       statusInline.textContent = "× 失败";
       btn.disabled = false;
+      setProgress(0, 0);
+      showToast('解析失败：' + e.message, 'error');
+      hideToast(3000);
     }
   });
 }
 </script>
 
 <style>
+  @keyframes spin { to { transform: rotate(360deg); } }
   .modality-card { transition: all .2s ease; }
   .modality-card:hover { border-color: var(--line); }
   .modality-card.active {
