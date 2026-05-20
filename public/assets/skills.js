@@ -144,29 +144,24 @@
     { key: "5-投后退出", name: "投后与退出", icon: "🚪", color: "purple", tagline: "Post-investment · 价值兑现" },
   ];
 
-  // ---------- Modal（三阶段状态机：上传 → 校验 → 执行）----------
-  function openModal(skillId, contextHint) {
+  // ---------- Modal ----------
+  function openModal(skillId) {
     const s = SKILLS.find(x => x.id === skillId);
     if (!s) return alert("未找到技能：" + skillId);
 
     const isLoggedIn = typeof VCPlat !== 'undefined' && VCPlat.isLoggedIn();
-
-    // 状态
-    let uploadId = null;      // 上传后返回
-    let validationPassed = false;
-    let missingFields = [];
+    let uploadId = null;
     let selectedFiles = [];
 
+    // ── 构建弹窗 HTML ──────────────────────────────────────
     const wrap = document.createElement("div");
     wrap.className = "skill-modal-wrap";
-
     wrap.innerHTML =
       '<div class="skill-modal-mask"></div>' +
       '<div class="skill-modal glass corner-deco">' +
       '  <button class="skill-modal-close" aria-label="关闭">✕</button>' +
-      '  <div class="flex items-start gap-4 mb-5">' +
-      '    <div class="w-14 h-14 rounded-xl flex items-center justify-center text-3xl"' +
-      '         style="background:rgba(212,175,55,.1);border:1px solid var(--line);">' + s.icon + '</div>' +
+      '  <div class="flex items-start gap-4 mb-4">' +
+      '    <div class="w-14 h-14 rounded-xl flex items-center justify-center text-3xl" style="background:rgba(212,175,55,.1);border:1px solid var(--line);">' + s.icon + '</div>' +
       '    <div class="flex-1">' +
       '      <div class="flex items-center gap-2 mb-1">' +
       '        <span class="chip chip-' + (s.suiteColor || "gold") + '">' + s.suite + ' 套件</span>' +
@@ -176,59 +171,39 @@
       '      <p class="text-mute text-[13px] leading-6 mt-1">' + s.desc + '</p>' +
       '    </div>' +
       '  </div>' +
-
-      // 输入/输出说明
-      '  <div class="grid grid-cols-2 gap-3 mb-5">' +
+      '  <div class="grid grid-cols-2 gap-3 mb-4">' +
       '    <div class="hairline rounded-lg p-3"><div class="text-[11px] text-dim">所需输入</div><div class="text-sm mt-1">' + s.input + '</div></div>' +
       '    <div class="hairline rounded-lg p-3"><div class="text-[11px] text-dim">输出交付物</div><div class="text-sm mt-1 text-gold-2">' + s.output + '</div></div>' +
       '  </div>' +
-
       (isLoggedIn
-        ? // ── 已登录：文件上传区 ──────────────────────────
-          '  <div id="skill-upload-section">' +
-          '    <label class="label">上传相关文件（PDF / PPTX / DOCX / TXT，最多 10 个）</label>' +
-          '    <label id="skill-dropzone" class="skill-dropzone" tabindex="0" aria-label="点击或拖放文件">' +
-          '      <input type="file" id="skill-file-input" multiple accept=".pdf,.pptx,.ppt,.docx,.doc,.txt" style="display:none">' +
-          '      <div id="skill-drop-hint" style="pointer-events:none;">' +
-          '        <div style="font-size:32px;margin-bottom:8px;">📁</div>' +
-          '        <div style="font-size:14px;color:var(--gold-2);">点击选择文件，或拖放至此</div>' +
-          '        <div style="font-size:12px;color:var(--dim);margin-top:4px;">支持 PDF · PPTX · DOCX · TXT</div>' +
-          '      </div>' +
-          '      <div id="skill-file-list" class="skill-file-list" style="pointer-events:auto;"></div>' +
-          '    </label>' +
-          '      <div id="skill-drop-hint" style="pointer-events:none;">' +
-          '        <div style="font-size:32px;margin-bottom:8px;">📁</div>' +
-          '        <div style="font-size:14px;color:var(--gold-2);">点击选择文件，或拖放至此</div>' +
-          '        <div style="font-size:12px;color:var(--dim);margin-top:4px;">支持 PDF · PPTX · DOCX · TXT</div>' +
-          '      </div>' +
-          '      <div id="skill-file-list" class="skill-file-list" style="pointer-events:auto;"></div>' +
+        ? '  <div id="sk-upload-box" class="hairline rounded-xl p-4 mb-4">' +
+          '    <input type="file" id="sk-fi" multiple accept=".pdf,.pptx,.ppt,.docx,.doc,.txt" style="display:none">' +
+          '    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+          '      <span style="font-size:13px;color:var(--text-2);">上传文件（PDF / PPTX / DOCX / TXT）</span>' +
+          '      <label for="sk-fi" class="btn btn-gold" style="padding:6px 16px;font-size:13px;cursor:pointer;">选择文件</label>' +
           '    </div>' +
-          '    <div id="skill-validate-result" style="display:none;margin-top:12px;"></div>' +
-          '    <div style="display:flex;gap:10px;margin-top:14px;">' +
-          '      <button id="skill-upload-btn" class="btn btn-gold" style="flex:1;" disabled>' +
-          '        上传并校验信息充分性' +
-          '      </button>' +
-          '      <button id="skill-run" class="btn-ai" style="flex:1;justify-content:center;display:none;">' +
-          '        <svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;"><path d="M8 0L9.5 5.5L15 7L9.5 8.5L8 14L6.5 8.5L1 7L6.5 5.5L8 0Z"/></svg>' +
-          '        用星链 AI 执行此技能' +
+          '    <div id="sk-file-list" style="display:none;margin-bottom:8px;"></div>' +
+          '    <div id="sk-validate-result" style="display:none;margin-top:8px;"></div>' +
+          '    <div style="display:flex;gap:10px;margin-top:12px;">' +
+          '      <button id="sk-upload-btn" class="btn btn-gold" style="flex:1;" disabled>上传并校验</button>' +
+          '      <button id="sk-run-btn" class="btn-ai" style="flex:1;justify-content:center;display:none;">' +
+          '        <svg viewBox="0 0 16 16" fill="currentColor" style="width:13px;height:13px;margin-right:6px;"><path d="M8 0L9.5 5.5L15 7L9.5 8.5L8 14L6.5 8.5L1 7L6.5 5.5L8 0Z"/></svg>用星链 AI 执行' +
           '      </button>' +
           '    </div>' +
           '  </div>'
-        : '  <a href="/auth.html" class="btn btn-gold mt-4 w-full justify-center" style="display:flex;">请先登录以使用 AI 技能</a>') +
-
-      // ── AI 输出区（始终渲染，初始隐藏）──────────────────
-      '  <div id="skill-ai-wrap" class="mt-4 hairline rounded-xl p-4" style="display:none;">' +
+        : '  <a href="/auth.html" class="btn btn-gold mt-2 mb-4 w-full justify-center" style="display:flex;">请先登录以使用 AI 技能</a>') +
+      '  <div id="sk-ai-wrap" style="display:none;" class="hairline rounded-xl p-4">' +
       '    <div class="flex items-center justify-between mb-3">' +
-      '      <div class="ai-status" id="skill-ai-status"><span class="dot"></span><span id="skill-ai-status-text">连接中…</span></div>' +
-      '      <button id="skill-ai-clear" class="text-[11px] text-dim hover:text-gold">清空</button>' +
+      '      <div class="ai-status" id="sk-ai-status"><span class="dot"></span><span id="sk-ai-status-txt">连接中…</span></div>' +
+      '      <button id="sk-ai-clear" class="text-[11px] text-dim hover:text-gold">清空</button>' +
       '    </div>' +
-      '    <div id="skill-ai-output" class="ai-stream" style="max-height:320px;overflow-y:auto;"></div>' +
+      '    <div id="sk-ai-out" class="ai-stream" style="max-height:320px;overflow-y:auto;"></div>' +
       '  </div>' +
       '</div>';
 
     document.body.appendChild(wrap);
 
-    // ── 关闭逻辑 ─────────────────────────────────────────
+    // ── 关闭 ──────────────────────────────────────────────
     function close() { wrap.remove(); }
     wrap.querySelector(".skill-modal-mask").onclick = close;
     wrap.querySelector(".skill-modal-close").onclick = close;
@@ -238,199 +213,112 @@
 
     if (!isLoggedIn) return;
 
-    // ── 文件选择逻辑 ─────────────────────────────────────
-    // dropzone 是 <label>，fileInput 在其内部，浏览器原生关联，无需 JS .click()
-    const dropzone = wrap.querySelector("#skill-dropzone");
-    const fileInput = wrap.querySelector("#skill-file-input");
-    const fileList  = wrap.querySelector("#skill-file-list");
-    const dropHint  = wrap.querySelector("#skill-drop-hint");
-    const uploadBtn = wrap.querySelector("#skill-upload-btn");
-    const runBtn    = wrap.querySelector("#skill-run");
+    // ── 文件 input：直接从弹窗 DOM 取，label for="sk-fi" 原生关联，无需任何 JS .click() ──
+    const fi = wrap.querySelector("#sk-fi");
+    const fileListEl  = wrap.querySelector("#sk-file-list");
+    const validateEl  = wrap.querySelector("#sk-validate-result");
+    const uploadBtn   = wrap.querySelector("#sk-upload-btn");
+    const runBtn      = wrap.querySelector("#sk-run-btn");
 
-    function renderFileList() {
-      if (selectedFiles.length === 0) {
-        dropHint.style.display = "";
-        fileList.innerHTML = "";
-        uploadBtn.disabled = true;
-        return;
-      }
-      dropHint.style.display = "none";
-      fileList.innerHTML = selectedFiles.map((f, i) =>
+    function renderFiles() {
+      if (!selectedFiles.length) { fileListEl.style.display = "none"; uploadBtn.disabled = true; return; }
+      fileListEl.style.display = "block";
+      fileListEl.innerHTML = selectedFiles.map((f, i) =>
         '<div class="skill-file-item">' +
-        '  <span>' + f.name + '</span>' +
-        '  <span style="color:var(--dim);font-size:11px;">' + (f.size / 1024).toFixed(0) + ' KB</span>' +
-        '  <button class="skill-file-remove" data-idx="' + i + '" title="移除">✕</button>' +
+        '  <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + f.name + '</span>' +
+        '  <span style="font-size:11px;color:var(--dim);margin:0 8px;">' + (f.size/1024).toFixed(0) + ' KB</span>' +
+        '  <button onclick="this.closest(\'[id=sk-file-list]\'); event.stopPropagation();" data-idx="' + i + '" style="background:none;border:none;cursor:pointer;color:var(--dim);font-size:12px;padding:2px 4px;" title="移除">✕</button>' +
         '</div>'
       ).join('');
+      fileListEl.querySelectorAll("[data-idx]").forEach(btn => {
+        btn.onclick = function(e) {
+          e.stopPropagation();
+          selectedFiles.splice(parseInt(this.dataset.idx), 1);
+          renderFiles();
+        };
+      });
       uploadBtn.disabled = false;
     }
 
-    // dropzone 是 <label>，原生关联 fileInput，点击自动弹出文件选择
-    // 只需阻止 .skill-file-remove 按钮的点击冒泡到 label（防止误触发）
-    dropzone.addEventListener("click", function (e) {
-      if (e.target.closest(".skill-file-remove")) e.preventDefault();
-    });
-    dropzone.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
-    });
-    // 拖拽：必须在 dropzone 上阻止默认行为才能触发 drop
-    dropzone.addEventListener("dragenter", function (e) { e.preventDefault(); dropzone.classList.add("drag-over"); });
-    dropzone.addEventListener("dragover",  function (e) { e.preventDefault(); dropzone.classList.add("drag-over"); });
-    dropzone.addEventListener("dragleave", function (e) {
-      // 只在离开 dropzone 本身时移除高亮（不是移动到子元素时）
-      if (!dropzone.contains(e.relatedTarget)) dropzone.classList.remove("drag-over");
-    });
-    dropzone.addEventListener("drop", function (e) {
-      e.preventDefault();
-      dropzone.classList.remove("drag-over");
-      const newFiles = Array.from(e.dataTransfer.files || []);
-      selectedFiles = selectedFiles.concat(newFiles).slice(0, 10);
-      renderFileList();
-    });
-    fileInput.addEventListener("change", function () {
-      const newFiles = Array.from(this.files || []);
-      selectedFiles = selectedFiles.concat(newFiles).slice(0, 10);
-      this.value = "";
-      renderFileList();
-    });
-    fileList.addEventListener("click", function (e) {
-      const btn = e.target.closest(".skill-file-remove");
-      if (!btn) return;
-      const idx = parseInt(btn.dataset.idx);
-      selectedFiles.splice(idx, 1);
-      renderFileList();
-    });
+    fi.onchange = function () {
+      selectedFiles = selectedFiles.concat(Array.from(fi.files)).slice(0, 10);
+      fi.value = "";
+      renderFiles();
+    };
 
-    // ── 上传 + 校验 ──────────────────────────────────────
+    // ── 上传 + 校验 ───────────────────────────────────────
     uploadBtn.onclick = async function () {
-      if (selectedFiles.length === 0) return;
       uploadBtn.disabled = true;
       uploadBtn.textContent = "上传中…";
-
-      const validateResult = wrap.querySelector("#skill-validate-result");
-      validateResult.style.display = "none";
-
+      validateEl.style.display = "none";
       try {
-        // 1. 上传文件
-        const formData = new FormData();
-        formData.append("skillKey", s.id);
-        selectedFiles.forEach(f => formData.append("files", f));
-
-        const uploadResp = await fetch("/api/skill-upload", {
+        const fd = new FormData();
+        fd.append("skillKey", s.id);
+        selectedFiles.forEach(f => fd.append("files", f));
+        const ur = await fetch("/api/skill-upload", {
           method: "POST",
-          headers: { "Authorization": "Bearer " + VCPlat.getToken() },
-          body: formData
+          headers: { Authorization: "Bearer " + VCPlat.getToken() },
+          body: fd
         });
-        const uploadData = await uploadResp.json();
-        if (!uploadResp.ok) throw new Error(uploadData.error || "上传失败");
+        const ud = await ur.json();
+        if (!ur.ok) throw new Error(ud.error || "上传失败");
+        uploadId = ud.uploadId;
+        uploadBtn.textContent = "AI 校验中…";
 
-        uploadId = uploadData.uploadId;
-        uploadBtn.textContent = "AI 校验信息充分性…";
-
-        // 2. AI 校验
-        const validateResp = await fetch("/api/skill-validate", {
+        const vr = await fetch("/api/skill-validate", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + VCPlat.getToken()
-          },
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + VCPlat.getToken() },
           body: JSON.stringify({ uploadId, skillKey: s.id })
         });
-        const vData = await validateResp.json();
-        if (!validateResp.ok) throw new Error(vData.error || "校验失败");
+        const vd = await vr.json();
+        if (!vr.ok) throw new Error(vd.error || "校验失败");
 
-        // 3. 展示校验结果
-        validationPassed = vData.sufficient;
-        missingFields = vData.missing || [];
-
-        if (vData.sufficient) {
-          validateResult.innerHTML =
-            '<div class="skill-validate-pass">' +
-            '  ✅ 信息充分，可以执行技能' +
-            (vData.summary ? '<br><span style="font-size:12px;opacity:.8;">' + vData.summary + '</span>' : '') +
-            '</div>';
+        if (vd.sufficient) {
+          validateEl.innerHTML = '<div class="skill-validate-pass">✅ 信息充分，可以执行技能' +
+            (vd.summary ? '<br><span style="font-size:12px;opacity:.8;">' + vd.summary + '</span>' : '') + '</div>';
           runBtn.style.display = "flex";
           uploadBtn.style.display = "none";
         } else {
-          const missingHtml = missingFields.length
-            ? '<ul style="margin:6px 0 0;padding-left:18px;">' + missingFields.map(m => '<li>' + m + '</li>').join('') + '</ul>'
-            : '';
-          validateResult.innerHTML =
-            '<div class="skill-validate-fail">' +
-            '  ⚠️ 文件信息不足，无法生成完整结果' +
-            (vData.summary ? '<br><span style="font-size:12px;">' + vData.summary + '</span>' : '') +
-            missingHtml +
-            '  <div style="margin-top:10px;font-size:12px;color:var(--dim);">请补充上述信息后重新上传，或直接继续（结果可能不完整）</div>' +
-            '  <button id="skill-run-anyway" class="btn" style="margin-top:8px;font-size:12px;">仍然继续执行</button>' +
-            '</div>';
-          // 绑定"仍然继续"
-          wrap.querySelector("#skill-run-anyway").onclick = function () {
-            runBtn.style.display = "flex";
-            uploadBtn.style.display = "none";
-            runBtn.click();
+          const miss = (vd.missing||[]).length
+            ? '<ul style="margin:4px 0 0;padding-left:18px;">' + vd.missing.map(m=>'<li>'+m+'</li>').join('') + '</ul>' : '';
+          validateEl.innerHTML =
+            '<div class="skill-validate-fail">⚠️ 信息不足，部分内容可能缺失' +
+            (vd.summary ? '<br><span style="font-size:12px;">' + vd.summary + '</span>' : '') + miss +
+            '<div style="margin-top:8px;"><button id="sk-run-anyway" class="btn" style="font-size:12px;">仍然继续执行</button></div></div>';
+          wrap.querySelector("#sk-run-anyway").onclick = function () {
+            runBtn.style.display = "flex"; uploadBtn.style.display = "none"; runBtn.click();
           };
-          uploadBtn.disabled = false;
-          uploadBtn.textContent = "重新上传";
+          uploadBtn.disabled = false; uploadBtn.textContent = "重新上传";
         }
-        validateResult.style.display = "block";
-
-      } catch (err) {
-        validateResult.innerHTML = '<div class="skill-validate-fail">❌ ' + err.message + '</div>';
-        validateResult.style.display = "block";
-        uploadBtn.disabled = false;
-        uploadBtn.textContent = "上传并校验信息充分性";
+        validateEl.style.display = "block";
+      } catch(err) {
+        validateEl.innerHTML = '<div class="skill-validate-fail">❌ ' + err.message + '</div>';
+        validateEl.style.display = "block";
+        uploadBtn.disabled = false; uploadBtn.textContent = "上传并校验";
       }
     };
 
-    // ── 执行技能 ─────────────────────────────────────────
-    wrap.querySelector("#skill-ai-clear").onclick = function () {
-      wrap.querySelector("#skill-ai-output").innerHTML = "";
-    };
-
+    // ── AI 执行 ───────────────────────────────────────────
+    wrap.querySelector("#sk-ai-clear").onclick = function () { wrap.querySelector("#sk-ai-out").innerHTML = ""; };
     runBtn.onclick = async function () {
-      const btn = this;
-      const aiWrap = wrap.querySelector("#skill-ai-wrap");
-      const out = wrap.querySelector("#skill-ai-output");
-      const statusBox = wrap.querySelector("#skill-ai-status");
-      const statusTxt = wrap.querySelector("#skill-ai-status-text");
-
-      btn.disabled = true;
+      const aiWrap = wrap.querySelector("#sk-ai-wrap");
+      const out    = wrap.querySelector("#sk-ai-out");
+      const stBox  = wrap.querySelector("#sk-ai-status");
+      const stTxt  = wrap.querySelector("#sk-ai-status-txt");
+      runBtn.disabled = true;
       aiWrap.style.display = "block";
       out.innerHTML = '<span class="ai-cursor"></span>';
-      statusBox.classList.remove("success", "error");
-      statusTxt.textContent = "连接星链 AI 中…";
-
-      // 滚动到 AI 输出区
-      setTimeout(() => { aiWrap.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 100);
-
-      let raw = "";
-      let firstChunk = true;
-
-      const payload = uploadId
-        ? { skill: s.id, uploadId }
-        : { skill: s.id, input: s.desc };
-
+      stBox.classList.remove("success","error");
+      stTxt.textContent = "连接星链 AI 中…";
+      setTimeout(() => aiWrap.scrollIntoView({ behavior:"smooth", block:"nearest" }), 100);
+      let raw = "", first = true;
       await VCPlat.streamAI({
         endpoint: "/api/skill-run",
-        payload,
-        onChunk: (delta) => {
-          if (firstChunk) { statusTxt.textContent = "AI 生成中…"; firstChunk = false; }
-          raw += delta;
-          out.innerHTML = VCPlat.mdToHtml(raw) + '<span class="ai-cursor"></span>';
-          out.scrollTop = out.scrollHeight;
-        },
-        onUsage: (u) => console.log("[skill usage]", u),
-        onDone: () => {
-          out.innerHTML = VCPlat.mdToHtml(raw);
-          statusBox.classList.add("success");
-          statusTxt.textContent = "执行完成";
-          btn.disabled = false;
-        },
-        onError: (e) => {
-          statusBox.classList.add("error");
-          statusTxt.textContent = "调用失败：" + e.message;
-          btn.disabled = false;
-        }
+        payload: uploadId ? { skill: s.id, uploadId } : { skill: s.id, input: s.desc },
+        onChunk: d => { if(first){stTxt.textContent="AI 生成中…";first=false;} raw+=d; out.innerHTML=VCPlat.mdToHtml(raw)+'<span class="ai-cursor"></span>'; out.scrollTop=out.scrollHeight; },
+        onUsage: u => console.log("[skill]",u),
+        onDone:  () => { out.innerHTML=VCPlat.mdToHtml(raw); stBox.classList.add("success"); stTxt.textContent="执行完成"; runBtn.disabled=false; },
+        onError: e => { stBox.classList.add("error"); stTxt.textContent="调用失败："+e.message; runBtn.disabled=false; }
       });
     };
   }
