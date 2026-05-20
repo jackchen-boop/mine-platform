@@ -1,7 +1,7 @@
 /* ============================================================
    专家套件 · 技能注册表 + 调用弹窗组件
    - 技能数据来源：equity-research / investment-banking / pe-vc-investment
-   - 登录用户：通过 /api/skill-run 调用真实 MiniMax AI（SSE 流式）
+   - 登录用户：通过 /api/skill-run 调用星链 AI 引擎（SSE 流式）
    - 未登录：展示登录提示
 ============================================================ */
 (function () {
@@ -183,7 +183,7 @@
       (isLoggedIn
         ? '  <button id="skill-run" class="btn-ai mt-4 w-full justify-center">' +
           '    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0L9.5 5.5L15 7L9.5 8.5L8 14L6.5 8.5L1 7L6.5 5.5L8 0Z"/></svg>' +
-          '    用 MiniMax AI 执行此技能' +
+          '    用星链 AI 执行此技能' +
           '  </button>'
         : '  <a href="/auth.html" class="btn btn-gold mt-4 w-full justify-center" style="display:flex;">请先登录以使用 AI 技能</a>') +
 
@@ -223,7 +223,7 @@
       aiWrap.style.display = "block";
       out.innerHTML = '<span class="ai-cursor"></span>';
       statusBox.classList.remove("success", "error");
-      statusTxt.textContent = "连接 MiniMax 中…";
+      statusTxt.textContent = "连接星链 AI 中…";
 
       let raw = "";
       let firstChunk = true;

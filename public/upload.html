@@ -139,7 +139,7 @@
     <!-- API 接入状态：真 AI 解析交互区 -->
     <div class="glass p-5" id="ai-parse-card" style="border-color:rgba(79,141,255,.3);">
       <div class="flex items-center justify-between mb-3">
-        <div class="text-sm font-bold text-blue">⚡ MiniMax AI · BP 智能解析</div>
+        <div class="text-sm font-bold text-blue">⚡ 星链 AI · BP 智能解析</div>
         <span class="chip chip-blue" id="ai-engine-tag">LIVE</span>
       </div>
       <p class="text-mute text-xs leading-6 mt-1 mb-3">
@@ -172,7 +172,7 @@
         <!-- AI 流式输出区（默认隐藏，点"用 AI 解析"后展开） -->
         <div id="ai-output-wrap" style="display:none;" class="hairline rounded-xl p-4 mb-4">
           <div class="flex items-center justify-between mb-3">
-            <div class="ai-status" id="ai-output-status"><span class="dot"></span><span id="ai-output-status-text">连接 MiniMax 中…</span></div>
+            <div class="ai-status" id="ai-output-status"><span class="dot"></span><span id="ai-output-status-text">连接星链 AI 中…</span></div>
             <button id="ai-output-clear" class="text-[11px] text-dim hover:text-gold">清空</button>
           </div>
           <div id="ai-output" class="ai-stream" style="max-height:260px;overflow-y:auto;"></div>
@@ -347,16 +347,38 @@ async function doUploadFile(file) {
     const formData = new FormData();
     formData.append('file', file);
     const token = VCPlat.getToken();
-    const resp = await fetch('/api/bp/upload', {
-      method: 'POST',
-      headers: token ? { 'Authorization': 'Bearer ' + token } : {},
-      body: formData
+
+    // 用 XHR 实现真实上传进度
+    showToast('准备上传：' + file.name);
+    const result = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/bp/upload');
+      if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round(e.loaded / e.total * 100);
+          showToast('上传中 ' + pct + '%　' + file.name);
+          document.getElementById(itemId + '-status').textContent =
+            sizeMB + ' MB · 上传中 ' + pct + '%';
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try { resolve(JSON.parse(xhr.responseText)); }
+          catch (e) { reject(new Error('响应解析失败')); }
+        } else {
+          let msg = '上传失败 ' + xhr.status;
+          try { msg = JSON.parse(xhr.responseText).error || msg; } catch {}
+          reject(new Error(msg));
+        }
+      });
+      xhr.addEventListener('error', () => reject(new Error('网络错误，上传失败')));
+      xhr.send(formData);
     });
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error || '上传失败 ' + resp.status);
-    }
-    const result = await resp.json();
+
+    showToast('文件上传完成，正在提取内容…', 'success');
     lastBpId = result.id || result.bp?.id;
     document.getElementById("file-count").textContent =
       parseInt(document.getElementById("file-count").textContent || '0') + 1;
@@ -381,6 +403,8 @@ async function doUploadFile(file) {
     document.getElementById(itemId + '-status').textContent = sizeMB + ' MB · 上传失败：' + e.message;
     document.getElementById(itemId + '-chip').outerHTML =
       '<span class="chip" style="color:#fca5a5;border-color:rgba(239,68,68,.4);">失败</span>';
+    showToast('上传失败：' + e.message, 'error');
+    hideToast(3000);
   }
 }
 
@@ -502,7 +526,7 @@ async function runAIParse({ pastedText, bpId }) {
   wrap.style.display = "block";
   out.innerHTML = '<span class="ai-cursor"></span>';
   statusBox.classList.remove("success", "error");
-  statusTxt.textContent = "连接 MiniMax 中…";
+  statusTxt.textContent = "连接星链 AI 中…";
   document.getElementById("parse-status").outerHTML =
     '<span id="parse-status" class="chip" style="background:rgba(79,141,255,.1);border-color:rgba(79,141,255,.4);color:#7cb8ff;"><span class="pulse-dot"></span>AI 解析中</span>';
 
@@ -532,7 +556,7 @@ async function runAIParse({ pastedText, bpId }) {
       out.scrollTop = out.scrollHeight;
     },
     onUsage: (u) => {
-      console.log("[MiniMax usage]", u);
+      console.log("[AI usage]", u);
     },
     onDone: () => {
       out.innerHTML = VCPlat.mdToHtml(raw);

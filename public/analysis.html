@@ -168,7 +168,7 @@
     <div class="glass corner-deco p-5 md:p-7">
       <div class="flex items-center gap-3 mb-3">
         <span class="chip chip-gold">AI 智能投研分析</span>
-        <div class="ai-status" id="analyze-status"><span class="dot"></span><span id="analyze-status-text">连接 MiniMax 中…</span></div>
+        <div class="ai-status" id="analyze-status"><span class="dot"></span><span id="analyze-status-text">连接星链 AI 中…</span></div>
       </div>
       <h1 id="analyze-title" class="font-serif-cn text-2xl font-black leading-tight"></h1>
       <div id="analyze-meta" class="flex flex-wrap items-center gap-3 mt-2 text-sm text-mute"></div>
@@ -397,7 +397,7 @@ async function startAnalysis(bpId) {
   const statusTxt = document.getElementById('analyze-status-text');
   output.innerHTML = '<span class="ai-cursor"></span>';
   statusBox.classList.remove('success', 'error');
-  statusTxt.textContent = '连接 MiniMax 中…';
+  statusTxt.textContent = '连接星链 AI 中…';
 
   let raw = '';
   let firstChunk = true;
@@ -411,7 +411,7 @@ async function startAnalysis(bpId) {
       output.innerHTML = VCPlat.mdToHtml(raw) + '<span class="ai-cursor"></span>';
       output.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     },
-    onUsage: (u) => console.log('[MiniMax usage]', u),
+    onUsage: (u) => console.log('[AI usage]', u),
     onDone: () => {
       output.innerHTML = VCPlat.mdToHtml(raw);
       statusBox.classList.add('success');
