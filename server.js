@@ -66,7 +66,8 @@ app.use(cors({
     if (!origin || allowedOrigins.some(o => origin.startsWith(o))) cb(null, true);
     else cb(null, false);
   },
-  credentials: true
+  credentials: true,
+  allowedHeaders: ['Authorization', 'Content-Type', 'X-Requested-With']
 }));
 
 // Body parsers
