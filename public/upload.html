@@ -280,15 +280,33 @@
 <script>
 const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("file-input");
-dropzone.addEventListener("click", () => fileInput.click());
+function requireLoginTip() {
+  if (VCPlat.isLoggedIn()) return true;
+  // 在 dropzone 上方显示提示横幅
+  if (!document.getElementById("login-tip-bar")) {
+    dropzone.insertAdjacentHTML("beforebegin",
+      '<div id="login-tip-bar" class="flex items-center justify-between gap-4 rounded-xl px-5 py-3 mb-4 text-sm" ' +
+      'style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);">' +
+      '<span style="color:#fca5a5;">请先登录后再上传 BP 文件</span>' +
+      '<a href="auth.html" class="btn btn-ghost text-xs" style="color:#fca5a5;border-color:rgba(239,68,68,.4);">立即登录 →</a>' +
+      '</div>'
+    );
+  }
+  return false;
+}
+
+dropzone.addEventListener("click", () => { if (requireLoginTip()) fileInput.click(); });
 fileInput.addEventListener("change", () => {
   if (fileInput.files[0]) doUploadFile(fileInput.files[0]);
 });
-dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.style.background = "rgba(212,175,55,.08)"; });
+dropzone.addEventListener("dragover", e => {
+  e.preventDefault();
+  if (VCPlat.isLoggedIn()) dropzone.style.background = "rgba(212,175,55,.08)";
+});
 dropzone.addEventListener("dragleave", () => dropzone.style.background = "");
 dropzone.addEventListener("drop", e => {
   e.preventDefault(); dropzone.style.background = "";
-  if (e.dataTransfer.files.length) doUploadFile(e.dataTransfer.files[0]);
+  if (requireLoginTip() && e.dataTransfer.files.length) doUploadFile(e.dataTransfer.files[0]);
 });
 
 document.querySelectorAll(".modality-card").forEach(card => {
@@ -320,12 +338,6 @@ async function doUploadFile(file) {
     '  <span class="chip" style="background:rgba(79,141,255,.1);border-color:rgba(79,141,255,.4);color:#7cb8ff;" id="' + itemId + '-chip"><span class="pulse-dot"></span>上传中</span>' +
     '</div>'
   );
-
-  if (!VCPlat.isLoggedIn()) {
-    document.getElementById(itemId + '-status').textContent = sizeMB + ' MB · 请先登录';
-    document.getElementById(itemId + '-chip').outerHTML = '<a href="auth.html" class="chip" style="color:#fca5a5;border-color:rgba(239,68,68,.4);">请登录</a>';
-    return;
-  }
 
   try {
     const formData = new FormData();
