@@ -175,23 +175,21 @@
       '    <div class="hairline rounded-lg p-3"><div class="text-[11px] text-dim">所需输入</div><div class="text-sm mt-1">' + s.input + '</div></div>' +
       '    <div class="hairline rounded-lg p-3"><div class="text-[11px] text-dim">输出交付物</div><div class="text-sm mt-1 text-gold-2">' + s.output + '</div></div>' +
       '  </div>' +
-      (isLoggedIn
-        ? '  <div id="sk-upload-box" class="hairline rounded-xl p-4 mb-4">' +
-          '    <input type="file" id="sk-fi" multiple accept=".pdf,.pptx,.ppt,.docx,.doc,.txt" style="display:none">' +
-          '    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
-          '      <span style="font-size:13px;color:var(--text-2);">上传文件（PDF / PPTX / DOCX / TXT）</span>' +
-          '      <label for="sk-fi" class="btn btn-gold" style="padding:6px 16px;font-size:13px;cursor:pointer;">选择文件</label>' +
-          '    </div>' +
-          '    <div id="sk-file-list" style="display:none;margin-bottom:8px;"></div>' +
-          '    <div id="sk-validate-result" style="display:none;margin-top:8px;"></div>' +
-          '    <div style="display:flex;gap:10px;margin-top:12px;">' +
-          '      <button id="sk-upload-btn" class="btn btn-gold" style="flex:1;" disabled>上传并校验</button>' +
-          '      <button id="sk-run-btn" class="btn-ai" style="flex:1;justify-content:center;display:none;">' +
-          '        <svg viewBox="0 0 16 16" fill="currentColor" style="width:13px;height:13px;margin-right:6px;"><path d="M8 0L9.5 5.5L15 7L9.5 8.5L8 14L6.5 8.5L1 7L6.5 5.5L8 0Z"/></svg>用星链 AI 执行' +
-          '      </button>' +
-          '    </div>' +
-          '  </div>'
-        : '  <a href="/auth.html" class="btn btn-gold mt-2 mb-4 w-full justify-center" style="display:flex;">请先登录以使用 AI 技能</a>') +
+      '  <div id="sk-upload-box" class="hairline rounded-xl p-4 mb-4">' +
+        '    <input type="file" id="sk-fi" multiple accept=".pdf,.pptx,.ppt,.docx,.doc,.txt" style="display:none">' +
+        '    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+        '      <span style="font-size:13px;color:var(--text-2);">上传文件（PDF / PPTX / DOCX / TXT）</span>' +
+        '      <label for="sk-fi" class="btn btn-gold" style="padding:6px 16px;font-size:13px;cursor:pointer;">选择文件</label>' +
+        '    </div>' +
+        '    <div id="sk-file-list" style="display:none;margin-bottom:8px;"></div>' +
+        '    <div id="sk-validate-result" style="display:none;margin-top:8px;"></div>' +
+        '    <div style="display:flex;gap:10px;margin-top:12px;">' +
+        '      <button id="sk-upload-btn" class="btn btn-gold" style="flex:1;" disabled>上传并校验</button>' +
+        '      <button id="sk-run-btn" class="btn-ai" style="flex:1;justify-content:center;display:none;">' +
+        '        <svg viewBox="0 0 16 16" fill="currentColor" style="width:13px;height:13px;margin-right:6px;"><path d="M8 0L9.5 5.5L15 7L9.5 8.5L8 14L6.5 8.5L1 7L6.5 5.5L8 0Z"/></svg>用星链 AI 执行' +
+        '      </button>' +
+        '    </div>' +
+        '  </div>' +
       '  <div id="sk-ai-wrap" style="display:none;" class="hairline rounded-xl p-4">' +
       '    <div class="flex items-center justify-between mb-3">' +
       '      <div class="ai-status" id="sk-ai-status"><span class="dot"></span><span id="sk-ai-status-txt">连接中…</span></div>' +
@@ -211,14 +209,18 @@
       if (e.key === "Escape") { close(); document.removeEventListener("keydown", esc); }
     });
 
-    if (!isLoggedIn) return;
-
     // ── 文件 input：直接从弹窗 DOM 取，label for="sk-fi" 原生关联，无需任何 JS .click() ──
     const fi = wrap.querySelector("#sk-fi");
     const fileListEl  = wrap.querySelector("#sk-file-list");
     const validateEl  = wrap.querySelector("#sk-validate-result");
     const uploadBtn   = wrap.querySelector("#sk-upload-btn");
     const runBtn      = wrap.querySelector("#sk-run-btn");
+
+    // 未登录时，点"上传并校验"直接跳登录
+    if (!isLoggedIn) {
+      uploadBtn.onclick = function () { window.location.href = '/auth.html'; };
+      return;
+    }
 
     function renderFiles() {
       if (!selectedFiles.length) { fileListEl.style.display = "none"; uploadBtn.disabled = true; return; }
