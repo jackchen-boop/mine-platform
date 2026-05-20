@@ -10,13 +10,13 @@ export function runSeed() {
 
   // 管理员账号 (密码: Admin@2026)
   const adminHash = bcrypt.hashSync('Admin@2026', 10);
-  db.prepare(`INSERT INTO users (name, email, password_hash, role, organization, avatar_letter) VALUES (?, ?, ?, 'admin', '启明资本', '管')`
-  ).run('系统管理员', 'admin@qiming-vc.com', adminHash);
+  db.prepare(`INSERT INTO users (name, email, password_hash, role, organization, avatar_letter) VALUES (?, ?, ?, 'admin', '星链创投', '管')`
+  ).run('系统管理员', 'admin@starlink-vc.com', adminHash);
 
   // 演示投资人账号 (密码: Demo@2026)
   const demoHash = bcrypt.hashSync('Demo@2026', 10);
   db.prepare(`INSERT INTO users (name, email, password_hash, role, organization, avatar_letter) VALUES (?, ?, ?, 'investor', '红杉中国', '张')`
-  ).run('张明远', 'demo@qiming-vc.com', demoHash);
+  ).run('张明远', 'demo@starlink-vc.com', demoHash);
 
   // 12 个融资项目种子数据
   const projects = [
@@ -263,8 +263,8 @@ export function runSeed() {
   }
 
   console.log(`✓ 种子数据写入完成：${projects.length} 个项目，${partners.length} 家机构，2 个演示账号`);
-  console.log('  管理员: admin@qiming-vc.com / Admin@2026');
-  console.log('  演示用: demo@qiming-vc.com  / Demo@2026');
+  console.log('  管理员: admin@starlink-vc.com / Admin@2026');
+  console.log('  演示用: demo@starlink-vc.com  / Demo@2026');
 }
 
 function datetimeOffset(days) {

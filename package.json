@@ -1,7 +1,7 @@
 {
-  "name": "qiming-vc-platform",
+  "name": "starlink-vc-platform",
   "version": "1.0.0",
-  "description": "启明资本 · 风险投资平台 — 全栈应用",
+  "description": "星链创投 StarLink VC — 算法解码创新，资本加速变革",
   "type": "module",
   "main": "server.js",
   "scripts": {

@@ -109,7 +109,7 @@ app.get('*', (req, res, next) => {
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`\n🚀 启明资本 VC 平台已启动`);
+  console.log(`\n🚀 星链创投 VC 平台已启动`);
   console.log(`   地址: http://localhost:${PORT}`);
   console.log(`   环境: ${process.env.NODE_ENV || 'development'}\n`);
 });
