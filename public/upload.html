@@ -295,7 +295,11 @@ function requireLoginTip() {
   return false;
 }
 
-dropzone.addEventListener("click", () => { if (requireLoginTip()) fileInput.click(); });
+dropzone.addEventListener("click", (e) => {
+  // 按钮自己的 onclick 已处理，避免冒泡到 dropzone 再触发一次
+  if (e.target.closest("button")) return;
+  if (requireLoginTip()) fileInput.click();
+});
 fileInput.addEventListener("change", () => {
   if (fileInput.files[0]) doUploadFile(fileInput.files[0]);
 });
