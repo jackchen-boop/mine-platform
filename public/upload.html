@@ -83,7 +83,7 @@
         </svg>
         <div class="font-serif-cn text-lg font-bold mt-4">拖拽文件到此处，或点击选择</div>
         <div class="text-mute text-xs mt-2">支持 .ppt / .pptx / .pdf / .docx / .mp4 / .mp3 · 单文件 ≤ 200MB</div>
-        <button class="btn btn-gold mt-5" onclick="document.getElementById('file-input').click()">选择文件</button>
+        <button class="btn btn-gold mt-5" onclick="requireLoginTip() && document.getElementById('file-input').click()">选择文件</button>
         <input type="file" id="file-input" class="hidden" />
 
         <div class="flex gap-2 mt-6 text-xs">
