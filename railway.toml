@@ -7,3 +7,11 @@ healthcheckPath = "/"
 healthcheckTimeout = 30
 restartPolicyType = "on-failure"
 restartPolicyMaxRetries = 3
+
+[[volumes]]
+name = "vc_data"
+mountPath = "/data"
+
+[[volumes]]
+name = "vc_uploads"
+mountPath = "/app/public/uploads"
