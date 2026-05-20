@@ -36,7 +36,7 @@
 <div class="max-w-[1280px] mx-auto px-6 pt-10 pb-20">
 
   <!-- 顶部用户信息卡 -->
-  <div class="glass p-8 corner-deco mb-8 flex flex-col md:flex-row items-start md:items-center gap-6">
+  <div class="glass p-5 md:p-8 corner-deco mb-8 flex flex-col md:flex-row items-start md:items-center gap-6">
     <div id="user-avatar" class="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-700 flex items-center justify-center text-2xl font-bold text-black flex-shrink-0">U</div>
     <div class="flex-1">
       <div class="flex items-center gap-3 flex-wrap">
@@ -52,7 +52,7 @@
   </div>
 
   <!-- KPI 卡片 -->
-  <div class="grid grid-cols-3 gap-5 mb-8">
+  <div class="grid grid-cols-3 gap-3 sm:gap-5 mb-8">
     <div class="glass p-6 text-center">
       <div class="text-dim text-xs mb-2">关注项目</div>
       <div class="stat-num text-3xl" id="stat-follows">0</div>
@@ -74,7 +74,7 @@
 
     <!-- 左侧 sidebar -->
     <div class="lg:col-span-3">
-      <div class="glass p-4 space-y-1">
+      <div class="glass p-4 space-y-1 hidden lg:block">
         <button onclick="showTab('overview')" class="dash-nav-btn active w-full text-left px-4 py-2.5 rounded-lg text-sm" id="nav-overview">概览</button>
         <button onclick="showTab('follows')"  class="dash-nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm" id="nav-follows">关注的项目</button>
         <button onclick="showTab('reports')"  class="dash-nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm" id="nav-reports">AI 报告</button>
@@ -83,6 +83,15 @@
         <div class="border-t border-white/5 mt-2 pt-2">
           <button onclick="VCPlat.logout()" class="w-full text-left px-4 py-2.5 rounded-lg text-sm text-dim hover:text-red-400 transition">退出登录</button>
         </div>
+      </div>
+      <!-- 移动端水平 tab 栏 -->
+      <div class="lg:hidden flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+        <button onclick="showTab('overview')" class="dash-tab-m-btn active whitespace-nowrap chip" id="m-nav-overview">概览</button>
+        <button onclick="showTab('follows')"  class="dash-tab-m-btn whitespace-nowrap chip" id="m-nav-follows">关注项目</button>
+        <button onclick="showTab('reports')"  class="dash-tab-m-btn whitespace-nowrap chip" id="m-nav-reports">AI 报告</button>
+        <button onclick="showTab('bps')"      class="dash-tab-m-btn whitespace-nowrap chip" id="m-nav-bps">我的 BP</button>
+        <button onclick="showTab('profile')"  class="dash-tab-m-btn whitespace-nowrap chip" id="m-nav-profile">账号</button>
+        <button onclick="VCPlat.logout()"     class="whitespace-nowrap chip text-red-400">退出</button>
       </div>
     </div>
 
@@ -150,8 +159,8 @@
       <!-- 账号设置 -->
       <div id="tab-profile" class="dash-tab hidden">
         <h2 class="font-serif-cn text-xl font-bold mb-5">账号设置</h2>
-        <div class="glass p-7 space-y-5">
-          <div class="grid grid-cols-2 gap-5">
+        <div class="glass p-5 md:p-7 space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label class="label">姓名</label>
               <input id="p-name" class="input" placeholder="您的姓名" />
@@ -172,7 +181,7 @@
           <button onclick="saveProfile()" class="btn btn-gold">保存修改</button>
         </div>
 
-        <div class="glass p-7 mt-5 space-y-4">
+        <div class="glass p-5 md:p-7 mt-5 space-y-4">
           <h3 class="font-bold text-sm">修改密码</h3>
           <input type="password" id="old-pass" class="input" placeholder="当前密码" />
           <input type="password" id="new-pass" class="input" placeholder="新密码（8位以上）" />
@@ -401,8 +410,10 @@ async function changePassword() {
 function showTab(name) {
   document.querySelectorAll(".dash-tab").forEach(t => t.classList.add("hidden"));
   document.querySelectorAll(".dash-nav-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".dash-tab-m-btn").forEach(b => b.classList.remove("active"));
   document.getElementById("tab-" + name)?.classList.remove("hidden");
   document.getElementById("nav-" + name)?.classList.add("active");
+  document.getElementById("m-nav-" + name)?.classList.add("active");
   if (name === "follows") loadFollows();
   if (name === "reports") loadReports();
   if (name === "bps")     loadBPs();
@@ -426,12 +437,17 @@ function formatFileSize(bytes) {
 .dash-nav-btn { color: var(--text-2); transition: all .15s; }
 .dash-nav-btn:hover { background: rgba(255,255,255,.04); color: var(--text-1); }
 .dash-nav-btn.active { background: rgba(212,175,55,.1); color: var(--gold-1); border-left: 2px solid var(--gold-1); }
+.dash-tab-m-btn { cursor: pointer; transition: all .15s; }
+.dash-tab-m-btn.active { background: rgba(212,175,55,.12); border-color: rgba(212,175,55,.5); color: var(--gold-2); }
 .prose-vc h1,.prose-vc h2,.prose-vc h3 { color: var(--gold-1); margin: 1.2em 0 .5em; }
 .prose-vc table { width:100%; border-collapse:collapse; margin:1em 0; }
 .prose-vc th,.prose-vc td { padding:.5em .75em; border:1px solid var(--line); font-size:.85em; }
 .prose-vc th { background:rgba(212,175,55,.08); }
 .prose-vc code { background:rgba(255,255,255,.05); padding:.2em .4em; border-radius:.25em; font-size:.85em; }
 .chip-green { background: rgba(16,185,129,.12); color: #6ee7b7; border-color: rgba(16,185,129,.3); }
+@media (max-width: 767px) {
+  .dash-tab-m-btn { font-size: 11px; padding: 4px 10px; }
+}
 </style>
 
 </body>

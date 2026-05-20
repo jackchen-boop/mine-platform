@@ -370,3 +370,52 @@ html, body {
 .btn-ai:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(79,141,255,0.5); }
 .btn-ai:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .btn-ai svg { width: 14px; height: 14px; }
+
+/* ===== 移动端适配 ===== */
+@media (max-width: 767px) {
+  .top-nav > div { padding-left: 12px; padding-right: 12px; }
+  .site-footer > div { padding-left: 12px; padding-right: 12px; }
+  /* 认证区域移动端紧凑 */
+  #nav-auth .chip { font-size: 10px; padding: 2px 6px; }
+  #nav-auth .btn { padding: 4px 10px; font-size: 11px; }
+  /* 全局间距压缩 - 不覆盖 corner-deco 和 md: 响应式 padding */
+  .glass:not(.corner-deco) { padding: 14px !important; }
+  .glass.corner-deco { padding: 16px !important; }
+  /* 表格滚动 */
+  .glass.overflow-hidden, .glass.overflow-x-auto { overflow-x: auto; }
+  table { font-size: 12px; }
+  /* 按钮紧凑 */
+  .btn { padding: 6px 12px; font-size: 12px; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  /* KPI 数字缩小 */
+  .stat-num { font-size: 1.25rem; }
+  /* Hero 区域紧凑 */
+  .font-serif-cn.text-3xl { font-size: 1.5rem; }
+  .font-serif-cn.text-4xl { font-size: 1.75rem; }
+  .font-serif-cn.text-2xl { font-size: 1.25rem; }
+  .font-serif-cn.text-xl  { font-size: 1.1rem; }
+  /* section 间距压缩 */
+  section { padding-top: 16px !important; padding-bottom: 16px !important; }
+  /* 搜索输入框全宽 */
+  .input { font-size: 13px; padding: 10px 12px; }
+  /* chip 紧凑 */
+  .chip { font-size: 11px; padding: 3px 8px; }
+  /* 隐藏大屏专属元素 */
+  .hide-mobile { display: none !important; }
+  /* AI 流式输出区适配 */
+  .ai-stream { font-size: 13px; }
+  .ai-stream h1 { font-size: 18px; }
+  .ai-stream h2 { font-size: 16px; }
+  .ai-stream h3 { font-size: 14px; }
+  .skill-modal { max-width: 100%; padding: 16px; }
+}
+
+/* 移动端管理后台提示 */
+.mobile-admin-block {
+  display: none;
+}
+@media (max-width: 767px) {
+  .mobile-admin-block { display: flex; }
+  .admin-sidebar-hide { display: none !important; }
+  .admin-content-hide { display: none !important; }
+}

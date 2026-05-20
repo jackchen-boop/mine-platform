@@ -216,6 +216,11 @@
     return h;
   };
 
+  // ── 移动端检测 ──────────────────────────────────────
+  VCPlat.isMobile = function () {
+    return window.innerWidth < 768;
+  };
+
   // ── DOMContentLoaded 初始化 ──────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
     // 背景层
@@ -231,8 +236,60 @@
     });
     // 渲染认证区域
     renderAuthArea();
+    // 移动端汉堡菜单
+    injectMobileNav();
     // 静态 count-up（保留兼容）
     document.querySelectorAll('[data-count]').forEach(VCPlat.startCountUp);
   });
+
+  // ── 移动端导航注入 ──────────────────────────────────
+  function injectMobileNav() {
+    const header = document.querySelector('.top-nav > div');
+    if (!header) return;
+    // 添加汉堡按钮（仅移动端可见）
+    const burger = document.createElement('button');
+    burger.id = 'mobile-burger';
+    burger.className = 'md:hidden flex flex-col gap-1 p-2';
+    burger.innerHTML = '<span class="block w-5 h-0.5 bg-gold-1"></span><span class="block w-5 h-0.5 bg-gold-1"></span><span class="block w-5 h-0.5 bg-gold-1"></span>';
+    burger.onclick = toggleMobileMenu;
+    // 插到 nav-auth 前面
+    const auth = document.getElementById('nav-auth');
+    if (auth) header.insertBefore(burger, auth);
+    else header.appendChild(burger);
+  }
+
+  function toggleMobileMenu() {
+    let menu = document.getElementById('mobile-menu');
+    if (menu) { menu.remove(); return; }
+    const u = VCPlat.getUser();
+    const links = [
+      { href: '/index.html', text: '首页' },
+      { href: '/roadshow.html', text: '项目路演' },
+      { href: '/upload.html', text: 'BP 上传' },
+      { href: '/analysis.html', text: 'AI 分析' },
+      { href: '/workshop.html', text: '投研工坊' },
+    ];
+    if (u) {
+      links.push({ href: '/dashboard.html', text: '用户中心' });
+      if (u.role === 'admin') links.push({ href: '/admin.html', text: '管理后台' });
+    }
+    menu = document.createElement('div');
+    menu.id = 'mobile-menu';
+    menu.className = 'fixed inset-0 z-50 md:hidden';
+    menu.innerHTML = `
+      <div class="absolute inset-0 bg-black/70" onclick="this.closest('#mobile-menu').remove()"></div>
+      <div class="absolute right-0 top-0 h-full w-64 glass p-6 flex flex-col gap-1">
+        <div class="flex items-center justify-between mb-5">
+          <span class="font-serif-cn font-bold text-gold-2">导航菜单</span>
+          <button onclick="this.closest('#mobile-menu').remove()" class="text-dim text-xl">&times;</button>
+        </div>
+        ${links.map(l => `<a href="${l.href}" class="block py-2 text-sm hover:text-gold-2 transition">${l.text}</a>`).join('')}
+        <div class="mt-auto pt-5 border-t border-white/10">
+          ${u ? `<button onclick="VCPlat.logout()" class="text-sm text-red-400">退出登录</button>` : `<a href="/auth.html" class="btn btn-gold w-full text-center text-sm">登录 / 注册</a>`}
+        </div>
+      </div>`;
+    document.body.appendChild(menu);
+  }
+  VCPlat.toggleMobileMenu = toggleMobileMenu;
 
 })();

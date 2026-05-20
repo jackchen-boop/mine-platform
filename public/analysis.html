@@ -125,7 +125,7 @@
 
   <!-- State 2: 查看报告 -->
   <div id="state-report" style="display:none;">
-    <div class="glass corner-deco p-7">
+    <div class="glass corner-deco p-5 md:p-7">
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div class="flex items-center gap-3 mb-3">
@@ -160,12 +160,12 @@
     </div>
 
     <!-- 报告正文 -->
-    <div id="report-content" class="mt-6 glass p-7 prose-ai"></div>
+    <div id="report-content" class="mt-6 glass p-5 md:p-7 prose-ai"></div>
   </div>
 
   <!-- State 3: 流式分析 -->
   <div id="state-analyze" style="display:none;">
-    <div class="glass corner-deco p-7">
+    <div class="glass corner-deco p-5 md:p-7">
       <div class="flex items-center gap-3 mb-3">
         <span class="chip chip-gold">AI 智能投研分析</span>
         <div class="ai-status" id="analyze-status"><span class="dot"></span><span id="analyze-status-text">连接 MiniMax 中…</span></div>
@@ -178,7 +178,7 @@
       </div>
     </div>
 
-    <div class="mt-6 glass p-7">
+    <div class="mt-6 glass p-5 md:p-7">
       <div id="analyze-output" class="ai-stream"></div>
     </div>
   </div>
@@ -193,7 +193,7 @@
 </div>
 
 <footer class="site-footer mt-20">
-  <div class="max-w-[1280px] mx-auto px-6 flex justify-between text-[12px] text-dim">
+  <div class="max-w-[1280px] mx-auto px-6 flex flex-col sm:flex-row justify-between text-[12px] text-dim gap-2">
     <span>&copy; 2026 启明资本 &middot; QIMING VC PLATFORM（仅供 Demo 演示）</span>
     <span>沪ICP备XXXXXXXX号</span>
   </div>
