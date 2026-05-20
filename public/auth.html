@@ -85,7 +85,7 @@
             <span class="text-xs text-blue-300 font-medium">快速体验</span>
           </div>
           <div class="flex items-center justify-between text-xs">
-            <span class="text-mute">账号：<span class="text-gold-2 font-mono cursor-pointer select-all" onclick="fillTestAccount()">test@starlink-vc.com</span></span>
+            <span class="text-mute">账号：<span class="text-gold-2 font-mono cursor-pointer select-all" onclick="fillTestAccount()">test@test.com</span></span>
             <span class="text-mute">密码：<span class="text-gold-2 font-mono">12345678</span></span>
             <button onclick="fillTestAccount()" class="text-blue-300 hover:text-blue-200 text-[11px]">一键填入</button>
           </div>
@@ -232,7 +232,7 @@ document.querySelectorAll(".role-card").forEach(b => {
 });
 
 function fillTestAccount() {
-  document.getElementById("login-account").value = "test@starlink-vc.com";
+  document.getElementById("login-account").value = "test@test.com";
   document.getElementById("login-pass").value = "12345678";
 }
 
