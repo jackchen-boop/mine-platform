@@ -121,4 +121,16 @@ router.put('/:id', requireRole('admin'), (req, res, next) => {
   }
 });
 
+// DELETE /api/roadshow/:id — 删除路演（管理员）
+router.delete('/:id', requireRole('admin'), (req, res, next) => {
+  try {
+    const roadshow = db.prepare('SELECT id FROM roadshows WHERE id = ?').get(req.params.id);
+    if (!roadshow) return res.status(404).json({ error: '路演不存在' });
+    db.prepare('DELETE FROM roadshows WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

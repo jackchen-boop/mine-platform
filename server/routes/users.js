@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import db from '../db/connection.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { hashPassword } from '../utils/password.js';
 
 const router = Router();
 
@@ -95,6 +96,82 @@ router.put('/:id/role', requireRole('admin'), (req, res, next) => {
       return res.status(400).json({ error: '不能修改自己的角色' });
     }
     db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/users — 管理员创建用户
+router.post('/', requireRole('admin'), async (req, res, next) => {
+  try {
+    const { name, email, password, phone, organization, role } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: '姓名、邮箱和密码为必填项' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: '密码至少 8 位' });
+    }
+    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+    if (existing) {
+      return res.status(400).json({ error: '该邮箱已被注册' });
+    }
+    const password_hash = await hashPassword(password);
+    const avatar_letter = name.charAt(0);
+    const userRole = ['admin', 'investor', 'entrepreneur'].includes(role) ? role : 'investor';
+    const result = db.prepare(`
+      INSERT INTO users (name, email, password_hash, phone, organization, role, avatar_letter, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+    `).run(name, email, password_hash, phone || null, organization || null, userRole, avatar_letter);
+    const user = db.prepare('SELECT id, name, email, phone, role, organization, avatar_letter, status, created_at FROM users WHERE id = ?').get(result.lastInsertRowid);
+    res.status(201).json({ user });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/users/:id — 管理员编辑用户基本信息
+router.put('/:id', requireRole('admin'), async (req, res, next) => {
+  try {
+    if (parseInt(req.params.id) === req.user.id) {
+      return res.status(400).json({ error: '不能编辑自己，请使用账号设置' });
+    }
+    const allowed = ['name', 'email', 'phone', 'organization', 'role', 'status'];
+    const updates = [];
+    const values = [];
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) { updates.push(`${key} = ?`); values.push(req.body[key]); }
+    }
+    if (req.body.password && req.body.password.trim()) {
+      if (req.body.password.length < 8) {
+        return res.status(400).json({ error: '密码至少 8 位' });
+      }
+      updates.push('password_hash = ?');
+      values.push(await hashPassword(req.body.password));
+    }
+    if (updates.length === 0) return res.status(400).json({ error: '无可更新字段' });
+    if (req.body.name) {
+      updates.push('avatar_letter = ?');
+      values.push(req.body.name.charAt(0));
+    }
+    values.push(req.params.id);
+    db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+    const user = db.prepare('SELECT id, name, email, phone, role, organization, avatar_letter, status, created_at FROM users WHERE id = ?').get(req.params.id);
+    res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/users/:id — 管理员删除用户（软删除）
+router.delete('/:id', requireRole('admin'), (req, res, next) => {
+  try {
+    if (parseInt(req.params.id) === req.user.id) {
+      return res.status(400).json({ error: '不能删除自己' });
+    }
+    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(req.params.id);
+    if (!user) return res.status(404).json({ error: '用户不存在' });
+    db.prepare("UPDATE users SET status = 'deleted' WHERE id = ?").run(req.params.id);
     res.json({ success: true });
   } catch (err) {
     next(err);

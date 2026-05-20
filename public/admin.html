@@ -103,6 +103,7 @@
         <h2 class="font-serif-cn text-xl font-bold">用户管理</h2>
         <div class="flex gap-3">
           <input id="user-search" class="input text-sm py-1.5" style="width:200px" placeholder="搜索用户名/邮箱" oninput="searchUsers()" />
+          <button onclick="openUserForm()" class="btn btn-gold text-sm py-1.5">新增用户</button>
         </div>
       </div>
       <div id="users-table" class="glass overflow-hidden">
@@ -114,6 +115,7 @@
     <div id="tab-projects" class="admin-tab hidden">
       <div class="flex items-center justify-between mb-5">
         <h2 class="font-serif-cn text-xl font-bold">项目管理</h2>
+        <button onclick="openProjectForm()" class="btn btn-gold text-sm py-1.5">新增项目</button>
       </div>
       <div id="projects-table" class="space-y-3">
         <div class="text-dim text-sm">加载中...</div>
@@ -124,6 +126,7 @@
     <div id="tab-roadshows" class="admin-tab hidden">
       <div class="flex items-center justify-between mb-5">
         <h2 class="font-serif-cn text-xl font-bold">路演管理</h2>
+        <button onclick="openRoadshowForm()" class="btn btn-gold text-sm py-1.5">新增路演</button>
       </div>
       <div id="roadshows-table" class="space-y-3">
         <div class="text-dim text-sm">加载中...</div>
@@ -134,6 +137,7 @@
     <div id="tab-partners" class="admin-tab hidden">
       <div class="flex items-center justify-between mb-5">
         <h2 class="font-serif-cn text-xl font-bold">合作机构管理</h2>
+        <button onclick="openPartnerForm()" class="btn btn-gold text-sm py-1.5">新增机构</button>
       </div>
       <div id="partners-table" class="space-y-3">
         <div class="text-dim text-sm">加载中...</div>
@@ -255,7 +259,9 @@ async function loadUsers(search = "") {
           <td class="px-4 py-3 text-dim text-xs">${u.organization||"—"}</td>
           <td class="px-4 py-3"><span class="chip ${u.status==='active'?'chip-green':''} text-xs">${u.status==='active'?'正常':'禁用'}</span></td>
           <td class="px-4 py-3">
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center">
+              <button onclick="openUserForm(${u.id})" class="text-xs text-blue-300 hover:text-blue-200">编辑</button>
+              <button onclick="deleteUser(${u.id},'${(u.name||'').replace(/'/g,"\\'")}')" class="text-xs text-red-400 hover:text-red-300">删除</button>
               <select onchange="changeUserRole(${u.id},this.value)" class="text-xs bg-transparent border border-white/10 rounded px-1 py-0.5">
                 <option value="investor" ${u.role==='investor'?'selected':''}>投资人</option>
                 <option value="entrepreneur" ${u.role==='entrepreneur'?'selected':''}>创业者</option>
@@ -309,6 +315,8 @@ async function loadProjects() {
           ${p.is_hot ? '<span class="chip chip-gold text-xs">热门</span>' : ''}
           <span class="chip text-xs">${p.status}</span>
           <button onclick="toggleHot(${p.id},${p.is_hot?0:1},this)" class="text-xs text-dim hover:text-gold-2">${p.is_hot?'取消热门':'设为热门'}</button>
+          <button onclick="openProjectForm(${p.id})" class="text-xs text-blue-300 hover:text-blue-200">编辑</button>
+          <button onclick="deleteProject(${p.id},'${(p.name||'').replace(/'/g,"\\'")}')" class="text-xs text-red-400 hover:text-red-300">删除</button>
         </div>
       </div>`
     ).join("") || "<div class='text-dim text-sm'>暂无项目</div>";
@@ -341,6 +349,8 @@ async function loadRoadshows() {
             <option value="live"     ${r.status==='live'?'selected':''}>直播中</option>
             <option value="completed" ${r.status==='completed'?'selected':''}>已结束</option>
           </select>
+          <button onclick="openRoadshowForm(${r.id})" class="text-xs text-blue-300 hover:text-blue-200">编辑</button>
+          <button onclick="deleteRoadshow(${r.id},'${(r.title||'').replace(/'/g,"\\'")}')" class="text-xs text-red-400 hover:text-red-300">删除</button>
         </div>
       </div>`
     ).join("") || "<div class='text-dim text-sm'>暂无路演</div>";
@@ -366,6 +376,8 @@ async function loadPartners() {
           ${p.is_featured ? '<span class="chip chip-gold text-xs">精选</span>' : ''}
           <span class="text-xs font-mono text-gold-2">${p.platform_deals||0} 单</span>
           ${p.fund_size ? `<span class="text-xs text-dim">${p.fund_size}</span>` : ''}
+          <button onclick="openPartnerForm(${p.id})" class="text-xs text-blue-300 hover:text-blue-200">编辑</button>
+          <button onclick="deletePartner(${p.id},'${(p.name||'').replace(/'/g,"\\'")}')" class="text-xs text-red-400 hover:text-red-300">删除</button>
         </div>
       </div>`
     ).join("") || "<div class='text-dim text-sm'>暂无机构</div>";
@@ -439,6 +451,243 @@ function showTab(name) {
 function fmtDate(s) {
   if (!s) return "";
   return new Date(s).toLocaleDateString("zh-CN", {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
+}
+
+/* ===== 通用弹窗 ===== */
+function openModal(title, fields, values, onSubmit) {
+  closeModal();
+  const wrap = document.createElement('div');
+  wrap.id = 'crud-modal';
+  wrap.className = 'fixed inset-0 z-50 flex items-center justify-center';
+  wrap.innerHTML = `
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal()"></div>
+    <div class="relative glass p-6 w-full max-w-lg mx-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="font-serif-cn text-lg font-bold">${title}</h3>
+        <button onclick="closeModal()" class="text-dim hover:text-white text-xl">&times;</button>
+      </div>
+      <form id="crud-form" class="space-y-4">
+        ${fields.map(f => {
+          const val = values ? (values[f.key] ?? '') : '';
+          if (f.type === 'select') {
+            return `<div><label class="text-xs text-dim block mb-1">${f.label}${f.required?' *':''}</label>
+              <select name="${f.key}" class="input text-sm" ${f.required?'required':''}>
+                ${f.options.map(o => `<option value="${o.value}" ${val==o.value?'selected':''}>${o.label}</option>`).join('')}
+              </select></div>`;
+          } else if (f.type === 'textarea') {
+            return `<div><label class="text-xs text-dim block mb-1">${f.label}${f.required?' *':''}</label>
+              <textarea name="${f.key}" class="input text-sm" rows="3" ${f.required?'required':''}>${val}</textarea></div>`;
+          } else if (f.type === 'checkbox') {
+            return `<div class="flex items-center gap-2">
+              <input type="checkbox" name="${f.key}" ${val?'checked':''} class="w-4 h-4 accent-yellow-500" />
+              <label class="text-sm">${f.label}</label></div>`;
+          } else if (f.type === 'datetime-local') {
+            const dv = val ? new Date(val).toISOString().slice(0,16) : '';
+            return `<div><label class="text-xs text-dim block mb-1">${f.label}${f.required?' *':''}</label>
+              <input type="datetime-local" name="${f.key}" value="${dv}" class="input text-sm" ${f.required?'required':''} /></div>`;
+          } else {
+            return `<div><label class="text-xs text-dim block mb-1">${f.label}${f.required?' *':''}</label>
+              <input type="${f.type||'text'}" name="${f.key}" value="${String(val).replace(/"/g,'&quot;')}" class="input text-sm" ${f.required?'required':''} ${f.placeholder?`placeholder="${f.placeholder}"`:''} /></div>`;
+          }
+        }).join('')}
+      </form>
+      <div class="flex gap-3 mt-5">
+        <button onclick="closeModal()" class="btn btn-ghost text-sm flex-1">取消</button>
+        <button id="crud-save-btn" class="btn btn-gold text-sm flex-1">保存</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  document.getElementById('crud-save-btn').onclick = async () => {
+    const form = document.getElementById('crud-form');
+    const data = {};
+    fields.forEach(f => {
+      const el = form.querySelector(`[name="${f.key}"]`);
+      if (f.type === 'checkbox') data[f.key] = el.checked ? 1 : 0;
+      else data[f.key] = el.value.trim();
+    });
+    await onSubmit(data);
+  };
+  // ESC 关闭
+  wrap._escHandler = (e) => { if (e.key === 'Escape') closeModal(); };
+  document.addEventListener('keydown', wrap._escHandler);
+}
+
+function closeModal() {
+  const m = document.getElementById('crud-modal');
+  if (m) { document.removeEventListener('keydown', m._escHandler); m.remove(); }
+}
+
+/* ===== 用户 CRUD ===== */
+const USER_FIELDS = [
+  { key:'name', label:'姓名', required:true },
+  { key:'email', label:'邮箱', type:'email', required:true },
+  { key:'password', label:'密码', type:'password', placeholder:'新增必填，编辑留空不修改' },
+  { key:'phone', label:'手机号', type:'tel' },
+  { key:'organization', label:'机构' },
+  { key:'role', label:'角色', type:'select', options:[
+    {value:'investor',label:'投资人'},{value:'entrepreneur',label:'创业者'},{value:'admin',label:'管理员'}
+  ]},
+  { key:'status', label:'状态', type:'select', options:[
+    {value:'active',label:'正常'},{value:'suspended',label:'禁用'}
+  ]},
+];
+
+async function openUserForm(id) {
+  let values = null;
+  if (id) {
+    try {
+      const { users } = await VCPlat.api('/api/users?limit=100');
+      values = users.find(u => u.id === id);
+    } catch(e) { alert(e.message); return; }
+  }
+  openModal(id ? '编辑用户' : '新增用户', USER_FIELDS, values, async (data) => {
+    try {
+      if (id) {
+        if (!data.password) delete data.password;
+        await VCPlat.api(`/api/users/${id}`, { method:'PUT', body:data });
+      } else {
+        if (!data.password) { alert('新增用户必须设置密码'); return; }
+        await VCPlat.api('/api/users', { method:'POST', body:data });
+      }
+      closeModal(); loadUsers(document.getElementById('user-search')?.value);
+    } catch(e) { alert('保存失败：' + e.message); }
+  });
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`确认删除用户「${name}」？此操作不可恢复。`)) return;
+  try { await VCPlat.api(`/api/users/${id}`, { method:'DELETE' }); loadUsers(); }
+  catch(e) { alert('删除失败：' + e.message); }
+}
+
+/* ===== 项目 CRUD ===== */
+const PROJECT_FIELDS = [
+  { key:'name', label:'项目名称', required:true },
+  { key:'name_en', label:'英文名' },
+  { key:'sector', label:'行业', type:'select', required:true, options:[
+    {value:'AI大模型',label:'AI大模型'},{value:'芯片半导体',label:'芯片半导体'},{value:'商业航天',label:'商业航天'},
+    {value:'合成生物',label:'合成生物'},{value:'智能机器人',label:'智能机器人'},{value:'新能源/储能',label:'新能源/储能'},
+    {value:'医疗健康',label:'医疗健康'},{value:'绿色科技',label:'绿色科技'},{value:'量子计算',label:'量子计算'},
+    {value:'自动驾驶',label:'自动驾驶'},{value:'企业服务',label:'企业服务'},{value:'农业科技',label:'农业科技'},
+    {value:'其他',label:'其他'}
+  ]},
+  { key:'round', label:'融资轮次', type:'select', options:[
+    {value:'天使轮',label:'天使轮'},{value:'Pre-A轮',label:'Pre-A轮'},{value:'A轮',label:'A轮'},
+    {value:'A+轮',label:'A+轮'},{value:'B轮',label:'B轮'},{value:'B+轮',label:'B+轮'},
+    {value:'C轮',label:'C轮'},{value:'Pre-IPO',label:'Pre-IPO'}
+  ]},
+  { key:'location', label:'地区' },
+  { key:'amount', label:'融资金额' },
+  { key:'valuation', label:'估值' },
+  { key:'description', label:'项目简介', type:'textarea' },
+  { key:'business_model', label:'商业模式', type:'textarea' },
+  { key:'is_hot', label:'热门项目', type:'checkbox' },
+  { key:'status', label:'状态', type:'select', options:[
+    {value:'active',label:'活跃'},{value:'draft',label:'草稿'},{value:'deleted',label:'已删除'}
+  ]},
+];
+
+async function openProjectForm(id) {
+  let values = null;
+  if (id) {
+    try { const d = await VCPlat.api(`/api/projects/${id}`); values = d.project || d; }
+    catch(e) { alert(e.message); return; }
+  }
+  openModal(id ? '编辑项目' : '新增项目', PROJECT_FIELDS, values, async (data) => {
+    try {
+      if (id) await VCPlat.api(`/api/projects/${id}`, { method:'PUT', body:data });
+      else await VCPlat.api('/api/projects', { method:'POST', body:data });
+      closeModal(); loadProjects();
+    } catch(e) { alert('保存失败：' + e.message); }
+  });
+}
+
+async function deleteProject(id, name) {
+  if (!confirm(`确认删除项目「${name}」？`)) return;
+  try { await VCPlat.api(`/api/projects/${id}`, { method:'DELETE' }); loadProjects(); }
+  catch(e) { alert('删除失败：' + e.message); }
+}
+
+/* ===== 路演 CRUD ===== */
+const ROADSHOW_FIELDS = [
+  { key:'project_id', label:'关联项目', type:'select', required:true, options:[] },
+  { key:'title', label:'路演标题', required:true },
+  { key:'type', label:'类型', type:'select', options:[
+    {value:'online',label:'线上'},{value:'recorded',label:'录播'},{value:'offline',label:'线下'}
+  ]},
+  { key:'presenter', label:'主讲人' },
+  { key:'scheduled_at', label:'预定时间', type:'datetime-local', required:true },
+  { key:'duration_min', label:'时长(分钟)', type:'number' },
+  { key:'status', label:'状态', type:'select', options:[
+    {value:'upcoming',label:'预约中'},{value:'live',label:'直播中'},{value:'completed',label:'已结束'}
+  ]},
+];
+
+async function openRoadshowForm(id) {
+  let values = null;
+  if (id) {
+    try { const d = await VCPlat.api(`/api/roadshow/${id}`); values = d.roadshow; }
+    catch(e) { alert(e.message); return; }
+  }
+  // 动态加载项目列表作为 project_id 选项
+  try {
+    const { projects } = await VCPlat.api('/api/projects?limit=50');
+    ROADSHOW_FIELDS[0].options = projects.map(p => ({ value: p.id, label: p.name }));
+  } catch(e) { ROADSHOW_FIELDS[0].options = []; }
+  openModal(id ? '编辑路演' : '新增路演', ROADSHOW_FIELDS, values, async (data) => {
+    data.project_id = parseInt(data.project_id);
+    data.duration_min = parseInt(data.duration_min) || 60;
+    try {
+      if (id) await VCPlat.api(`/api/roadshow/${id}`, { method:'PUT', body:data });
+      else await VCPlat.api('/api/roadshow', { method:'POST', body:data });
+      closeModal(); loadRoadshows();
+    } catch(e) { alert('保存失败：' + e.message); }
+  });
+}
+
+async function deleteRoadshow(id, title) {
+  if (!confirm(`确认删除路演「${title}」？`)) return;
+  try { await VCPlat.api(`/api/roadshow/${id}`, { method:'DELETE' }); loadRoadshows(); }
+  catch(e) { alert('删除失败：' + e.message); }
+}
+
+/* ===== 合作机构 CRUD ===== */
+const PARTNER_FIELDS = [
+  { key:'name', label:'机构名称', required:true },
+  { key:'name_en', label:'英文名' },
+  { key:'type', label:'类型', type:'select', options:[
+    {value:'gp',label:'GP'},{value:'lp',label:'LP'},{value:'fa',label:'FA'},{value:'cvc',label:'CVC'}
+  ]},
+  { key:'stage_preference', label:'偏好阶段' },
+  { key:'sector_count', label:'赛道数', type:'number' },
+  { key:'platform_deals', label:'平台成交数', type:'number' },
+  { key:'fund_size', label:'基金规模' },
+  { key:'is_featured', label:'精选机构', type:'checkbox' },
+  { key:'sort_order', label:'排序权重', type:'number' },
+];
+
+async function openPartnerForm(id) {
+  let values = null;
+  if (id) {
+    try { const { partners } = await VCPlat.api('/api/partners?limit=50'); values = partners.find(p => p.id === id); }
+    catch(e) { alert(e.message); return; }
+  }
+  openModal(id ? '编辑机构' : '新增机构', PARTNER_FIELDS, values, async (data) => {
+    data.sector_count = parseInt(data.sector_count) || 0;
+    data.platform_deals = parseInt(data.platform_deals) || 0;
+    data.sort_order = parseInt(data.sort_order) || 0;
+    try {
+      if (id) await VCPlat.api(`/api/partners/${id}`, { method:'PUT', body:data });
+      else await VCPlat.api('/api/partners', { method:'POST', body:data });
+      closeModal(); loadPartners();
+    } catch(e) { alert('保存失败：' + e.message); }
+  });
+}
+
+async function deletePartner(id, name) {
+  if (!confirm(`确认删除机构「${name}」？`)) return;
+  try { await VCPlat.api(`/api/partners/${id}`, { method:'DELETE' }); loadPartners(); }
+  catch(e) { alert('删除失败：' + e.message); }
 }
 </script>
 
