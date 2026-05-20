@@ -18,6 +18,11 @@ export function runSeed() {
   db.prepare(`INSERT INTO users (name, email, password_hash, role, organization, avatar_letter) VALUES (?, ?, ?, 'investor', '红杉中国', '张')`
   ).run('张明远', 'demo@starlink-vc.com', demoHash);
 
+  // 快速体验账号 (密码: 12345678)
+  const testHash = bcrypt.hashSync('12345678', 10);
+  db.prepare(`INSERT INTO users (name, email, password_hash, role, organization, avatar_letter) VALUES (?, ?, ?, 'investor', '体验机构', '体')`
+  ).run('体验用户', 'test@starlink-vc.com', testHash);
+
   // 12 个融资项目种子数据
   const projects = [
     {
