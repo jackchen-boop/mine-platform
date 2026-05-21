@@ -35,14 +35,66 @@ export function retrieveKnowledgeContext(inputText, sectorHint) {
     'SELECT * FROM kb_policies WHERE industry_name = ? ORDER BY effective_date DESC'
   ).all(industry.industry_name);
 
-  // 6. 组装 RAG 上下文
-  const context = buildRAGContext(industry, valBenchmarks, redlines, policies);
+  // 6. 检索可比上市公司
+  const comparableCompanies = retrieveComparableCompanies(text, industry.industry_name);
+
+  // 7. 组装 RAG 上下文
+  const context = buildRAGContext(industry, valBenchmarks, redlines, policies, comparableCompanies);
 
   return {
     context,
     matchedIndustry: industry.industry_name,
     tier: industry.tier
   };
+}
+
+/**
+ * 检索可比上市公司：根据行业匹配 + 营收规模排序
+ * 申万行业分类与知识库行业名称的映射
+ */
+const SW_INDSTRY_MAPPING = {
+  'AI/具身智能/机器人': ['计算机', '通信', '电子', '机械设备'],
+  '半导体/芯片': ['电子', '计算机'],
+  '生物制造/创新药': ['医药生物', '化工'],
+  '低空经济/eVTOL': ['国防军工', '机械设备', '通信'],
+  '新能源/新型储能': ['电力设备', '有色金属', '汽车'],
+  '航空航天/商业航天': ['国防军工', '通信', '计算机'],
+  'SaaS/企服': ['计算机', '通信'],
+  '消费品牌': ['食品饮料', '美容护理', '纺织服饰', '家用电器', '商贸零售', '轻工制造'],
+  '先进制造/工业自动化': ['机械设备', '电力设备', '电子', '计算机'],
+};
+
+function retrieveComparableCompanies(text, industryName) {
+  // 检查是否有上市公司数据
+  const countRow = db.prepare('SELECT COUNT(*) as c FROM kb_listed_companies').get();
+  if (!countRow || countRow.c === 0) return [];
+
+  const swIndustries = SW_INDSTRY_MAPPING[industryName] || [];
+
+  if (swIndustries.length === 0) {
+    // 尝试从行业名关键词模糊匹配
+    const keywords = industryName.split('/').map(s => s.trim()).filter(Boolean);
+    for (const kw of keywords) {
+      const rows = db.prepare(
+        "SELECT * FROM kb_listed_companies WHERE industry_sw_l1 LIKE ? OR industry_sw_l2 LIKE ? ORDER BY market_cap DESC LIMIT 10"
+      ).all(`%${kw}%`, `%${kw}%`);
+      if (rows.length > 0) return rows;
+    }
+    return [];
+  }
+
+  // 按申万一级行业匹配，取市值前10名
+  const placeholders = swIndustries.map(() => '?').join(',');
+  return db.prepare(
+    `SELECT stock_code, company_name, industry_sw_l1, industry_sw_l2, listing_board,
+            revenue, revenue_yoy, net_profit, net_profit_yoy,
+            gross_margin, net_margin, roe, debt_ratio,
+            market_cap, pe_ttm, pb, ps_ttm, ev_ebitda
+     FROM kb_listed_companies
+     WHERE industry_sw_l1 IN (${placeholders})
+     ORDER BY market_cap DESC
+     LIMIT 10`
+  ).all(...swIndustries);
 }
 
 /**
@@ -125,7 +177,7 @@ function retrieveValuationBenchmarks(text, industryName) {
 /**
  * 组装 RAG 上下文 — 将检索到的知识格式化为可注入 prompt 的文本
  */
-function buildRAGContext(industry, valBenchmarks, redlines, policies) {
+function buildRAGContext(industry, valBenchmarks, redlines, policies, comparableCompanies) {
   const parts = [];
 
   // 行业档案
@@ -170,7 +222,58 @@ function buildRAGContext(industry, valBenchmarks, redlines, policies) {
     }
   }
 
-  // 使用指引
+  // 可比上市公司（真实财报数据）
+  if (comparableCompanies && comparableCompanies.length > 0) {
+    parts.push('\n### 可比上市公司参考（真实财报数据，估值锚定必用）');
+    parts.push('| 公司 | 代码 | 行业 | 板块 | 营收(亿) | 营收增速 | 净利润(亿) | 毛利率 | ROE | 市值(亿) | PE(TTM) | PB | PS(TTM) |');
+    parts.push('|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+    for (const c of comparableCompanies) {
+      // 智能判断营收单位：>1e8认为原始单位是元，否则认为是亿元
+      const rev = c.revenue != null
+        ? (c.revenue > 1e8 ? (c.revenue / 1e8).toFixed(1) : c.revenue.toFixed(1))
+        : '-';
+      const revYoy = c.revenue_yoy != null
+        ? (Math.abs(c.revenue_yoy) <= 5 ? (c.revenue_yoy * 100).toFixed(1) : c.revenue_yoy.toFixed(1)) + '%'
+        : '-';
+      const np = c.net_profit != null
+        ? (c.net_profit > 1e8 ? (c.net_profit / 1e8).toFixed(1) : (c.net_profit < -1e8 ? (c.net_profit / 1e8).toFixed(1) : c.net_profit.toFixed(1)))
+        : '-';
+      const gm = c.gross_margin != null
+        ? (Math.abs(c.gross_margin) <= 1 ? (c.gross_margin * 100).toFixed(1) : c.gross_margin.toFixed(1)) + '%'
+        : '-';
+      const roe = c.roe != null
+        ? (Math.abs(c.roe) <= 1 ? (c.roe * 100).toFixed(1) : c.roe.toFixed(1)) + '%'
+        : '-';
+      const mcap = c.market_cap != null
+        ? (c.market_cap > 1e8 ? (c.market_cap / 1e8).toFixed(0) : c.market_cap.toFixed(0))
+        : '-';
+      const pe = c.pe_ttm != null ? c.pe_ttm.toFixed(1) : '-';
+      const pb = c.pb != null ? c.pb.toFixed(2) : '-';
+      const ps = c.ps_ttm != null ? c.ps_ttm.toFixed(1) : '-';
+      parts.push(`| ${c.company_name} | ${c.stock_code} | ${c.industry_sw_l2 || c.industry_sw_l1 || '-'} | ${c.listing_board || '-'} | ${rev} | ${revYoy} | ${np} | ${gm} | ${roe} | ${mcap} | ${pe} | ${pb} | ${ps} |`);
+    }
+
+    // 计算行业估值中位数
+    const peValues = comparableCompanies.filter(c => c.pe_ttm != null && c.pe_ttm > 0).map(c => c.pe_ttm).sort((a, b) => a - b);
+    const psValues = comparableCompanies.filter(c => c.ps_ttm != null && c.ps_ttm > 0).map(c => c.ps_ttm).sort((a, b) => a - b);
+    const pbValues = comparableCompanies.filter(c => c.pb != null && c.pb > 0).map(c => c.pb).sort((a, b) => a - b);
+
+    if (peValues.length > 0 || psValues.length > 0) {
+      parts.push('\n**行业估值中位数**（基于上述上市公司计算）：');
+      if (peValues.length > 0) {
+        const mid = Math.floor(peValues.length / 2);
+        parts.push(`- PE(TTM) 中位数：${peValues[mid].toFixed(1)}（范围 ${peValues[0].toFixed(1)} ~ ${peValues[peValues.length - 1].toFixed(1)}）`);
+      }
+      if (psValues.length > 0) {
+        const mid = Math.floor(psValues.length / 2);
+        parts.push(`- PS(TTM) 中位数：${psValues[mid].toFixed(1)}（范围 ${psValues[0].toFixed(1)} ~ ${psValues[psValues.length - 1].toFixed(1)}）`);
+      }
+      if (pbValues.length > 0) {
+        const mid = Math.floor(pbValues.length / 2);
+        parts.push(`- PB 中位数：${pbValues[mid].toFixed(2)}（范围 ${pbValues[0].toFixed(2)} ~ ${pbValues[pbValues.length - 1].toFixed(2)}）`);
+      }
+    }
+  }
   parts.push('\n### 数据使用指引');
   parts.push('1. 上述行业数据为真实参考数据，分析时必须对照使用，不得编造矛盾数据');
   parts.push('2. 估值基准用于判断BP中估值合理性，如BP估值偏离基准区间，必须在"估值合理性"维度说明原因');

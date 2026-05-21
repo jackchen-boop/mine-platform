@@ -68,4 +68,55 @@ router.post('/knowledge/test-retrieval', requireAuth, (req, res) => {
   });
 });
 
+// GET /api/knowledge/listed-companies — 查询上市公司数据
+router.get('/knowledge/listed-companies', requireAuth, (req, res) => {
+  const { industry, keyword, limit } = req.query;
+  const maxRows = Math.min(parseInt(limit) || 20, 100);
+
+  let rows;
+  if (keyword) {
+    rows = db.prepare(
+      'SELECT * FROM kb_listed_companies WHERE company_name LIKE ? OR stock_code LIKE ? ORDER BY market_cap DESC LIMIT ?'
+    ).all(`%${keyword}%`, `%${keyword}%`, maxRows);
+  } else if (industry) {
+    rows = db.prepare(
+      'SELECT * FROM kb_listed_companies WHERE industry_sw_l1 LIKE ? OR industry_sw_l2 LIKE ? ORDER BY market_cap DESC LIMIT ?'
+    ).all(`%${industry}%`, `%${industry}%`, maxRows);
+  } else {
+    rows = db.prepare(
+      'SELECT * FROM kb_listed_companies ORDER BY market_cap DESC LIMIT ?'
+    ).all(maxRows);
+  }
+
+  const total = db.prepare('SELECT COUNT(*) as c FROM kb_listed_companies').get();
+  res.json({ companies: rows, total: total?.c || 0 });
+});
+
+// GET /api/knowledge/listed-companies/stats — 上市公司数据统计
+router.get('/knowledge/listed-companies/stats', requireAuth, (req, res) => {
+  const total = db.prepare('SELECT COUNT(*) as c FROM kb_listed_companies').get();
+  const byIndustry = db.prepare(
+    'SELECT industry_sw_l1 as industry, COUNT(*) as cnt FROM kb_listed_companies WHERE industry_sw_l1 IS NOT NULL GROUP BY industry_sw_l1 ORDER BY cnt DESC'
+  ).all();
+  const byBoard = db.prepare(
+    'SELECT listing_board as board, COUNT(*) as cnt FROM kb_listed_companies WHERE listing_board IS NOT NULL GROUP BY listing_board'
+  ).all();
+  res.json({ total: total?.c || 0, byIndustry, byBoard });
+});
+
+// POST /api/knowledge/import-listed — 触发上市公司数据导入（管理员）
+router.post('/knowledge/import-listed', requireAuth, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: '仅管理员可导入数据' });
+  const { filePath, reportYear } = req.body;
+  if (!filePath) return res.status(400).json({ error: '请提供文件路径' });
+  // 导入是同步操作，可能较慢
+  try {
+    const { importListedCompaniesFromFile } = await import('../services/listedCompanyImporter.js');
+    const result = importListedCompaniesFromFile(filePath, reportYear || '2024');
+    res.json({ success: true, ...result });
+  } catch (e) {
+    res.status(500).json({ error: `导入失败: ${e.message}` });
+  }
+});
+
 export default router;

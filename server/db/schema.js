@@ -216,6 +216,42 @@ export function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_kb_val_sector     ON kb_valuation_benchmarks(sector);
     CREATE INDEX IF NOT EXISTS idx_kb_redlines_ind   ON kb_redlines(industry_name);
     CREATE INDEX IF NOT EXISTS idx_kb_policies_ind   ON kb_policies(industry_name);
+
+    -- ===== 上市公司可比公司数据库 =====
+
+    -- 上市公司关键财务指标（用于可比公司分析和估值锚定）
+    CREATE TABLE IF NOT EXISTS kb_listed_companies (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      stock_code      TEXT    NOT NULL UNIQUE,
+      company_name    TEXT    NOT NULL,
+      industry_sw     TEXT,
+      industry_sw_l1  TEXT,
+      industry_sw_l2  TEXT,
+      industry_sw_l3  TEXT,
+      listing_board   TEXT,
+      listing_date    TEXT,
+      revenue         REAL,
+      revenue_yoy     REAL,
+      net_profit      REAL,
+      net_profit_yoy  REAL,
+      gross_margin    REAL,
+      net_margin      REAL,
+      roe             REAL,
+      total_assets    REAL,
+      total_liab      REAL,
+      equity          REAL,
+      debt_ratio      REAL,
+      cash            REAL,
+      ocf             REAL,
+      market_cap      REAL,
+      pe_ttm          REAL,
+      pb              REAL,
+      ps_ttm          REAL,
+      ev_ebitda       REAL,
+      report_year     TEXT,
+      data_source     TEXT,
+      updated_at      TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 
   // 迁移：reports 表增加 bp_upload_id 列（SQLite 不支持 IF NOT EXISTS，用 try/catch）
@@ -223,6 +259,14 @@ export function initSchema() {
 
   // bp_upload_id 索引（必须在列存在后创建）
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_reports_bp ON reports(bp_upload_id)'); } catch {}
+
+  // 上市公司索引
+  try {
+    db.exec('CREATE INDEX IF NOT EXISTS idx_kb_listed_sw1 ON kb_listed_companies(industry_sw_l1)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_kb_listed_sw2 ON kb_listed_companies(industry_sw_l2)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_kb_listed_board ON kb_listed_companies(listing_board)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_kb_listed_mktcap ON kb_listed_companies(market_cap)');
+  } catch {}
 
   console.log('✓ 数据库 schema 初始化完成');
 }
