@@ -319,10 +319,11 @@ async function doReserve(roadshowId, btn) {
 loadLiveRoadshows();
 loadProjects();
 
-// 加入直播
+// 加入直播（管理员自动进入主播视角）
 function joinLive(roadshowId) {
   if (!VCPlat.isLoggedIn()) { location.href = 'auth.html'; return; }
-  location.href = 'live.html?id=' + roadshowId;
+  const roleParam = VCPlat.isAdmin() ? '&role=presenter' : '';
+  location.href = 'live.html?id=' + roadshowId + roleParam;
 }
 
 // 管理员开播

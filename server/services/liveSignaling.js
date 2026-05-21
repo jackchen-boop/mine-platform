@@ -160,7 +160,7 @@ function handleJoin(ws, msg) {
     viewerCount: room.viewers.size
   }, ws);
 
-  // 如果房间有主播，通知新观众可以接收流
+  // 如果房间有主播，通知主播有新观众加入（让主播创建PeerConnection）
   if (room.presenterWs && room.presenterWs !== ws && room.presenterWs.readyState === 1) {
     wsSend(room.presenterWs, {
       type: 'new-viewer',
@@ -168,6 +168,20 @@ function handleJoin(ws, msg) {
       userName,
       viewerWsId: getWsId(ws)
     });
+  }
+
+  // 如果新加入的是主播/管理员，通知TA房间中所有现有观众（断线重连恢复）
+  if ((role === 'presenter' || role === 'admin') && room.presenterWs === ws) {
+    for (const [viewerWs, viewerInfo] of room.viewers) {
+      if (viewerWs !== ws && viewerWs.readyState === 1) {
+        wsSend(ws, {
+          type: 'new-viewer',
+          userId: viewerInfo.userId,
+          userName: viewerInfo.userName,
+          viewerWsId: getWsId(viewerWs)
+        });
+      }
+    }
   }
 }
 

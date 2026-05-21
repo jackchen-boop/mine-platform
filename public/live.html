@@ -25,7 +25,7 @@
   #chat-panel-desktop.chat-panel-hidden { width: 0 !important; opacity: 0; margin: 0; padding: 0; border: none; pointer-events: none; }
 </style>
 </head>
-<body data-page="live" class="bg-[#060b16] text-white min-h-screen flex flex-col overflow-hidden">
+<body data-page="live" class="bg-[#060b16] text-white h-[100dvh] flex flex-col overflow-hidden">
 
 <!-- ===== NAV ===== -->
 <header class="top-nav shrink-0">
@@ -74,7 +74,7 @@
     <div id="speakers-bar" class="hidden flex gap-2 h-20 sm:h-24 lg:h-28 shrink-0"></div>
 
     <!-- 底部控制栏 -->
-    <div class="shrink-0 flex items-center justify-between glass rounded-none lg:rounded-lg px-3 py-2 sm:px-4 sm:py-2 border-t border-white/5 lg:border-t-0">
+    <div class="shrink-0 flex items-center justify-between glass rounded-none lg:rounded-lg px-3 py-2 sm:px-4 sm:py-2 border-t border-white/5 lg:border-t-0 pb-[max(env(safe-area-inset-bottom),8px)]">
       <div class="flex items-center gap-1.5" id="presenter-controls" style="display:none;">
         <button onclick="toggleCamera()" id="btn-cam" class="ctrl-btn active" title="摄像头">📷</button>
         <button onclick="toggleMic()" id="btn-mic" class="ctrl-btn active" title="麦克风">🎤</button>
@@ -82,7 +82,7 @@
         <button onclick="endLive()" class="ctrl-btn text-red-400" title="结束直播">⏹️</button>
       </div>
       <div id="viewer-controls" class="flex items-center gap-1.5" style="display:none;">
-        <button onclick="requestSpeak()" id="btn-speak-req" class="btn btn-ghost text-xs py-2 px-3">✋ 申请发言</button>
+        <button onclick="requestSpeak()" id="btn-speak-req" class="btn btn-gold text-xs py-2 px-3 font-bold">✋ 申请视频发言</button>
       </div>
       <div class="flex items-center gap-1.5">
         <button onclick="toggleChat()" id="btn-chat" class="ctrl-btn" title="聊天">💬</button>
@@ -199,6 +199,7 @@ let micOn = true;
 let screenSharing = false;
 let screenStream = null;
 let chatOpen = !IS_MOBILE; // 桌面端默认展开聊天
+let pendingViewers = []; // 主播摄像头未准备好时缓存的新观众
 
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 
@@ -262,7 +263,12 @@ function wsSend(msg) { if (ws?.readyState === 1) ws.send(JSON.stringify(msg)); }
 function handleWSMessage(msg) {
   switch (msg.type) {
     case 'joined':         return onJoined(msg);
-    case 'new-viewer':     return IS_PRESENTER && localStream ? createPeerConnection(msg.viewerWsId, msg.userId, msg.userName, true) : null;
+    case 'new-viewer':
+      if (!IS_PRESENTER) return null;
+      if (localStream) return createPeerConnection(msg.viewerWsId, msg.userId, msg.userName, true);
+      // 摄像头还没准备好，缓存起来等 ready 后重试
+      pendingViewers.push({ viewerWsId: msg.viewerWsId, userId: msg.userId, userName: msg.userName });
+      return null;
     case 'offer':          return onOffer(msg);
     case 'answer':         return onAnswer(msg);
     case 'ice':            return onIce(msg);
@@ -316,6 +322,12 @@ async function startPresenterStream() {
     document.getElementById('local-video').srcObject = localStream;
     document.getElementById('local-video').classList.remove('hidden');
     document.getElementById('video-overlay').classList.add('hidden');
+    // 处理断线重连期间缓存的新观众
+    if (pendingViewers.length > 0) {
+      console.log('摄像头就绪，处理缓存的', pendingViewers.length, '个观众');
+      pendingViewers.forEach(v => createPeerConnection(v.viewerWsId, v.userId, v.userName, true));
+      pendingViewers = [];
+    }
   } catch (e) {
     console.error('获取摄像头/麦克风失败:', e);
     alert('无法获取摄像头/麦克风，请检查权限设置');
