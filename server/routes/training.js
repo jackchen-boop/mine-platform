@@ -1,11 +1,15 @@
 // AI 训练路由 — /api/training/*
 import { Router } from 'express';
+import { unlink } from 'fs/promises';
 import db from '../db/connection.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { uploadMultiple } from '../middleware/upload.js';
+import { extractText } from '../services/fileExtractor.js';
 import {
   getTrainingStats, createSample, deleteSample, toggleSampleActive,
   createSamplesFromFeedback, recordFeedback, createTrainingJob,
-  updateTrainingJob, getTrainingSamples, buildTrainingContext
+  updateTrainingJob, getTrainingSamples, buildTrainingContext,
+  importSamplesFromDocuments
 } from '../services/trainingEngine.js';
 
 const router = Router();
@@ -75,7 +79,7 @@ router.post('/samples', requireRole('admin'), (req, res) => {
   }
 });
 
-// POST /api/training/samples/batch — 批量上传训练样本
+// POST /api/training/samples/batch — 批量上传训练样本（JSON）
 router.post('/samples/batch', requireRole('admin'), (req, res) => {
   try {
     const { samples } = req.body;
@@ -98,6 +102,72 @@ router.post('/samples/batch', requireRole('admin'), (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// POST /api/training/samples/import — 批量文件上传导入训练样本
+// 上传 PDF/DOCX/PPTX/TXT 文件，自动提取文本并生成训练样本
+router.post('/samples/import', requireRole('admin'), (req, res, next) => {
+  uploadMultiple(req, res, async (multerErr) => {
+    if (multerErr) {
+      return res.status(400).json({ error: multerErr.message });
+    }
+
+    try {
+      const { category, skill_key, industry } = req.body;
+      if (!category) {
+        return res.status(400).json({ error: '请选择样本分类' });
+      }
+
+      const files = req.files || [];
+      if (files.length === 0) {
+        return res.status(400).json({ error: '请至少上传一个文件' });
+      }
+
+      // 逐文件提取文本
+      const documents = [];
+      const fileMeta = [];
+
+      for (const file of files) {
+        const { text, method, pageCount } = await extractText(file.path, file.mimetype);
+        fileMeta.push({
+          fileName: file.originalname,
+          size: file.size,
+          method,
+          pageCount,
+          charCount: text.length
+        });
+        if (text.trim()) {
+          documents.push({ fileName: file.originalname, text: text.trim() });
+        }
+        // 提取后删除临时文件
+        try { await unlink(file.path); } catch { /* ignore */ }
+      }
+
+      if (documents.length === 0) {
+        return res.status(400).json({ error: '所有文件均无法提取有效文本', fileMeta });
+      }
+
+      // 批量导入
+      const result = importSamplesFromDocuments({
+        category,
+        skillKey: skill_key || null,
+        industry: industry || null,
+        documents,
+        createdBy: req.user.id
+      });
+
+      res.status(201).json({
+        created: result.created,
+        errors: result.errors,
+        filesProcessed: documents.length,
+        filesTotal: files.length,
+        fileMeta
+      });
+    } catch (e) {
+      console.error('training import error:', e.message);
+      res.status(500).json({ error: '文件处理失败，请重试' });
+    }
+  });
 });
 
 // DELETE /api/training/samples/:id — 删除训练样本

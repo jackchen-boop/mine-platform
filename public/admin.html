@@ -218,6 +218,54 @@
         </div>
       </div>
 
+      <!-- 批量文件上传区 -->
+      <div class="glass p-6 mb-6">
+        <h3 class="font-bold text-sm mb-2">批量导入训练素材</h3>
+        <p class="text-xs text-dim mb-4">上传行业研究报告、公司财报、分析文档等，系统自动提取内容并切分为训练样本。支持 PDF、DOCX、PPTX、TXT 格式，单次最多10个文件。</p>
+        <div class="grid grid-cols-3 gap-4 mb-4">
+          <div>
+            <label class="text-xs text-dim block mb-1">样本分类 *</label>
+            <select id="import-category" class="input text-sm w-full py-1.5">
+              <option value="analysis">分析范例</option>
+              <option value="qa">Q&A范例</option>
+              <option value="redline">红线判定范例</option>
+              <option value="valuation">估值判定范例</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-dim block mb-1">关联技能（可选）</label>
+            <input id="import-skill-key" class="input text-sm w-full py-1.5" placeholder="如 pe-vc:筛项目">
+          </div>
+          <div>
+            <label class="text-xs text-dim block mb-1">关联行业（可选）</label>
+            <input id="import-industry" class="input text-sm w-full py-1.5" placeholder="如 半导体、AI">
+          </div>
+        </div>
+        <div id="train-drop-zone"
+             class="border-2 border-dashed border-white/10 rounded-xl p-8 text-center cursor-pointer hover:border-gold-1/30 hover:bg-gold-1/[0.02] transition-all"
+             onclick="document.getElementById('train-file-input').click()"
+             ondragover="event.preventDefault(); this.classList.add('border-gold-1/40','bg-gold-1/[0.03]')"
+             ondragleave="this.classList.remove('border-gold-1/40','bg-gold-1/[0.03]')"
+             ondrop="event.preventDefault(); this.classList.remove('border-gold-1/40','bg-gold-1/[0.03]'); handleTrainFileDrop(event)">
+          <input type="file" id="train-file-input" multiple accept=".pdf,.docx,.doc,.pptx,.ppt,.txt,.md" class="hidden" onchange="handleTrainFileSelect(this.files)">
+          <div id="train-drop-placeholder">
+            <div class="text-3xl mb-2 opacity-30">📁</div>
+            <div class="text-sm text-dim">拖拽文件到此处，或点击选择文件</div>
+            <div class="text-[10px] text-dim mt-1">支持 PDF / DOCX / PPTX / TXT，最多10个文件</div>
+          </div>
+          <div id="train-file-list" class="hidden text-left space-y-1"></div>
+        </div>
+        <div class="flex items-center justify-between mt-3">
+          <div id="train-import-status" class="text-xs text-dim"></div>
+          <button id="btn-train-import" onclick="doTrainFileImport()" class="btn btn-gold text-sm hidden" disabled>开始导入</button>
+        </div>
+        <div id="train-import-progress" class="mt-3 hidden">
+          <div class="w-full bg-white/5 rounded-full h-2 overflow-hidden"><div id="train-import-bar" class="h-full bg-gold-1 transition-all duration-500" style="width:0%"></div></div>
+          <div class="text-xs text-dim mt-1" id="train-import-msg">处理中...</div>
+        </div>
+        <div id="train-import-result" class="mt-3 hidden"></div>
+      </div>
+
       <!-- 样本分类分布 + 反馈评分分布 -->
       <div class="grid grid-cols-2 gap-6 mb-6">
         <div class="glass p-6">
@@ -941,6 +989,159 @@ async function previewTrainingContext() {
       { key:'context', label:'注入到AI prompt的训练内容', type:'textarea' },
     ], { context: res.context || '（当前无训练样本）' }, () => closeModal());
   } catch(e) { alert('预览失败：' + e.message); }
+}
+
+/* ===== 批量文件导入训练样本 ===== */
+let _trainFiles = [];
+
+function handleTrainFileSelect(fileList) {
+  const files = Array.from(fileList);
+  addTrainFiles(files);
+}
+
+function handleTrainFileDrop(event) {
+  const files = Array.from(event.dataTransfer.files).filter(f => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    return ['pdf','doc','docx','ppt','pptx','txt','md'].includes(ext);
+  });
+  if (files.length === 0) { alert('不支持的文件格式'); return; }
+  addTrainFiles(files);
+}
+
+function addTrainFiles(files) {
+  // 最多10个
+  _trainFiles = _trainFiles.concat(files).slice(0, 10);
+  renderTrainFileList();
+}
+
+function removeTrainFile(idx) {
+  _trainFiles.splice(idx, 1);
+  renderTrainFileList();
+}
+
+function clearTrainFiles() {
+  _trainFiles = [];
+  renderTrainFileList();
+}
+
+function renderTrainFileList() {
+  const placeholder = document.getElementById('train-drop-placeholder');
+  const listEl = document.getElementById('train-file-list');
+  const btn = document.getElementById('btn-train-import');
+  const statusEl = document.getElementById('train-import-status');
+
+  if (_trainFiles.length === 0) {
+    placeholder.classList.remove('hidden');
+    listEl.classList.add('hidden');
+    btn.classList.add('hidden');
+    statusEl.textContent = '';
+    return;
+  }
+
+  placeholder.classList.add('hidden');
+  listEl.classList.remove('hidden');
+  btn.classList.remove('hidden');
+  btn.disabled = false;
+  statusEl.textContent = `已选择 ${_trainFiles.length} 个文件`;
+
+  const sizeStr = (b) => b < 1024 ? b + 'B' : b < 1048576 ? (b/1024).toFixed(1) + 'KB' : (b/1048576).toFixed(1) + 'MB';
+  const iconFor = (name) => {
+    const ext = name.split('.').pop().toLowerCase();
+    return { pdf:'📕', docx:'📘', doc:'📘', pptx:'📙', ppt:'📙', txt:'📄', md:'📄' }[ext] || '📁';
+  };
+
+  listEl.innerHTML = _trainFiles.map((f, i) => `
+    <div class="flex items-center gap-2 hairline rounded-lg px-3 py-2">
+      <span class="text-base">${iconFor(f.name)}</span>
+      <span class="text-xs flex-1 truncate">${f.name}</span>
+      <span class="text-[10px] text-dim">${sizeStr(f.size)}</span>
+      <button onclick="removeTrainFile(${i})" class="text-xs text-red-400/60 hover:text-red-400 ml-1">✕</button>
+    </div>`).join('') +
+    (_trainFiles.length > 1 ? `<button onclick="clearTrainFiles()" class="text-[10px] text-dim hover:text-red-400 mt-1">清空全部</button>` : '');
+}
+
+async function doTrainFileImport() {
+  if (_trainFiles.length === 0) return;
+
+  const btn = document.getElementById('btn-train-import');
+  const prog = document.getElementById('train-import-progress');
+  const bar = document.getElementById('train-import-bar');
+  const msg = document.getElementById('train-import-msg');
+  const resultEl = document.getElementById('train-import-result');
+
+  const category = document.getElementById('import-category').value;
+  const skillKey = document.getElementById('import-skill-key').value.trim() || '';
+  const industry = document.getElementById('import-industry').value.trim() || '';
+
+  btn.disabled = true;
+  btn.textContent = '导入中...';
+  prog.classList.remove('hidden');
+  resultEl.classList.add('hidden');
+  bar.style.width = '10%';
+  msg.textContent = `正在上传 ${_trainFiles.length} 个文件...`;
+
+  try {
+    const formData = new FormData();
+    for (const f of _trainFiles) formData.append('files', f);
+    formData.append('category', category);
+    if (skillKey) formData.append('skill_key', skillKey);
+    if (industry) formData.append('industry', industry);
+
+    bar.style.width = '30%';
+    msg.textContent = '文件上传中，正在提取文本...';
+
+    const res = await fetch('/api/training/samples/import', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${VCPlat.getToken()}` },
+      body: formData
+    });
+
+    bar.style.width = '80%';
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || '导入失败');
+    }
+
+    bar.style.width = '100%';
+    msg.textContent = '导入完成！';
+
+    // 显示结果
+    resultEl.classList.remove('hidden');
+    let html = `<div class="text-xs space-y-1">`;
+    html += `<div class="text-emerald-400">成功导入 ${data.created} 条训练样本（来自 ${data.filesProcessed} 个文件）</div>`;
+    if (data.fileMeta?.length > 0) {
+      html += `<div class="mt-2 text-dim">文件处理详情：</div>`;
+      for (const fm of data.fileMeta) {
+        html += `<div class="flex gap-2"><span>${fm.fileName}</span><span class="text-dim">${fm.charCount}字 · ${fm.method}</span></div>`;
+      }
+    }
+    if (data.errors?.length > 0) {
+      html += `<div class="mt-2 text-yellow-400">跳过 ${data.errors.length} 项：</div>`;
+      for (const e of data.errors) {
+        html += `<div class="text-yellow-400/70">${e}</div>`;
+      }
+    }
+    html += `</div>`;
+    resultEl.innerHTML = html;
+
+    // 清空文件列表
+    _trainFiles = [];
+    renderTrainFileList();
+    document.getElementById('train-file-input').value = '';
+
+    // 刷新仪表盘
+    setTimeout(() => loadTrainingDashboard(), 500);
+
+  } catch(e) {
+    msg.textContent = '导入失败：' + e.message;
+    bar.style.width = '0%';
+    resultEl.classList.remove('hidden');
+    resultEl.innerHTML = `<div class="text-xs text-red-400">${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '开始导入';
+  }
 }
 
 async function runTraining() {

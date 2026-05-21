@@ -192,6 +192,156 @@ export function createTrainingJob({ sampleCount, feedbackCount, config, createdB
 }
 
 /**
+ * 从文档文本批量创建训练样本
+ * 将长文档按段落/章节智能切分为多条样本
+ * @param {Object} opts
+ * @param {string} opts.category - 样本分类 (qa/analysis/redline/valuation)
+ * @param {string} [opts.skillKey] - 关联技能
+ * @param {string} [opts.industry] - 关联行业
+ * @param {Array<{fileName:string, text:string}>} opts.documents - 文档列表
+ * @param {number} [opts.createdBy] - 创建者ID
+ * @returns {{ created: number, errors: string[] }}
+ */
+export function importSamplesFromDocuments({ category, skillKey, industry, documents, createdBy }) {
+  const errors = [];
+  let created = 0;
+
+  const validCategories = ['qa', 'analysis', 'redline', 'valuation'];
+  const cat = validCategories.includes(category) ? category : 'analysis';
+
+  for (const doc of documents) {
+    try {
+      const text = (doc.text || '').trim();
+      if (!text || text.length < 100) {
+        errors.push(`${doc.fileName}: 内容过短(${text.length}字)，跳过`);
+        continue;
+      }
+
+      // 智能切分：按"第X章"/"一、"/"1."等章节标记分段
+      const chunks = splitDocumentToChunks(text);
+
+      if (chunks.length === 0) {
+        errors.push(`${doc.fileName}: 无法提取有效段落`);
+        continue;
+      }
+
+      // 如果只有1个chunk（文档很短），整篇作为一条样本
+      if (chunks.length === 1) {
+        const chunk = chunks[0];
+        if (chunk.length < 50) continue;
+        const inputLen = Math.min(800, Math.floor(chunk.length * 0.3));
+        createSample({
+          category: cat,
+          skillKey,
+          industry,
+          inputText: chunk.substring(0, inputLen),
+          idealOutput: chunk,
+          sourceType: 'file-import',
+          qualityScore: null,
+          createdBy
+        });
+        created++;
+        continue;
+      }
+
+      // 多chunk：前一段作为input，后一段作为ideal_output；相邻chunk配对
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        if (chunk.length < 50) continue;
+
+        // 单个chunk太长时，切分为input+output
+        if (chunk.length > 300) {
+          const inputLen = Math.min(800, Math.floor(chunk.length * 0.3));
+          createSample({
+            category: cat,
+            skillKey,
+            industry,
+            inputText: chunk.substring(0, inputLen),
+            idealOutput: chunk,
+            sourceType: 'file-import',
+            qualityScore: null,
+            createdBy
+          });
+          created++;
+        } else if (i + 1 < chunks.length) {
+          // 短chunk和下一个chunk配对
+          createSample({
+            category: cat,
+            skillKey,
+            industry,
+            inputText: chunk,
+            idealOutput: chunks[i + 1],
+            sourceType: 'file-import',
+            qualityScore: null,
+            createdBy
+          });
+          created++;
+          i++; // 跳过下一个chunk，避免重复使用
+        }
+      }
+    } catch (err) {
+      errors.push(`${doc.fileName}: ${err.message}`);
+    }
+  }
+
+  return { created, errors };
+}
+
+/**
+ * 将文档文本按章节/段落标记切分为chunk
+ */
+function splitDocumentToChunks(text) {
+  const chunks = [];
+
+  // 优先按章节标记切分：第X章/第X节/一、/二、/1./2./（一）/（二）等
+  const sectionPattern = /(?:^|\n)(?:第[一二三四五六七八九十百]+[章节篇部分]|[%s一二三四五六七八九十]+[、．.]|\([一二三四五六七八九十]+\)|\d+[、．.])\s*/;
+
+  // 尝试按章节切分
+  const sections = text.split(new RegExp(sectionPattern.source, 'g')).filter(s => s.trim().length > 30);
+
+  if (sections.length >= 2) {
+    for (const sec of sections) {
+      const trimmed = sec.trim();
+      if (trimmed.length >= 50) {
+        chunks.push(trimmed.substring(0, 4000)); // 单个chunk最大4000字
+      }
+    }
+    return chunks;
+  }
+
+  // 没有章节标记，按段落（双换行）切分，然后合并相邻短段落
+  const paragraphs = text.split(/\n{2,}/).map(p => p.trim()).filter(p => p.length > 20);
+  let buffer = '';
+  for (const para of paragraphs) {
+    if (buffer.length + para.length > 3000 && buffer.length >= 50) {
+      chunks.push(buffer.substring(0, 4000));
+      buffer = para;
+    } else {
+      buffer += (buffer ? '\n\n' : '') + para;
+    }
+  }
+  if (buffer.length >= 50) {
+    chunks.push(buffer.substring(0, 4000));
+  }
+
+  // 如果仍然只有1个chunk且太长，按固定长度切分
+  if (chunks.length <= 1 && text.length > 2000) {
+    chunks.length = 0;
+    const chunkSize = 1500;
+    const overlap = 200;
+    let start = 0;
+    while (start < text.length) {
+      const end = Math.min(start + chunkSize, text.length);
+      const chunk = text.substring(start, end).trim();
+      if (chunk.length >= 50) chunks.push(chunk);
+      start += chunkSize - overlap;
+    }
+  }
+
+  return chunks;
+}
+
+/**
  * 更新训练任务状态
  */
 export function updateTrainingJob(id, { status, result }) {
