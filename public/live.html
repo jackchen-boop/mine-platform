@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>项目直播 · 星链创投</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="assets/theme.css" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  #local-video, #presenter-video { transform: scaleX(-1); }
+  .chat-msg { animation: msgIn .2s ease; }
+  @keyframes msgIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .speak-req-item { animation: reqIn .25s ease; }
+  @keyframes reqIn { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:scale(1); } }
+</style>
+</head>
+<body data-page="live" class="bg-[#060b16] text-white min-h-screen">
+
+<!-- ===== NAV ===== -->
+<header class="top-nav">
+  <div class="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <svg width="30" height="30" viewBox="0 0 40 40" fill="none">
+        <path d="M20 3 L36 12 L36 28 L20 37 L4 28 L4 12 Z" stroke="#d4af37" stroke-width="1.4" fill="rgba(212,175,55,0.06)"/>
+        <path d="M14 24 L20 14 L26 24" stroke="#f1d77a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="20" cy="14" r="1.6" fill="#f1d77a"/>
+      </svg>
+      <span class="font-serif-cn text-base tracking-wider brand-wordmark font-bold">星链创投</span>
+    </a>
+    <div class="flex items-center gap-3">
+      <span id="live-status-badge" class="chip text-xs"><span class="w-2 h-2 rounded-full bg-red-500 inline-block mr-1 animate-pulse"></span>LIVE</span>
+      <span id="viewer-count" class="text-xs text-dim">0 人观看</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===== 3-column layout ===== -->
+<div class="max-w-[1400px] mx-auto px-4 py-4 flex gap-4" style="height:calc(100vh - 56px);">
+
+  <!-- 左侧：视频区 -->
+  <div class="flex-1 flex flex-col gap-3 min-w-0">
+    <!-- 主视频区 -->
+    <div class="flex-1 relative rounded-xl overflow-hidden bg-[#0a1020] border border-white/5">
+      <!-- 主播/屏幕共享视频 -->
+      <video id="presenter-video" autoplay playsinline class="w-full h-full object-contain bg-black"></video>
+      <!-- 本地预览（主播模式） -->
+      <video id="local-video" autoplay playsinline muted class="hidden absolute bottom-4 right-4 w-48 h-36 rounded-lg border border-white/20 object-cover z-10"></video>
+      <!-- 状态覆盖层 -->
+      <div id="video-overlay" class="absolute inset-0 flex items-center justify-center bg-[#0a1020]">
+        <div class="text-center">
+          <div class="text-4xl mb-3 opacity-30">📹</div>
+          <div id="overlay-text" class="text-dim text-sm">等待主播开始直播...</div>
+        </div>
+      </div>
+      <!-- 直播信息条 -->
+      <div class="absolute top-0 left-0 right-0 p-3 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent">
+        <div>
+          <div id="live-title" class="font-serif-cn font-bold text-sm"></div>
+          <div id="live-presenter" class="text-xs text-white/60"></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="chip text-[10px]" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.5);color:#fca5a5;">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-400 inline-block mr-1"></span>LIVE
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 发言者视频条 -->
+    <div id="speakers-bar" class="hidden flex gap-2 h-28">
+      <!-- 动态填充发言者视频 -->
+    </div>
+
+    <!-- 底部控制栏 -->
+    <div class="flex items-center justify-between glass rounded-lg px-4 py-2">
+      <div class="flex items-center gap-2" id="presenter-controls" style="display:none;">
+        <button onclick="toggleCamera()" id="btn-cam" class="ctrl-btn active" title="摄像头">📷</button>
+        <button onclick="toggleMic()" id="btn-mic" class="ctrl-btn active" title="麦克风">🎤</button>
+        <button onclick="toggleScreen()" id="btn-screen" class="ctrl-btn" title="屏幕共享">🖥️</button>
+        <button onclick="endLive()" class="ctrl-btn text-red-400" title="结束直播">⏹️</button>
+      </div>
+      <div id="viewer-controls" class="flex items-center gap-2" style="display:none;">
+        <button onclick="requestSpeak()" id="btn-speak-req" class="btn btn-ghost text-xs">✋ 申请发言</button>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="toggleChat()" class="ctrl-btn" title="聊天">💬</button>
+        <button onclick="toggleFullscreen()" class="ctrl-btn" title="全屏">⛶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧：聊天 + 管控面板 -->
+  <div class="w-80 flex flex-col gap-3 shrink-0">
+
+    <!-- 管理员管控面板（仅管理员可见） -->
+    <div id="admin-panel" class="glass rounded-lg p-4 hidden" style="max-height:40%;">
+      <h3 class="font-bold text-xs mb-3 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-gold-1"></span>管理控制台
+      </h3>
+      <!-- 发言申请列表 -->
+      <div class="mb-3">
+        <div class="text-[10px] text-dim mb-1">发言申请</div>
+        <div id="speak-requests" class="space-y-1.5 max-h-40 overflow-y-auto">
+          <div class="text-dim text-[10px]">暂无申请</div>
+        </div>
+      </div>
+      <!-- 当前发言者 -->
+      <div>
+        <div class="text-[10px] text-dim mb-1">当前发言者</div>
+        <div id="active-speakers" class="space-y-1">
+          <div class="text-dim text-[10px]">暂无</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 聊天区 -->
+    <div class="flex-1 glass rounded-lg flex flex-col overflow-hidden">
+      <div class="px-4 py-2 border-b border-white/5 flex items-center justify-between">
+        <span class="text-xs font-bold">互动聊天</span>
+        <span id="online-count" class="text-[10px] text-dim">0 在线</span>
+      </div>
+      <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-2 space-y-2">
+        <div class="text-dim text-xs text-center py-4">直播聊天将在开始后显示</div>
+      </div>
+      <div class="px-3 py-2 border-t border-white/5">
+        <div class="flex gap-2">
+          <input id="chat-input" class="input text-xs flex-1 py-1.5" placeholder="输入消息..."
+                 onkeydown="if(event.key==='Enter')sendChat()">
+          <button onclick="sendChat()" class="btn btn-gold text-xs py-1 px-3">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/api.js"></script>
+<script>
+// ===== 全局变量 =====
+const params = new URLSearchParams(location.search);
+const ROADSHOW_ID = params.get('id');
+const USER = VCPlat.getUser();
+const IS_ADMIN = VCPlat.isAdmin();
+const IS_PRESENTER = params.get('role') === 'presenter';
+
+let ws = null;
+let localStream = null;
+let presenterStream = null;
+let peerConnections = new Map(); // wsId → RTCPeerConnection
+let isSpeaker = false;
+let cameraOn = true;
+let micOn = true;
+let screenSharing = false;
+let screenStream = null;
+
+const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
+
+// ===== 初始化 =====
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!VCPlat.isLoggedIn()) { location.href = 'auth.html'; return; }
+  if (!ROADSHOW_ID) { alert('缺少路演ID'); location.href = 'roadshow.html'; return; }
+
+  // 显示控制面板
+  if (IS_PRESENTER || IS_ADMIN) {
+    document.getElementById('presenter-controls').style.display = 'flex';
+    document.getElementById('admin-panel').classList.remove('hidden');
+  } else {
+    document.getElementById('viewer-controls').style.display = 'flex';
+  }
+
+  // 加载路演信息
+  await loadRoadshowInfo();
+  // 连接 WebSocket
+  connectWS();
+  // 记录观众
+  if (!IS_PRESENTER) {
+    VCPlat.api(`/api/live/${ROADSHOW_ID}/record-viewer`, { method: 'POST' }).catch(() => {});
+  }
+});
+
+async function loadRoadshowInfo() {
+  try {
+    const data = await VCPlat.api(`/api/roadshow/${ROADSHOW_ID}`);
+    const r = data.roadshow;
+    document.getElementById('live-title').textContent = r.title || r.project_name || '项目路演';
+    document.getElementById('live-presenter').textContent = r.presenter || '';
+    document.title = (r.title || '项目路演') + ' · 星链创投';
+  } catch (e) {
+    console.error('加载路演信息失败:', e);
+  }
+}
+
+// ===== WebSocket 连接 =====
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${proto}//${location.host}/ws/live`;
+  ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    // 加入房间
+    wsSend({
+      type: 'join',
+      roomId: ROADSHOW_ID,
+      userId: USER.id,
+      userName: USER.name,
+      role: IS_PRESENTER ? 'presenter' : (IS_ADMIN ? 'admin' : 'viewer')
+    });
+  };
+
+  ws.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      handleWSMessage(msg);
+    } catch (err) { console.error('WS parse error:', err); }
+  };
+
+  ws.onclose = () => {
+    document.getElementById('overlay-text').textContent = '连接已断开，3秒后重连...';
+    setTimeout(connectWS, 3000);
+  };
+
+  ws.onerror = (err) => console.error('WS error:', err);
+}
+
+function wsSend(msg) {
+  if (ws && ws.readyState === 1) ws.send(JSON.stringify(msg));
+}
+
+// ===== WS 消息处理 =====
+function handleWSMessage(msg) {
+  switch (msg.type) {
+    case 'joined':         return onJoined(msg);
+    case 'new-viewer':     return onNewViewer(msg);
+    case 'offer':          return onOffer(msg);
+    case 'answer':         return onAnswer(msg);
+    case 'ice':            return onIce(msg);
+    case 'chat':           return onChat(msg);
+    case 'viewer-joined':  return onViewerEvent(msg);
+    case 'viewer-left':    return onViewerEvent(msg);
+    case 'speak-request':  return onSpeakRequest(msg);
+    case 'speak-approved': return onSpeakApproved();
+    case 'speak-rejected': return onSpeakRejected();
+    case 'speak-ended':    return onSpeakEnded();
+    case 'speaker-added':  return onSpeakerAdded(msg);
+    case 'speaker-removed':return onSpeakerRemoved(msg);
+    case 'new-speaker':    return onNewSpeaker(msg);
+    case 'muted':          return alert('你已被管理员禁言');
+    case 'stream-ended':   return onStreamEnded();
+  }
+}
+
+function onJoined(msg) {
+  document.getElementById('viewer-count').textContent = msg.viewerCount + ' 人观看';
+  document.getElementById('online-count').textContent = msg.viewerCount + ' 在线';
+  // 渲染历史聊天
+  const chatEl = document.getElementById('chat-messages');
+  if (msg.chatLog?.length > 0) {
+    chatEl.innerHTML = '';
+    msg.chatLog.forEach(m => appendChat(m.userName, m.text, m.time));
+  }
+  // 渲染待审批发言申请
+  if (msg.speakRequests?.length > 0) {
+    msg.speakRequests.forEach(r => addSpeakRequestUI(r.userId, r.userName, r.reason));
+  }
+  // 如果是主播，自动开始推流
+  if (IS_PRESENTER) {
+    startPresenterStream();
+  } else {
+    document.getElementById('overlay-text').textContent = '正在连接主播...';
+  }
+}
+
+function onNewViewer(msg) {
+  // 有新观众加入，主播需要为其创建 offer
+  if (IS_PRESENTER && localStream) {
+    createPeerConnection(msg.viewerWsId, msg.userId, msg.userName, true);
+  }
+}
+
+function onViewerEvent(msg) {
+  document.getElementById('viewer-count').textContent = msg.viewerCount + ' 人观看';
+  document.getElementById('online-count').textContent = msg.viewerCount + ' 在线';
+}
+
+// ===== WebRTC 核心 =====
+async function startPresenterStream() {
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const localVideo = document.getElementById('local-video');
+    localVideo.srcObject = localStream;
+    localVideo.classList.remove('hidden');
+    document.getElementById('video-overlay').classList.add('hidden');
+  } catch (e) {
+    console.error('获取摄像头失败:', e);
+    alert('无法获取摄像头/麦克风，请检查权限设置');
+  }
+}
+
+function createPeerConnection(targetWsId, targetUserId, targetUserName, isInitiator) {
+  if (peerConnections.has(targetWsId)) return peerConnections.get(targetWsId);
+
+  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+  peerConnections.set(targetWsId, pc);
+
+  // 添加本地流
+  const stream = localStream || presenterStream;
+  if (stream) {
+    stream.getTracks().forEach(track => pc.addTrack(track, stream));
+  }
+
+  // 接收远程流
+  pc.ontrack = (e) => {
+    const remoteVideo = document.getElementById('presenter-video');
+    if (!remoteVideo.srcObject || remoteVideo.srcObject.id !== e.streams[0].id) {
+      remoteVideo.srcObject = e.streams[0];
+      presenterStream = e.streams[0];
+      document.getElementById('video-overlay').classList.add('hidden');
+    }
+  };
+
+  pc.onicecandidate = (e) => {
+    if (e.candidate) {
+      wsSend({ type: 'ice', targetWsId, candidate: e.candidate });
+    }
+  };
+
+  pc.onconnectionstatechange = () => {
+    if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+      peerConnections.delete(targetWsId);
+    }
+  };
+
+  if (isInitiator) {
+    pc.createOffer().then(offer => pc.setLocalDescription(offer)).then(() => {
+      wsSend({ type: 'offer', targetWsId, sdp: pc.localDescription });
+    });
+  }
+
+  return pc;
+}
+
+async function onOffer(msg) {
+  const pc = createPeerConnection(msg.fromWsId, msg.fromUser?.userId, msg.fromUser?.userName, false);
+  await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  wsSend({ type: 'answer', targetWsId: msg.fromWsId, sdp: pc.localDescription });
+}
+
+async function onAnswer(msg) {
+  const pc = peerConnections.get(msg.fromWsId);
+  if (pc) {
+    await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+  }
+}
+
+function onIce(msg) {
+  const pc = peerConnections.get(msg.fromWsId);
+  if (pc) {
+    pc.addIceCandidate(new RTCIceCandidate(msg.candidate)).catch(() => {});
+  }
+}
+
+// ===== 主播控制 =====
+function toggleCamera() {
+  if (!localStream) return;
+  const videoTrack = localStream.getVideoTracks()[0];
+  if (videoTrack) {
+    cameraOn = !cameraOn;
+    videoTrack.enabled = cameraOn;
+    document.getElementById('btn-cam').classList.toggle('active', cameraOn);
+    document.getElementById('btn-cam').textContent = cameraOn ? '📷' : '🚫📷';
+  }
+}
+
+function toggleMic() {
+  if (!localStream) return;
+  const audioTrack = localStream.getAudioTracks()[0];
+  if (audioTrack) {
+    micOn = !micOn;
+    audioTrack.enabled = micOn;
+    document.getElementById('btn-mic').classList.toggle('active', micOn);
+    document.getElementById('btn-mic').textContent = micOn ? '🎤' : '🔇';
+  }
+}
+
+async function toggleScreen() {
+  if (screenSharing) {
+    // 停止屏幕共享，切回摄像头
+    screenStream?.getTracks().forEach(t => t.stop());
+    screenSharing = false;
+    document.getElementById('btn-screen').classList.remove('active');
+    // 重新获取摄像头
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    document.getElementById('local-video').srcObject = localStream;
+    replaceStreamForAllPeers(localStream);
+  } else {
+    // 开始屏幕共享
+    try {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      screenSharing = true;
+      document.getElementById('btn-screen').classList.add('active');
+      // 主视频显示屏幕共享
+      document.getElementById('presenter-video').srcObject = screenStream;
+      document.getElementById('presenter-video').style.transform = 'none';
+      document.getElementById('video-overlay').classList.add('hidden');
+      replaceStreamForAllPeers(screenStream);
+      screenStream.getVideoTracks()[0].onended = () => toggleScreen();
+    } catch (e) {
+      console.error('屏幕共享失败:', e);
+    }
+  }
+}
+
+function replaceStreamForAllPeers(newStream) {
+  const videoTrack = newStream.getVideoTracks()[0];
+  for (const [, pc] of peerConnections) {
+    const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+    if (sender && videoTrack) sender.replaceTrack(videoTrack);
+  }
+}
+
+async function endLive() {
+  if (!confirm('确定结束直播？')) return;
+  wsSend({ type: 'end-stream' });
+  try { await VCPlat.api(`/api/live/${ROADSHOW_ID}/end`, { method: 'POST' }); } catch {}
+  localStream?.getTracks().forEach(t => t.stop());
+  location.href = 'roadshow.html';
+}
+
+function onStreamEnded() {
+  alert('直播已结束');
+  localStream?.getTracks().forEach(t => t.stop());
+  location.href = 'roadshow.html';
+}
+
+// ===== 聊天 =====
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  wsSend({ type: 'chat', text });
+  input.value = '';
+}
+
+function onChat(msg) {
+  appendChat(msg.userName, msg.text, msg.time);
+}
+
+function appendChat(name, text, time) {
+  const el = document.getElementById('chat-messages');
+  const t = time ? new Date(time).toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' }) : '';
+  el.innerHTML += `<div class="chat-msg"><span class="text-gold-2 text-xs font-bold">${esc(name)}</span> <span class="text-[10px] text-dim">${t}</span><div class="text-xs text-white/80 mt-0.5">${esc(text)}</div></div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ===== 发言管控 =====
+function requestSpeak() {
+  const reason = prompt('请输入发言理由（可选）：') || '';
+  wsSend({ type: 'speak-request', reason });
+  document.getElementById('btn-speak-req').textContent = '⏳ 等待审批';
+  document.getElementById('btn-speak-req').disabled = true;
+}
+
+function onSpeakRequest(msg) {
+  if (!IS_ADMIN && !IS_PRESENTER) return;
+  addSpeakRequestUI(msg.userId, msg.userName, msg.reason);
+}
+
+function addSpeakRequestUI(userId, userName, reason) {
+  const el = document.getElementById('speak-requests');
+  if (el.querySelector('.text-dim')) el.innerHTML = '';
+  el.innerHTML += `
+    <div class="speak-req-item hairline rounded-lg p-2" data-req-user="${userId}">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold">${esc(userName)}</span>
+        <div class="flex gap-1">
+          <button onclick="approveSpeak('${userId}')" class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30">批准</button>
+          <button onclick="rejectSpeak('${userId}')" class="text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30">拒绝</button>
+        </div>
+      </div>
+      ${reason ? `<div class="text-[10px] text-dim mt-1">${esc(reason)}</div>` : ''}
+    </div>`;
+}
+
+function approveSpeak(userId) {
+  wsSend({ type: 'speak-approve', userId });
+  const el = document.querySelector(`[data-req-user="${userId}"]`);
+  if (el) el.remove();
+}
+
+function rejectSpeak(userId) {
+  wsSend({ type: 'speak-reject', userId });
+  const el = document.querySelector(`[data-req-user="${userId}"]`);
+  if (el) el.remove();
+}
+
+async function onSpeakApproved() {
+  isSpeaker = true;
+  document.getElementById('btn-speak-req').textContent = '🎙️ 发言中';
+  document.getElementById('btn-speak-req').classList.add('text-emerald-400');
+  // 获取麦克风权限
+  try {
+    const speakStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    localStream = speakStream;
+    appendChat('系统', '你的发言申请已批准，现在可以发言了', new Date().toISOString());
+  } catch (e) {
+    alert('无法获取麦克风权限');
+  }
+}
+
+function onSpeakRejected() {
+  document.getElementById('btn-speak-req').textContent = '✋ 申请发言';
+  document.getElementById('btn-speak-req').disabled = false;
+  alert('发言申请未被批准');
+}
+
+function onSpeakEnded() {
+  isSpeaker = false;
+  document.getElementById('btn-speak-req').textContent = '✋ 申请发言';
+  document.getElementById('btn-speak-req').disabled = false;
+  document.getElementById('btn-speak-req').classList.remove('text-emerald-400');
+  localStream?.getTracks().forEach(t => t.stop());
+}
+
+function onNewSpeaker(msg) {
+  // 主播收到：需要与发言者建立WebRTC连接
+  if (IS_PRESENTER && localStream) {
+    createPeerConnection(msg.speakerWsId, msg.userId, msg.userName, true);
+  }
+}
+
+function onSpeakerAdded(msg) {
+  addActiveSpeakerUI(msg.userId, msg.userName);
+  appendChat('系统', `${msg.userName} 开始发言`, new Date().toISOString());
+}
+
+function onSpeakerRemoved(msg) {
+  const el = document.querySelector(`[data-speaker-user="${msg.userId}"]`);
+  if (el) el.remove();
+  const bar = document.getElementById('speakers-bar');
+  if (!bar.children.length) bar.classList.add('hidden');
+  appendChat('系统', `${msg.userName} 结束发言`, new Date().toISOString());
+}
+
+function addActiveSpeakerUI(userId, userName) {
+  const bar = document.getElementById('speakers-bar');
+  bar.classList.remove('hidden');
+  bar.innerHTML += `
+    <div class="flex-1 relative rounded-lg overflow-hidden bg-[#0a1020] border border-white/5" data-speaker-user="${userId}">
+      <div class="absolute bottom-1 left-2 text-[10px] text-gold-2 z-10">🎙️ ${esc(userName)}</div>
+    </div>`;
+  if (IS_ADMIN || IS_PRESENTER) {
+    const div = document.querySelector(`[data-speaker-user="${userId}"]`);
+    if (div) {
+      div.innerHTML += `<button onclick="endSpeak('${userId}')" class="absolute top-1 right-1 text-[10px] text-red-400/60 hover:text-red-400 z-10">✕</button>`;
+    }
+  }
+}
+
+function endSpeak(userId) {
+  wsSend({ type: 'speak-end', userId });
+}
+
+// ===== 工具函数 =====
+function toggleChat() {
+  const chatPanel = document.querySelector('.w-80');
+  chatPanel.classList.toggle('hidden');
+}
+
+function toggleFullscreen() {
+  const el = document.getElementById('presenter-video');
+  if (el.requestFullscreen) el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

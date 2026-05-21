@@ -290,9 +290,10 @@ async function loadLiveRoadshows() {
         '    <div class="absolute bottom-3 left-3 right-3">' +
         '      <div class="font-serif-cn text-base font-bold">' + (r.title || '').replace(/\.\.\.\[登录查看完整内容\]/g, '') + '</div>' +
         '      <div class="text-xs text-mute mt-1">' + (r.presenter || '') + (r.duration_min ? ' · ' + r.duration_min + '分钟' : '') + '</div>' +
+        (VCPlat.isAdmin() && !isLive ? '      <button onclick="startLive(' + r.id + ')" class="btn btn-gold text-[10px] mt-1 py-0.5 px-2">开播</button>' : '') +
         '    </div>' +
         (isLive
-          ? '    <button class="absolute inset-0 m-auto w-14 h-14 rounded-full flex items-center justify-center" style="background:rgba(212,175,55,.85);" onclick="alert(\'直播功能演示中\')">' +
+          ? '    <button class="absolute inset-0 m-auto w-14 h-14 rounded-full flex items-center justify-center" style="background:rgba(212,175,55,.85);" onclick="joinLive(' + r.id + ')">' +
             '      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#0a0f1c" d="M8 5v14l11-7z"/></svg></button>'
           : '    <button class="absolute inset-0 m-auto w-14 h-14 rounded-full flex items-center justify-center" style="background:rgba(255,255,255,.08);border:1px solid var(--line);" onclick="doReserve(' + r.id + ', this)">' +
             '      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#f1d77a" stroke-width="1.6"/><path d="M12 7v5l3 2" stroke="#f1d77a" stroke-width="1.6" stroke-linecap="round"/></svg></button>') +
@@ -317,6 +318,21 @@ async function doReserve(roadshowId, btn) {
 
 loadLiveRoadshows();
 loadProjects();
+
+// 加入直播
+function joinLive(roadshowId) {
+  if (!VCPlat.isLoggedIn()) { location.href = 'auth.html'; return; }
+  location.href = 'live.html?id=' + roadshowId;
+}
+
+// 管理员开播
+async function startLive(roadshowId) {
+  if (!confirm('确定开始直播？')) return;
+  try {
+    await VCPlat.api('/api/live/' + roadshowId + '/start', { method: 'POST' });
+    location.href = 'live.html?id=' + roadshowId + '&role=presenter';
+  } catch (e) { alert('开播失败：' + e.message); }
+}
 </script>
 </body>
 </html>

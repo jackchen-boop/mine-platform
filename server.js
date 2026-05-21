@@ -1,4 +1,5 @@
 import express from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import { fileURLToPath } from 'url';
@@ -12,6 +13,7 @@ import { initSchema } from './server/db/schema.js';
 import { runSeed } from './server/db/seed.js';
 import { runKnowledgeSeed } from './server/db/knowledgeSeed.js';
 import errorHandler from './server/middleware/errorHandler.js';
+import { initLiveSignaling } from './server/services/liveSignaling.js';
 
 import authRoutes from './server/routes/auth.js';
 import projectRoutes from './server/routes/projects.js';
@@ -28,6 +30,7 @@ import partnerRoutes from './server/routes/partners.js';
 import statsRoutes from './server/routes/stats.js';
 import knowledgeRoutes from './server/routes/knowledge.js';
 import trainingRoutes from './server/routes/training.js';
+import liveRoutes from './server/routes/live.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -56,7 +59,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "cdn.tailwindcss.com", "fonts.googleapis.com", "fonts.gstatic.com"],
       fontSrc: ["'self'", "fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "api.minimax.chat"],
+      connectSrc: ["'self'", "api.minimax.chat", "ws://localhost:*", "ws://127.0.0.1:*"],
       frameSrc: ["'none'"]
     }
   },
@@ -107,6 +110,7 @@ app.use('/api/partners',  partnerRoutes);
 app.use('/api/stats',     statsRoutes);
 app.use('/api',           knowledgeRoutes);  // /api/knowledge/*
 app.use('/api/training',  trainingRoutes);  // /api/training/*
+app.use('/api/live',      liveRoutes);      // /api/live/*
 
 // 所有其他 GET 请求回退到 index.html（SPA 支持）
 app.get('*', (req, res, next) => {
@@ -117,7 +121,13 @@ app.get('*', (req, res, next) => {
 // 全局错误处理
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+// 创建 HTTP 服务器（同时服务 Express + WebSocket）
+const server = createServer(app);
+
+// 初始化直播 WebSocket 信令服务器
+initLiveSignaling(server);
+
+server.listen(PORT, () => {
   console.log(`\n🚀 星链创投 VC 平台已启动`);
   console.log(`   地址: http://localhost:${PORT}`);
   console.log(`   环境: ${process.env.NODE_ENV || 'development'}\n`);

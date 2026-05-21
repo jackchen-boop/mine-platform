@@ -482,6 +482,7 @@ async function loadRoadshows() {
         <div class="flex items-center gap-3">
           <span class="chip text-xs">${r.status}</span>
           <span class="text-xs text-mute">${r.viewer_count||0} 观看 / ${r.reservation_count||0} 预约</span>
+          ${r.status==='live' ? `<button onclick="window.open('live.html?id=${r.id}&role=presenter','_blank')" class="text-xs px-2 py-1 rounded bg-red-500/20 text-red-300 hover:bg-red-500/30">进入直播</button>` : `<button onclick="startLiveFromAdmin(${r.id})" class="text-xs px-2 py-1 rounded bg-gold-1/10 text-gold-2 hover:bg-gold-1/20">开播</button>`}
           <select onchange="updateRoadshowStatus(${r.id},this.value)" class="text-xs bg-transparent border border-white/10 rounded px-1 py-0.5">
             <option value="upcoming" ${r.status==='upcoming'?'selected':''}>预约中</option>
             <option value="live"     ${r.status==='live'?'selected':''}>直播中</option>
@@ -493,6 +494,15 @@ async function loadRoadshows() {
       </div>`
     ).join("") || "<div class='text-dim text-sm'>暂无路演</div>";
   } catch(e) { el.innerHTML = `<div class="text-red-400 text-sm">${e.message}</div>`; }
+}
+
+async function startLiveFromAdmin(id) {
+  if (!confirm('确定开始直播？')) return;
+  try {
+    await VCPlat.api('/api/live/' + id + '/start', { method: 'POST' });
+    window.open('live.html?id=' + id + '&role=presenter', '_blank');
+    loadRoadshows();
+  } catch(e) { alert('开播失败：' + e.message); }
 }
 
 async function updateRoadshowStatus(id, status) {
