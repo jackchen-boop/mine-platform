@@ -1,6 +1,7 @@
 // 直播信令服务器 — WebSocket + WebRTC
 // 管理直播房间、视频信令、聊天、发言申请/审批
 import { WebSocketServer } from 'ws';
+import { randomUUID } from 'crypto';
 
 // 房间状态存储（内存，服务器重启后清空）
 const rooms = new Map(); // roomId → { presenterWs, viewers: Map<ws, {userId,userName,role}>, speakers: Set<ws>, speakRequests: Map<ws,reason>, chatLog: [], viewerCount, createdAt }
@@ -15,6 +16,7 @@ export function initLiveSignaling(server) {
 
   wss.on('connection', (ws) => {
     ws.isAlive = true;
+    ws._id = randomUUID();
     ws.roomId = null;
     ws.userInfo = null;
 
@@ -405,8 +407,7 @@ function broadcastToAdmins(roomId, data) {
 }
 
 function getWsId(ws) {
-  // 用连接的内部ID作为标识
-  return ws._ultron?.id || ws._socket?.remotePort?.toString() || Math.random().toString(36).slice(2);
+  return ws._id;
 }
 
 function findWsById(roomId, wsId) {
