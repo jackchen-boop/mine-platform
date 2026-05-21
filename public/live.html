@@ -20,6 +20,9 @@
   .ctrl-btn { min-width:40px; min-height:40px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; font-size:18px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04); }
   .ctrl-btn:active { background:rgba(255,255,255,.1); }
   .ctrl-btn.active { background:rgba(212,175,55,.15); border-color:rgba(212,175,55,.3); }
+  /* 桌面端聊天面板隐藏/显示过渡 */
+  #chat-panel-desktop { transition: width 0.3s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease; overflow: hidden; }
+  #chat-panel-desktop.chat-panel-hidden { width: 0 !important; opacity: 0; margin: 0; padding: 0; border: none; pointer-events: none; }
 </style>
 </head>
 <body data-page="live" class="bg-[#060b16] text-white min-h-screen flex flex-col overflow-hidden">
@@ -82,7 +85,7 @@
         <button onclick="requestSpeak()" id="btn-speak-req" class="btn btn-ghost text-xs py-2 px-3">✋ 申请发言</button>
       </div>
       <div class="flex items-center gap-1.5">
-        <button onclick="toggleChat()" class="ctrl-btn" title="聊天">💬</button>
+        <button onclick="toggleChat()" id="btn-chat" class="ctrl-btn" title="聊天">💬</button>
         <button onclick="toggleFullscreen()" class="ctrl-btn hidden sm:inline-flex" title="全屏">⛶</button>
       </div>
     </div>
@@ -195,7 +198,7 @@ let cameraOn = true;
 let micOn = true;
 let screenSharing = false;
 let screenStream = null;
-let chatOpen = false;
+let chatOpen = !IS_MOBILE; // 桌面端默认展开聊天
 
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 
@@ -213,6 +216,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await loadRoadshowInfo();
   connectWS();
+  // 设置聊天按钮初始状态
+  document.getElementById('btn-chat').classList.toggle('active', chatOpen);
   if (!IS_PRESENTER) {
     VCPlat.api(`/api/live/${ROADSHOW_ID}/record-viewer`, { method: 'POST' }).catch(() => {});
   }
@@ -388,13 +393,27 @@ function appendChat(name, text, time) {
   });
 }
 
-// ===== 聊天抽屉 (移动端) =====
+// ===== 聊天面板切换 =====
 function toggleChat() {
   chatOpen = !chatOpen;
-  const drawer = document.getElementById('chat-drawer');
-  const overlay = document.getElementById('chat-overlay');
-  if (chatOpen) { drawer.classList.remove('closed'); overlay.classList.remove('hidden'); }
-  else { drawer.classList.add('closed'); overlay.classList.add('hidden'); }
+  // 更新按钮状态
+  document.getElementById('btn-chat').classList.toggle('active', chatOpen);
+
+  if (IS_MOBILE) {
+    // 移动端：抽屉模式
+    const drawer = document.getElementById('chat-drawer');
+    const overlay = document.getElementById('chat-overlay');
+    if (chatOpen) { drawer.classList.remove('closed'); overlay.classList.remove('hidden'); }
+    else { drawer.classList.add('closed'); overlay.classList.add('hidden'); }
+  } else {
+    // 桌面端：显示/隐藏右侧面板
+    const panel = document.getElementById('chat-panel-desktop');
+    if (chatOpen) {
+      panel.classList.remove('chat-panel-hidden');
+    } else {
+      panel.classList.add('chat-panel-hidden');
+    }
+  }
 }
 
 // ===== 发言管控 =====
