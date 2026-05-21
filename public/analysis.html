@@ -417,13 +417,23 @@ async function startAnalysis(bpId) {
       statusBox.classList.add('success');
       statusTxt.textContent = '报告生成完成';
 
-      // 添加"查看报告"按钮
+      // 添加"查看报告"按钮 + AI反馈评分
       const doneBar = document.createElement('div');
       doneBar.className = 'mt-6 pt-5 border-t border-white/5 text-center';
       doneBar.innerHTML = `
         <div class="text-gold-2 font-serif-cn text-lg font-bold mb-3">✓ 分析完成</div>
         <button class="btn btn-gold" onclick="viewReport(${bpId})">查看完整报告</button>
         <button class="btn btn-ghost ml-2" onclick="goToList()">返回列表</button>
+        <div class="mt-5 pt-4 border-t border-white/5" id="ai-feedback-section">
+          <div class="text-xs text-dim mb-2">这份AI分析对您有帮助吗？您的反馈将帮助AI持续改进</div>
+          <div class="flex items-center justify-center gap-2" id="ai-rating-stars">
+            ${[1,2,3,4,5].map(n => `<button onclick="rateAI(${n})" class="text-2xl text-white/20 hover:text-gold-1 transition-colors" data-star="${n}">★</button>`).join('')}
+          </div>
+          <div id="ai-feedback-form" class="hidden mt-3">
+            <textarea id="ai-correction-input" class="input text-sm w-full" rows="2" placeholder="如有修正建议，请在此输入（可选）..."></textarea>
+            <button onclick="submitAIFeedback()" class="btn btn-ghost text-xs mt-2">提交反馈</button>
+          </div>
+        </div>
       `;
       output.parentElement.appendChild(doneBar);
 
@@ -573,6 +583,44 @@ async function deleteBP(bpId, name) {
   } catch (e) {
     alert('删除失败：' + e.message);
   }
+}
+
+/* ===== AI 反馈评分 ===== */
+let _aiRatingValue = 0;
+let _aiLastReportId = null;
+
+function rateAI(stars) {
+  _aiRatingValue = stars;
+  // 高亮星星
+  document.querySelectorAll('#ai-rating-stars button').forEach(btn => {
+    const s = parseInt(btn.dataset.star);
+    btn.classList.toggle('text-gold-1', s <= stars);
+    btn.classList.toggle('text-white/20', s > stars);
+  });
+  // 显示修正建议输入框
+  document.getElementById('ai-feedback-form')?.classList.remove('hidden');
+  // 自动提交评分（不需要修正时）
+  if (stars <= 3) return; // 低分时等用户输入修正建议再提交
+}
+
+async function submitAIFeedback() {
+  if (!_aiRatingValue) { alert('请先选择评分'); return; }
+  try {
+    // 获取最近一份报告ID
+    const { reports } = await VCPlat.api('/api/reports?limit=1');
+    const reportId = reports?.[0]?.id;
+    if (!reportId) { alert('未找到对应报告'); return; }
+
+    const correction = document.getElementById('ai-correction-input')?.value?.trim() || null;
+    await VCPlat.api('/api/training/feedback', {
+      method: 'POST',
+      body: { report_id: reportId, rating: _aiRatingValue, correction }
+    });
+
+    // 显示感谢信息
+    const section = document.getElementById('ai-feedback-section');
+    if (section) section.innerHTML = '<div class="text-xs text-emerald-400">感谢您的反馈！这将帮助AI持续改进分析质量。</div>';
+  } catch(e) { console.error('提交反馈失败:', e); }
 }
 </script>
 </body>

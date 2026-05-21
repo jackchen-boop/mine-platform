@@ -5,6 +5,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { streamToResponseWithSave } from '../services/minimax.js';
 import { SKILL_PROMPTS, resolveSkillKey } from '../services/skillPrompts.js';
 import { retrieveKnowledgeContext } from '../services/knowledgeRetriever.js';
+import { buildTrainingContext } from '../services/trainingEngine.js';
 
 const router = Router();
 
@@ -49,6 +50,11 @@ router.post('/skill-run', requireAuth, async (req, res, next) => {
       const ragResult = retrieveKnowledgeContext(finalInput, sectorHint);
       if (ragResult.context) {
         systemPrompt += `\n\n---\n${ragResult.context}`;
+      }
+      // 注入训练样本 few-shot 上下文
+      const trainingCtx = buildTrainingContext({ skillKey, industry: sectorHint, maxSamples: 3 });
+      if (trainingCtx) {
+        systemPrompt += `\n\n---\n${trainingCtx}`;
       }
     }
 

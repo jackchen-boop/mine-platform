@@ -268,5 +268,66 @@ export function initSchema() {
     db.exec('CREATE INDEX IF NOT EXISTS idx_kb_listed_mktcap ON kb_listed_companies(market_cap)');
   } catch {}
 
+  // ===== AI 训练系统表 =====
+
+  // 训练样本库（管理员上传的 Q&A 对、参考分析、评分标准）
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS ai_training_samples (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        category        TEXT    NOT NULL,
+        skill_key       TEXT,
+        industry        TEXT,
+        input_text      TEXT    NOT NULL,
+        ideal_output    TEXT    NOT NULL,
+        source_type     TEXT    NOT NULL DEFAULT 'manual',
+        quality_score   REAL,
+        is_active       INTEGER NOT NULL DEFAULT 1,
+        created_by      INTEGER REFERENCES users(id),
+        created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+        updated_at      TEXT    NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    db.exec('CREATE INDEX IF NOT EXISTS idx_train_cat ON ai_training_samples(category)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_train_skill ON ai_training_samples(skill_key)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_train_ind ON ai_training_samples(industry)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_train_active ON ai_training_samples(is_active)');
+  } catch {}
+
+  // AI 反馈学习（用户对 AI 输出的评价和修正）
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS ai_feedback (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        report_id       INTEGER REFERENCES reports(id),
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        rating          INTEGER NOT NULL,
+        correction      TEXT,
+        accepted        INTEGER,
+        created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    db.exec('CREATE INDEX IF NOT EXISTS idx_fb_report ON ai_feedback(report_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_fb_user ON ai_feedback(user_id)');
+  } catch {}
+
+  // 训练任务记录（每次训练的参数、状态、结果）
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS ai_training_jobs (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        status          TEXT    NOT NULL DEFAULT 'pending',
+        sample_count    INTEGER DEFAULT 0,
+        feedback_count  INTEGER DEFAULT 0,
+        config          TEXT,
+        result          TEXT,
+        started_at      TEXT,
+        completed_at    TEXT,
+        created_by      INTEGER REFERENCES users(id),
+        created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch {}
+
   console.log('✓ 数据库 schema 初始化完成');
 }

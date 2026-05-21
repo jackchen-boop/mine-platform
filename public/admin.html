@@ -49,6 +49,9 @@
       <button onclick="showTab('reports')"   class="admin-nav w-full text-left px-3 py-2 rounded-lg text-sm" id="nav-reports">AI 报告</button>
       <button onclick="showTab('stats')"     class="admin-nav w-full text-left px-3 py-2 rounded-lg text-sm" id="nav-stats">平台统计</button>
       <button onclick="showTab('logs')"      class="admin-nav w-full text-left px-3 py-2 rounded-lg text-sm" id="nav-logs">操作日志</button>
+      <div class="border-t border-white/10 my-2"></div>
+      <div class="text-[10px] text-dim tracking-widest px-3 py-2">AI 系统</div>
+      <button onclick="showTab('training')"  class="admin-nav w-full text-left px-3 py-2 rounded-lg text-sm" id="nav-training">AI 训练台</button>
     </div>
   </div>
 
@@ -176,6 +179,85 @@
       <h2 class="font-serif-cn text-xl font-bold mb-5">操作日志</h2>
       <div id="logs-list" class="space-y-2">
         <div class="text-dim text-sm">加载中...</div>
+      </div>
+    </div>
+
+    <!-- AI 训练台 -->
+    <div id="tab-training" class="admin-tab hidden">
+      <h2 class="font-serif-cn text-2xl font-bold mb-4">AI 训练操作台</h2>
+
+      <!-- 训练状态概览 -->
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="glass p-4 text-center"><div class="text-[10px] text-dim">训练样本</div><div class="stat-num text-2xl mt-1 text-gold-2" id="train-sample-count">—</div></div>
+        <div class="glass p-4 text-center"><div class="text-[10px] text-dim">用户反馈</div><div class="stat-num text-2xl mt-1 text-gold-2" id="train-feedback-count">—</div></div>
+        <div class="glass p-4 text-center"><div class="text-[10px] text-dim">平均评分</div><div class="stat-num text-2xl mt-1" id="train-avg-rating">—</div></div>
+        <div class="glass p-4 text-center"><div class="text-[10px] text-dim">训练次数</div><div class="stat-num text-2xl mt-1" id="train-job-count">—</div></div>
+      </div>
+
+      <!-- 训练操作区 -->
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div class="glass p-6">
+          <h3 class="font-bold text-sm mb-4">执行训练</h3>
+          <p class="text-xs text-dim mb-4">训练将把样本库中的范例注入AI分析prompt，使AI学习标准分析风格和判定逻辑。用户反馈中高质量的修正也会被纳入训练。</p>
+          <button onclick="runTraining()" id="btn-run-training" class="btn btn-gold text-sm w-full">开始训练</button>
+          <div id="training-progress" class="mt-4 hidden">
+            <div class="w-full bg-white/5 rounded-full h-2 overflow-hidden"><div id="training-progress-bar" class="h-full bg-gold-1 transition-all duration-500" style="width:0%"></div></div>
+            <div class="text-xs text-dim mt-2" id="training-progress-msg">准备中...</div>
+          </div>
+        </div>
+        <div class="glass p-6">
+          <h3 class="font-bold text-sm mb-4">快捷操作</h3>
+          <div class="space-y-3">
+            <button onclick="feedbackToSamples()" class="btn btn-ghost text-sm w-full">从反馈生成样本</button>
+            <p class="text-[10px] text-dim -mt-1">将评分>=4且有修正的反馈自动转为训练样本</p>
+            <button onclick="openAddSampleModal()" class="btn btn-ghost text-sm w-full">手动添加样本</button>
+            <p class="text-[10px] text-dim -mt-1">上传Q&A范例、参考分析等训练素材</p>
+            <button onclick="previewTrainingContext()" class="btn btn-ghost text-sm w-full">预览训练上下文</button>
+            <p class="text-[10px] text-dim -mt-1">查看当前训练样本会如何注入AI prompt</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 样本分类分布 + 反馈评分分布 -->
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div class="glass p-6">
+          <h3 class="font-bold text-sm mb-3">样本分类分布</h3>
+          <div id="train-cat-dist" class="space-y-2"><div class="text-dim text-xs">暂无数据</div></div>
+        </div>
+        <div class="glass p-6">
+          <h3 class="font-bold text-sm mb-3">反馈评分分布</h3>
+          <div id="train-rating-dist" class="space-y-2"><div class="text-dim text-xs">暂无数据</div></div>
+        </div>
+      </div>
+
+      <!-- 训练样本列表 -->
+      <div class="glass p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-sm">训练样本库</h3>
+          <div class="flex gap-2">
+            <select id="sample-filter-cat" onchange="loadTrainingSamples()" class="input text-xs py-1 px-2">
+              <option value="">全部分类</option>
+              <option value="qa">Q&A范例</option>
+              <option value="analysis">分析范例</option>
+              <option value="redline">红线判定</option>
+              <option value="valuation">估值判定</option>
+            </select>
+          </div>
+        </div>
+        <div id="training-samples-list" class="space-y-2"><div class="text-dim text-sm py-4 text-center">加载中...</div></div>
+        <div class="flex gap-3 mt-4" id="samples-pager"></div>
+      </div>
+
+      <!-- 最近反馈 -->
+      <div class="glass p-6 mb-6">
+        <h3 class="font-bold text-sm mb-3">最近用户反馈</h3>
+        <div id="training-recent-feedback" class="space-y-2"><div class="text-dim text-xs">暂无反馈</div></div>
+      </div>
+
+      <!-- 训练历史 -->
+      <div class="glass p-6">
+        <h3 class="font-bold text-sm mb-3">训练历史</h3>
+        <div id="training-job-history" class="space-y-2"><div class="text-dim text-xs">暂无训练记录</div></div>
       </div>
     </div>
 
@@ -454,6 +536,7 @@ function showTab(name) {
   if (name === "partners")  loadPartners();
   if (name === "stats")     loadStats();
   if (name === "logs")      loadLogs();
+  if (name === "training")  loadTrainingDashboard();
 }
 
 function fmtDate(s) {
@@ -696,6 +779,234 @@ async function deletePartner(id, name) {
   if (!confirm(`确认删除机构「${name}」？`)) return;
   try { await VCPlat.api(`/api/partners/${id}`, { method:'DELETE' }); loadPartners(); }
   catch(e) { alert('删除失败：' + e.message); }
+}
+
+/* ===== AI 训练台 ===== */
+const SAMPLE_CAT_LABELS = { qa:'Q&A范例', analysis:'分析范例', redline:'红线判定', valuation:'估值判定' };
+
+async function loadTrainingDashboard() {
+  try {
+    const stats = await VCPlat.api('/api/training/stats');
+    document.getElementById('train-sample-count').textContent = stats.sampleTotal || 0;
+    document.getElementById('train-feedback-count').textContent = stats.feedbackTotal || 0;
+    document.getElementById('train-avg-rating').textContent = stats.feedbackAvgRating ? stats.feedbackAvgRating.toFixed(1) : '—';
+    document.getElementById('train-job-count').textContent = stats.jobHistory?.length || 0;
+
+    // 样本分类分布
+    const catEl = document.getElementById('train-cat-dist');
+    if (stats.sampleByCategory?.length > 0) {
+      const maxCat = Math.max(...stats.sampleByCategory.map(c => c.cnt));
+      catEl.innerHTML = stats.sampleByCategory.map(c => `
+        <div class="flex items-center gap-3">
+          <span class="text-xs w-20 text-right">${SAMPLE_CAT_LABELS[c.category] || c.category}</span>
+          <div class="flex-1 bg-white/5 rounded h-4 overflow-hidden"><div class="h-full bg-gold-1/40 rounded" style="width:${(c.cnt/maxCat*100).toFixed(0)}%"></div></div>
+          <span class="text-xs text-dim w-8">${c.cnt}</span>
+        </div>`).join('');
+    }
+
+    // 反馈评分分布
+    const ratingEl = document.getElementById('train-rating-dist');
+    if (stats.feedbackByRating?.length > 0) {
+      const maxR = Math.max(...stats.feedbackByRating.map(r => r.cnt));
+      const ratingColors = { 1:'bg-red-500/60', 2:'bg-orange-500/60', 3:'bg-yellow-500/60', 4:'bg-emerald-500/60', 5:'bg-green-500/60' };
+      ratingEl.innerHTML = stats.feedbackByRating.map(r => `
+        <div class="flex items-center gap-3">
+          <span class="text-xs w-8 text-right">${r.rating}星</span>
+          <div class="flex-1 bg-white/5 rounded h-4 overflow-hidden"><div class="h-full ${ratingColors[r.rating]||'bg-gold-1/40'} rounded" style="width:${(r.cnt/maxR*100).toFixed(0)}%"></div></div>
+          <span class="text-xs text-dim w-8">${r.cnt}</span>
+        </div>`).join('');
+    }
+
+    // 最近反馈
+    const fbEl = document.getElementById('training-recent-feedback');
+    if (stats.recentFeedback?.length > 0) {
+      fbEl.innerHTML = stats.recentFeedback.map(f => `
+        <div class="hairline rounded-lg p-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs">${'★'.repeat(f.rating)}${'☆'.repeat(5-f.rating)}</span>
+            <span class="text-[10px] text-dim">${fmtDate(f.created_at)} · ${f.user_name}</span>
+          </div>
+          ${f.correction ? `<div class="text-xs text-emerald-400/80 mt-1">修正：${f.correction.substring(0,100)}${f.correction.length>100?'...':''}</div>` : ''}
+          <div class="text-[10px] text-dim mt-1">报告：${f.report_title || f.skill_key || '—'}</div>
+        </div>`).join('');
+    }
+
+    // 训练历史
+    const jobEl = document.getElementById('training-job-history');
+    if (stats.jobHistory?.length > 0) {
+      jobEl.innerHTML = stats.jobHistory.map(j => `
+        <div class="hairline rounded-lg p-3 flex items-center justify-between">
+          <div>
+            <span class="text-xs">${j.creator_name || '系统'} · ${j.sample_count}样本 + ${j.feedback_count}反馈</span>
+            <span class="text-[10px] text-dim ml-2">${fmtDate(j.created_at)}</span>
+          </div>
+          <span class="chip ${j.status==='completed'?'chip-green':'bg-yellow-500/10 text-yellow-400'} text-[10px]">${j.status==='completed'?'已完成':'运行中'}</span>
+        </div>`).join('');
+    }
+
+    // 加载样本列表
+    await loadTrainingSamples();
+
+  } catch(e) { console.error('训练仪表盘加载失败:', e); }
+}
+
+async function loadTrainingSamples(page = 1) {
+  const cat = document.getElementById('sample-filter-cat')?.value || '';
+  const el = document.getElementById('training-samples-list');
+  try {
+    const params = new URLSearchParams({ page, limit: 10 });
+    if (cat) params.set('category', cat);
+    const { samples, pagination } = await VCPlat.api(`/api/training/samples?${params}`);
+
+    if (samples.length === 0) {
+      el.innerHTML = '<div class="text-dim text-sm py-4 text-center">暂无训练样本，点击"手动添加样本"或"从反馈生成样本"</div>';
+      return;
+    }
+
+    el.innerHTML = samples.map(s => `
+      <div class="hairline rounded-lg p-4 ${s.is_active?'':'opacity-40'}">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="chip text-[10px]">${SAMPLE_CAT_LABELS[s.category]||s.category}</span>
+            ${s.skill_key ? `<span class="text-[10px] text-dim">${s.skill_key}</span>` : ''}
+            ${s.industry ? `<span class="text-[10px] text-dim">· ${s.industry}</span>` : ''}
+            ${s.quality_score ? `<span class="text-[10px] text-gold-2">质量${(s.quality_score*100).toFixed(0)}%</span>` : ''}
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="toggleSample(${s.id})" class="text-[10px] ${s.is_active?'text-emerald-400':'text-dim'} hover:underline">${s.is_active?'启用中':'已停用'}</button>
+            <button onclick="deleteTrainingSample(${s.id})" class="text-[10px] text-red-400/60 hover:text-red-400">删除</button>
+          </div>
+        </div>
+        <div class="text-xs mb-1"><span class="text-dim">输入：</span>${s.input_text.substring(0,120)}${s.input_text.length>120?'...':''}</div>
+        <div class="text-xs"><span class="text-dim">输出：</span>${s.ideal_output.substring(0,120)}${s.ideal_output.length>120?'...':''}</div>
+        <div class="text-[10px] text-dim mt-1">${s.creator_name||'系统'} · ${fmtDate(s.created_at)} · 来源:${s.source_type}</div>
+      </div>`).join('');
+
+    // 分页
+    const pager = document.getElementById('samples-pager');
+    if (pagination.pages > 1) {
+      pager.innerHTML = `<span class="text-xs text-dim">第${pagination.page}/${pagination.pages}页</span>
+        <button onclick="loadTrainingSamples(${pagination.page-1})" class="text-xs text-gold-2" ${pagination.page<=1?'disabled':''}>上一页</button>
+        <button onclick="loadTrainingSamples(${pagination.page+1})" class="text-xs text-gold-2" ${pagination.page>=pagination.pages?'disabled':''}>下一页</button>`;
+    } else { pager.innerHTML = ''; }
+
+  } catch(e) { el.innerHTML = `<div class="text-red-400 text-sm">${e.message}</div>`; }
+}
+
+function openAddSampleModal() {
+  openModal('添加训练样本', [
+    { key:'category', label:'样本类型', type:'select', required:true, options:[
+      {value:'qa',label:'Q&A范例'},{value:'analysis',label:'分析范例'},
+      {value:'redline',label:'红线判定范例'},{value:'valuation',label:'估值判定范例'}
+    ]},
+    { key:'skill_key', label:'关联技能（可选）', type:'text', placeholder:'如 pe-vc:筛项目' },
+    { key:'industry', label:'关联行业（可选）', type:'text', placeholder:'如 AI, 半导体' },
+    { key:'input_text', label:'输入文本', type:'textarea', required:true },
+    { key:'ideal_output', label:'标准输出', type:'textarea', required:true },
+    { key:'quality_score', label:'质量评分(0-1)', type:'number', placeholder:'0.8' },
+  ], null, async (data) => {
+    try {
+      if (data.quality_score) data.quality_score = parseFloat(data.quality_score);
+      else delete data.quality_score;
+      await VCPlat.api('/api/training/samples', { method:'POST', body:data });
+      closeModal();
+      loadTrainingDashboard();
+    } catch(e) { alert('添加失败：' + e.message); }
+  });
+}
+
+async function deleteTrainingSample(id) {
+  if (!confirm('确认删除此训练样本？')) return;
+  try { await VCPlat.api(`/api/training/samples/${id}`, { method:'DELETE' }); loadTrainingSamples(); }
+  catch(e) { alert('删除失败：' + e.message); }
+}
+
+async function toggleSample(id) {
+  try { await VCPlat.api(`/api/training/samples/${id}/toggle`, { method:'PUT' }); loadTrainingSamples(); }
+  catch(e) { alert('操作失败：' + e.message); }
+}
+
+async function feedbackToSamples() {
+  try {
+    const res = await VCPlat.api('/api/training/feedback-to-samples', { method:'POST' });
+    alert(`已从反馈生成 ${res.created} 条训练样本`);
+    loadTrainingDashboard();
+  } catch(e) { alert('操作失败：' + e.message); }
+}
+
+async function previewTrainingContext() {
+  try {
+    const res = await VCPlat.api('/api/training/context-preview');
+    openModal('训练上下文预览', [
+      { key:'context', label:'注入到AI prompt的训练内容', type:'textarea' },
+    ], { context: res.context || '（当前无训练样本）' }, () => closeModal());
+  } catch(e) { alert('预览失败：' + e.message); }
+}
+
+async function runTraining() {
+  const btn = document.getElementById('btn-run-training');
+  const prog = document.getElementById('training-progress');
+  const bar = document.getElementById('training-progress-bar');
+  const msg = document.getElementById('training-progress-msg');
+
+  btn.disabled = true;
+  btn.textContent = '训练中...';
+  prog.classList.remove('hidden');
+  bar.style.width = '0%';
+  msg.textContent = '准备中...';
+
+  try {
+    const res = await fetch('/api/training/run', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${VCPlat.getToken()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.startsWith('event:') && !line.startsWith('data:')) continue;
+        if (line.startsWith('event:')) {
+          const event = line.slice(6).trim();
+          continue;
+        }
+        const data = line.slice(5).trim();
+        if (!data) continue;
+        try {
+          const obj = JSON.parse(data);
+          if (obj.pct !== undefined) {
+            bar.style.width = obj.pct + '%';
+            msg.textContent = obj.msg || '';
+          }
+          if (obj.message) {
+            msg.textContent = obj.message;
+            bar.style.width = '100%';
+          }
+        } catch {}
+      }
+    }
+
+    msg.textContent = '训练完成！';
+    bar.style.width = '100%';
+    btn.disabled = false;
+    btn.textContent = '开始训练';
+
+    setTimeout(() => loadTrainingDashboard(), 500);
+
+  } catch(e) {
+    msg.textContent = '训练失败：' + e.message;
+    btn.disabled = false;
+    btn.textContent = '开始训练';
+  }
 }
 </script>
 

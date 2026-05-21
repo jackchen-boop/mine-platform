@@ -27,6 +27,7 @@ import adminRoutes from './server/routes/admin.js';
 import partnerRoutes from './server/routes/partners.js';
 import statsRoutes from './server/routes/stats.js';
 import knowledgeRoutes from './server/routes/knowledge.js';
+import trainingRoutes from './server/routes/training.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -105,6 +106,7 @@ app.use('/api/admin',     adminRoutes);
 app.use('/api/partners',  partnerRoutes);
 app.use('/api/stats',     statsRoutes);
 app.use('/api',           knowledgeRoutes);  // /api/knowledge/*
+app.use('/api/training',  trainingRoutes);  // /api/training/*
 
 // 所有其他 GET 请求回退到 index.html（SPA 支持）
 app.get('*', (req, res, next) => {

@@ -5,6 +5,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { streamToResponseWithSave } from '../services/minimax.js';
 import { SKILL_PROMPTS } from '../services/skillPrompts.js';
 import { retrieveKnowledgeContext } from '../services/knowledgeRetriever.js';
+import { buildTrainingContext } from '../services/trainingEngine.js';
 
 const router = Router();
 
@@ -76,6 +77,12 @@ router.post('/ai-analyze', requireAuth, async (req, res, next) => {
 
     if (ragResult.context) {
       systemPrompt += `\n\n---\n${ragResult.context}`;
+    }
+
+    // 注入训练样本 few-shot 上下文
+    const trainingCtx = buildTrainingContext({ skillKey: 'pe-vc:筛项目', industry: sectorHint, maxSamples: 3 });
+    if (trainingCtx) {
+      systemPrompt += `\n\n---\n${trainingCtx}`;
     }
 
     systemPrompt += `
