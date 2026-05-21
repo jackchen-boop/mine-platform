@@ -74,17 +74,17 @@
     <div id="speakers-bar" class="hidden flex gap-2 h-20 sm:h-24 lg:h-28 shrink-0"></div>
 
     <!-- 底部控制栏 -->
-    <div class="shrink-0 flex items-center justify-between glass rounded-none lg:rounded-lg px-3 py-2 sm:px-4 sm:py-2 border-t border-white/5 lg:border-t-0 pb-[max(env(safe-area-inset-bottom),8px)]">
-      <div class="flex items-center gap-1.5" id="presenter-controls" style="display:none;">
+    <div class="shrink-0 flex items-center justify-between glass rounded-none lg:rounded-lg px-3 py-2.5 sm:px-4 sm:py-2 border-t border-white/5 lg:border-t-0" style="padding-bottom: max(env(safe-area-inset-bottom, 12px), 16px);">
+      <div class="flex items-center gap-2" id="presenter-controls" style="display:none;">
         <button onclick="toggleCamera()" id="btn-cam" class="ctrl-btn active" title="摄像头">📷</button>
         <button onclick="toggleMic()" id="btn-mic" class="ctrl-btn active" title="麦克风">🎤</button>
         <button onclick="toggleScreen()" id="btn-screen" class="ctrl-btn hidden sm:inline-flex" title="屏幕共享">🖥️</button>
         <button onclick="endLive()" class="ctrl-btn text-red-400" title="结束直播">⏹️</button>
       </div>
-      <div id="viewer-controls" class="flex items-center gap-1.5" style="display:none;">
-        <button onclick="requestSpeak()" id="btn-speak-req" class="btn btn-gold text-xs py-2 px-3 font-bold">✋ 申请视频发言</button>
+      <div id="viewer-controls" class="flex items-center gap-2" style="display:none;">
+        <button onclick="requestSpeak()" id="btn-speak-req" class="btn btn-gold text-xs py-2.5 px-4 font-bold rounded-lg shadow-lg shadow-yellow-900/20">✋ 申请视频发言</button>
       </div>
-      <div class="flex items-center gap-1.5">
+      <div class="flex items-center gap-2">
         <button onclick="toggleChat()" id="btn-chat" class="ctrl-btn" title="聊天">💬</button>
         <button onclick="toggleFullscreen()" class="ctrl-btn hidden sm:inline-flex" title="全屏">⛶</button>
       </div>
@@ -200,6 +200,12 @@ let screenSharing = false;
 let screenStream = null;
 let chatOpen = !IS_MOBILE; // 桌面端默认展开聊天
 let pendingViewers = []; // 主播摄像头未准备好时缓存的新观众
+
+// Canvas 合成（屏幕共享 + 摄像头画中画）
+let compositeCanvas = null;
+let compositeCtx = null;
+let compositeStream = null;
+let compositeAnimationId = null;
 
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 
@@ -343,17 +349,25 @@ function createPeerConnection(targetWsId, targetUserId, targetUserName, isInitia
   pc.ontrack = (e) => {
     const rv = document.getElementById('presenter-video');
     const stream = e.streams[0];
-    if (!rv.srcObject || rv.srcObject.id !== stream.id) {
+    // WebRTC 视频和音频轨道分批到达，每次 ontrack 的 stream 只有当前到达的轨道
+    // 必须把新轨道添加到视频元素的流中，否则音频轨道会被漏掉
+    if (!rv.srcObject) {
       rv.srcObject = stream; presenterStream = stream;
-      document.getElementById('video-overlay').classList.add('hidden');
-      // 检查收到的轨道
-      console.log('收到远程轨道:', stream.getTracks().map(t => ({kind:t.kind, enabled:t.enabled, muted:t.muted})));
-      // 显式播放以绕过浏览器自动播放策略
-      rv.play().catch(err => {
-        console.log('音频自动播放被阻止，需要用户交互:', err);
-        showAudioUnlock();
-      });
+    } else {
+      // 将新轨道追加到已有流中（避免遗漏音频轨道）
+      e.track && rv.srcObject.addTrack(e.track);
     }
+    document.getElementById('video-overlay').classList.add('hidden');
+    // 强制取消静音、音量最大，然后显式播放
+    rv.muted = false;
+    rv.volume = 1;
+    const audioTracks = rv.srcObject.getAudioTracks();
+    console.log('视频元素当前轨道:', rv.srcObject.getTracks().map(t => ({kind:t.kind, enabled:t.enabled})));
+    if (audioTracks.length === 0) console.warn('⚠️ 尚未收到音频轨道');
+    rv.play().catch(err => {
+      console.log('自动播放被阻止，需要用户交互:', err);
+      showAudioUnlock();
+    });
   };
   pc.onicecandidate = (e) => { if (e.candidate) wsSend({type:'ice', targetWsId, candidate:e.candidate}); };
   pc.onconnectionstatechange = () => { if (pc.connectionState==='failed'||pc.connectionState==='closed') peerConnections.delete(targetWsId); };
@@ -386,22 +400,96 @@ function toggleMic() {
 }
 async function toggleScreen() {
   if (screenSharing) {
+    // 停止屏幕共享
     screenStream?.getTracks().forEach(t => t.stop()); screenSharing = false;
     document.getElementById('btn-screen').classList.remove('active');
-    localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
+    stopCompositeStream();
+    // 恢复摄像头
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode:'user', width:{ideal:1280}, height:{ideal:720} },
+      audio: { echoCancellation:true, noiseSuppression:true }
+    });
     document.getElementById('local-video').srcObject = localStream;
+    document.getElementById('presenter-video').style.transform = 'scaleX(-1)';
     replaceStreamForAllPeers(localStream);
+    // 处理断线重连期间缓存的新观众
+    if (pendingViewers.length > 0) {
+      pendingViewers.forEach(v => createPeerConnection(v.viewerWsId, v.userId, v.userName, true));
+      pendingViewers = [];
+    }
   } else {
     try {
       screenStream = await navigator.mediaDevices.getDisplayMedia({video:true, audio:true});
       screenSharing = true; document.getElementById('btn-screen').classList.add('active');
+      // 主播自己看到屏幕共享
       document.getElementById('presenter-video').srcObject = screenStream;
       document.getElementById('presenter-video').style.transform = 'none';
       document.getElementById('video-overlay').classList.add('hidden');
-      replaceStreamForAllPeers(screenStream);
+      // 启动 canvas 合成（屏幕共享 + 摄像头画中画），发送给观众
+      startCompositeStream();
+      if (compositeStream) replaceStreamForAllPeers(compositeStream);
       screenStream.getVideoTracks()[0].onended = () => toggleScreen();
-    } catch(e) {}
+    } catch(e) { console.error('屏幕共享失败:', e); }
   }
+}
+
+// Canvas 合成：屏幕共享全屏 + 摄像头右下角画中画
+function startCompositeStream() {
+  if (!compositeCanvas) {
+    compositeCanvas = document.createElement('canvas');
+    compositeCanvas.width = 1280;
+    compositeCanvas.height = 720;
+    compositeCtx = compositeCanvas.getContext('2d');
+  }
+  compositeStream = compositeCanvas.captureStream(30);
+
+  function draw() {
+    if (!screenSharing || !compositeCtx) return;
+    const screenVideo = document.getElementById('presenter-video');
+    const cameraVideo = document.getElementById('local-video');
+
+    // 绘制屏幕共享（全屏背景）
+    if (screenVideo.videoWidth > 0) {
+      const scale = Math.max(compositeCanvas.width / screenVideo.videoWidth, compositeCanvas.height / screenVideo.videoHeight);
+      const dx = (compositeCanvas.width - screenVideo.videoWidth * scale) / 2;
+      const dy = (compositeCanvas.height - screenVideo.videoHeight * scale) / 2;
+      compositeCtx.drawImage(screenVideo, dx, dy, screenVideo.videoWidth * scale, screenVideo.videoHeight * scale);
+    } else {
+      compositeCtx.fillStyle = '#0a1020';
+      compositeCtx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+    }
+
+    // 绘制摄像头（右下角画中画）
+    if (cameraVideo.videoWidth > 0) {
+      const pipW = 240, pipH = 180;
+      const pipX = compositeCanvas.width - pipW - 16;
+      const pipY = compositeCanvas.height - pipH - 16;
+      // 背景+边框
+      compositeCtx.fillStyle = 'rgba(0,0,0,0.4)';
+      compositeCtx.fillRect(pipX - 3, pipY - 3, pipW + 6, pipH + 6);
+      compositeCtx.drawImage(cameraVideo, pipX, pipY, pipW, pipH);
+      compositeCtx.strokeStyle = 'rgba(212,175,55,0.6)';
+      compositeCtx.lineWidth = 2;
+      compositeCtx.strokeRect(pipX, pipY, pipW, pipH);
+      // 主播标签
+      compositeCtx.fillStyle = 'rgba(0,0,0,0.6)';
+      compositeCtx.fillRect(pipX, pipY + pipH - 22, pipW, 22);
+      compositeCtx.fillStyle = '#f1d77a';
+      compositeCtx.font = 'bold 12px sans-serif';
+      compositeCtx.fillText('主播', pipX + 8, pipY + pipH - 6);
+    }
+
+    compositeAnimationId = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function stopCompositeStream() {
+  if (compositeAnimationId) {
+    cancelAnimationFrame(compositeAnimationId);
+    compositeAnimationId = null;
+  }
+  compositeStream = null;
 }
 function replaceStreamForAllPeers(newStream) {
   for (const [,pc] of peerConnections) {
