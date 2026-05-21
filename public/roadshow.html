@@ -290,7 +290,8 @@ async function loadLiveRoadshows() {
         '    <div class="absolute bottom-3 left-3 right-3">' +
         '      <div class="font-serif-cn text-base font-bold">' + (r.title || '').replace(/\.\.\.\[登录查看完整内容\]/g, '') + '</div>' +
         '      <div class="text-xs text-mute mt-1">' + (r.presenter || '') + (r.duration_min ? ' · ' + r.duration_min + '分钟' : '') + '</div>' +
-        (VCPlat.isAdmin() && !isLive ? '      <button onclick="startLive(' + r.id + ')" class="btn btn-gold text-[10px] mt-1 py-0.5 px-2">开播</button>' : '') +
+        (VCPlat.isAdmin() && !isLive ? '      <button onclick="startLive(' + r.id + ')" class="btn btn-gold text-[10px] mt-1 py-0.5 px-2">开播</button>' :
+         !isLive ? '      <button onclick="applyLiveStream(' + r.id + ')" class="btn btn-ghost text-[10px] mt-1 py-0.5 px-2">申请直播</button>' : '') +
         '    </div>' +
         (isLive
           ? '    <button class="absolute inset-0 m-auto w-14 h-14 rounded-full flex items-center justify-center" style="background:rgba(212,175,55,.85);" onclick="joinLive(' + r.id + ')">' +
@@ -319,20 +320,50 @@ async function doReserve(roadshowId, btn) {
 loadLiveRoadshows();
 loadProjects();
 
-// 加入直播（管理员自动进入主播视角）
-function joinLive(roadshowId) {
+// 加入直播（管理员自动进入主播视角，创业者需先申请）
+async function joinLive(roadshowId) {
   if (!VCPlat.isLoggedIn()) { location.href = 'auth.html'; return; }
-  const roleParam = VCPlat.isAdmin() ? '&role=presenter' : '';
-  location.href = 'live.html?id=' + roadshowId + roleParam;
+
+  // 管理员直接以主播身份进入
+  if (VCPlat.isAdmin()) {
+    location.href = 'live.html?id=' + roadshowId + '&role=presenter';
+    return;
+  }
+
+  // 非管理员：先检查是否有直播权限
+  try {
+    const check = await VCPlat.api('/api/live-applications/check/' + roadshowId);
+    if (check.canStream) {
+      location.href = 'live.html?id=' + roadshowId + '&role=presenter';
+    } else if (check.reason === 'pending') {
+      alert('您的直播申请正在审批中，请耐心等待管理员审核');
+    } else {
+      alert('您尚未获得该路演的直播权限，请先提交申请');
+    }
+  } catch(e) {
+    location.href = 'live.html?id=' + roadshowId;
+  }
 }
 
-// 管理员开播
+// 管理员直接开播
 async function startLive(roadshowId) {
   if (!confirm('确定开始直播？')) return;
   try {
     await VCPlat.api('/api/live/' + roadshowId + '/start', { method: 'POST' });
     location.href = 'live.html?id=' + roadshowId + '&role=presenter';
   } catch (e) { alert('开播失败：' + e.message); }
+}
+
+// 创业者申请直播权限
+async function applyLiveStream(roadshowId) {
+  if (!VCPlat.isLoggedIn()) { location.href = 'auth.html'; return; }
+  const reason = prompt('请简要说明申请直播的原因（如：我是该项目创始人，准备进行融资路演）：') || '';
+  try {
+    await VCPlat.api('/api/live-applications', { method: 'POST', body: { roadshowId, reason } });
+    alert('直播申请已提交，请等待管理员审批');
+  } catch (e) {
+    alert(e.message || '申请失败');
+  }
 }
 </script>
 </body>

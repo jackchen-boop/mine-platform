@@ -31,6 +31,7 @@ import statsRoutes from './server/routes/stats.js';
 import knowledgeRoutes from './server/routes/knowledge.js';
 import trainingRoutes from './server/routes/training.js';
 import liveRoutes from './server/routes/live.js';
+import liveApplicationRoutes from './server/routes/liveApplications.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -111,6 +112,7 @@ app.use('/api/stats',     statsRoutes);
 app.use('/api',           knowledgeRoutes);  // /api/knowledge/*
 app.use('/api/training',  trainingRoutes);  // /api/training/*
 app.use('/api/live',      liveRoutes);      // /api/live/*
+app.use('/api/live-applications', liveApplicationRoutes);  // /api/live-applications/*
 
 // 所有其他 GET 请求回退到 index.html（SPA 支持）
 app.get('*', (req, res, next) => {

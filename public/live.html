@@ -214,6 +214,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!VCPlat.isLoggedIn()) { location.href = 'auth.html'; return; }
   if (!ROADSHOW_ID) { alert('缺少路演ID'); location.href = 'roadshow.html'; return; }
 
+  // 非管理员携带 presenter 参数时，检查直播权限
+  let hasLivePermission = true;
+  if (IS_PRESENTER && !IS_ADMIN) {
+    try {
+      const check = await VCPlat.api('/api/live-applications/check/' + ROADSHOW_ID);
+      hasLivePermission = check.canStream;
+      if (!hasLivePermission) {
+        alert(check.reason === 'pending'
+          ? '您的直播申请正在审批中，请耐心等待管理员审核'
+          : '您尚未获得该路演的直播权限，请先提交申请');
+        location.href = 'roadshow.html';
+        return;
+      }
+    } catch(e) {
+      console.warn('权限检查失败:', e);
+    }
+  }
+
   if (IS_PRESENTER || IS_ADMIN) {
     document.getElementById('presenter-controls').style.display = 'flex';
     document.getElementById(IS_MOBILE ? 'admin-panel-mobile' : 'admin-panel-desktop').classList.remove('hidden');

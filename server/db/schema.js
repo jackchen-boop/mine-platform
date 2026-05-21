@@ -114,6 +114,20 @@ export function initSchema() {
       created_at       TEXT    NOT NULL DEFAULT (datetime('now'))
     );
 
+    -- 直播权限申请表（创业者申请直播路演，管理员审批）
+    CREATE TABLE IF NOT EXISTS live_applications (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      roadshow_id     INTEGER NOT NULL REFERENCES roadshows(id),
+      applicant_user_id INTEGER NOT NULL REFERENCES users(id),
+      applicant_name  TEXT,
+      applicant_org   TEXT,
+      status          TEXT    NOT NULL DEFAULT 'pending',
+      reason          TEXT,
+      admin_notes     TEXT,
+      created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+      updated_at      TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+
     -- 管理员操作日志
     CREATE TABLE IF NOT EXISTS admin_logs (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -212,6 +226,8 @@ export function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_follows_user      ON follows(user_id);
     CREATE INDEX IF NOT EXISTS idx_reports_user      ON reports(user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_roadshows_status  ON roadshows(status, scheduled_at);
+    CREATE INDEX IF NOT EXISTS idx_live_app_status   ON live_applications(status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_live_app_user     ON live_applications(applicant_user_id);
     CREATE INDEX IF NOT EXISTS idx_kb_industry_tier  ON kb_industries(tier);
     CREATE INDEX IF NOT EXISTS idx_kb_val_sector     ON kb_valuation_benchmarks(sector);
     CREATE INDEX IF NOT EXISTS idx_kb_redlines_ind   ON kb_redlines(industry_name);
