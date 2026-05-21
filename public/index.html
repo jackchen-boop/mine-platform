@@ -44,8 +44,8 @@
 
 <!-- ========== HERO ========== -->
 <section class="relative overflow-hidden">
-  <div class="max-w-[1280px] mx-auto px-6 pt-20 pb-16 grid lg:grid-cols-12 gap-12 items-center">
-    <div class="lg:col-span-7">
+  <div class="max-w-[1280px] mx-auto px-6 pt-20 pb-16 items-center">
+    <div>
       <div class="flex items-center gap-3 mb-7">
         <span class="chip chip-gold">AI + VC · 智能投资</span>
         <span class="chip"><span class="pulse-dot"></span>2026 Q2 · 平台升级中</span>
@@ -91,77 +91,6 @@
       </div>
     </div>
 
-    <!-- HERO art -->
-    <div class="lg:col-span-5 relative">
-      <div class="glass p-6 corner-deco">
-        <div class="flex items-center justify-between mb-4">
-          <div class="text-xs text-dim tracking-widest">LIVE · 资本流动态势</div>
-          <div class="chip chip-blue"><span class="pulse-dot"></span>实时更新</div>
-        </div>
-
-        <!-- Radar / orbit svg -->
-        <svg viewBox="0 0 360 240" class="w-full h-[240px]">
-          <defs>
-            <radialGradient id="rg" cx="50%" cy="50%" r="60%">
-              <stop offset="0%" stop-color="#d4af37" stop-opacity=".25"/>
-              <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
-            </radialGradient>
-            <linearGradient id="lg" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%"  stop-color="#4f8dff"/>
-              <stop offset="100%" stop-color="#d4af37"/>
-            </linearGradient>
-          </defs>
-          <rect width="360" height="240" fill="url(#rg)"/>
-          <!-- orbit rings -->
-          <g fill="none" stroke="rgba(212,175,55,0.18)">
-            <ellipse cx="180" cy="120" rx="160" ry="50"/>
-            <ellipse cx="180" cy="120" rx="120" ry="38"/>
-            <ellipse cx="180" cy="120" rx="80"  ry="25"/>
-          </g>
-          <!-- nodes -->
-          <g>
-            <circle cx="60"  cy="120" r="3" fill="#f1d77a"/>
-            <circle cx="120" cy="100" r="4" fill="#4f8dff"/>
-            <circle cx="180" cy="120" r="6" fill="#d4af37"/>
-            <circle cx="240" cy="140" r="4" fill="#8b5cf6"/>
-            <circle cx="300" cy="120" r="3" fill="#2dd4bf"/>
-            <circle cx="180" cy="70"  r="3" fill="#f1d77a"/>
-            <circle cx="180" cy="170" r="3" fill="#f1d77a"/>
-          </g>
-          <!-- chart line -->
-          <path d="M10 200 L40 180 L70 188 L100 160 L130 168 L160 130 L190 142 L220 110 L250 122 L280 80 L310 96 L340 60"
-                stroke="url(#lg)" stroke-width="2" fill="none"/>
-          <!-- ticker labels -->
-          <g font-family="JetBrains Mono" font-size="9" fill="#a8b2c5">
-            <text x="14" y="20">SECTOR FLOW · 2026.05.19</text>
-            <text x="14" y="232">AI · BIO · NEV · SEMI · ROBOT</text>
-          </g>
-        </svg>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-          <div class="hairline rounded-lg p-3">
-            <div class="text-[10px] text-dim">AI 大模型</div>
-            <div class="text-gold-2 font-mono">+38.2%</div>
-          </div>
-          <div class="hairline rounded-lg p-3">
-            <div class="text-[10px] text-dim">商业航天</div>
-            <div class="text-gold-2 font-mono">+24.6%</div>
-          </div>
-          <div class="hairline rounded-lg p-3">
-            <div class="text-[10px] text-dim">合成生物</div>
-            <div class="text-gold-2 font-mono">+19.1%</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- floating badge -->
-      <div class="absolute -top-4 -right-4 glass p-3 hidden md:block">
-        <div class="flex items-center gap-2">
-          <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
-          <div class="text-xs text-mute">本周新增 <span class="text-gold-2 font-mono">132</span> 个项目</div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <div class="shimmer-line max-w-[1280px] mx-auto"></div>
@@ -174,56 +103,44 @@
     <p>Capabilities · 全链路投资协同</p>
   </div>
 
-  <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+  <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
     <!-- card 1 -->
-    <div class="glass p-6 hover:border-yellow-500/50 transition group">
-      <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
-           style="background:rgba(212,175,55,.10); border:1px solid var(--line);">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10" stroke="#f1d77a" stroke-width="1.6" stroke-linecap="round"/><circle cx="19" cy="17" r="2.5" stroke="#f1d77a" stroke-width="1.6"/></svg>
-      </div>
-      <h3 class="font-serif-cn text-[18px] font-bold mb-2">多模态 BP 识别</h3>
-      <p class="text-mute text-[13px] leading-6">PPT / PDF / 视频路演一键解析，自动抽取财务、团队、商业模式与赛道关键信息。</p>
-      <div class="mt-4 text-gold-2 text-xs group-hover:translate-x-1 transition">了解更多 →</div>
+    <div class="glass p-5 hover:border-yellow-500/50 transition">
+      <h3 class="font-serif-cn text-[16px] font-bold mb-1.5 text-gold-2">多模态 BP 识别</h3>
+      <p class="text-mute text-[12px] leading-5">PPT / PDF / 视频路演一键解析，自动抽取财务、团队、商业模式与赛道关键信息。</p>
     </div>
     <!-- card 2 -->
-    <div class="glass p-6 hover:border-yellow-500/50 transition group">
-      <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
-           style="background:rgba(79,141,255,.10); border:1px solid rgba(79,141,255,.3);">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 13l4-4 4 4 4-6 6 8" stroke="#7cb8ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <h3 class="font-serif-cn text-[18px] font-bold mb-2">AI 智能投研</h3>
-      <p class="text-mute text-[13px] leading-6">市场空间、竞品图谱、估值建模、风险扫描——分析报告 6 秒生成。</p>
-      <div class="mt-4 text-gold-2 text-xs group-hover:translate-x-1 transition">了解更多 →</div>
+    <div class="glass p-5 hover:border-yellow-500/50 transition">
+      <h3 class="font-serif-cn text-[16px] font-bold mb-1.5 text-gold-2">AI 智能投研</h3>
+      <p class="text-mute text-[12px] leading-5">市场空间、竞品图谱、估值建模、风险扫描——分析报告秒级生成。</p>
     </div>
     <!-- card 3 -->
-    <div class="glass p-6 hover:border-yellow-500/50 transition group">
-      <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
-           style="background:rgba(139,92,246,.10); border:1px solid rgba(139,92,246,.3);">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#c4b5fd" stroke-width="1.6"/><path d="M3 12h18M12 3v18" stroke="#c4b5fd" stroke-width="1.6"/></svg>
-      </div>
-      <h3 class="font-serif-cn text-[18px] font-bold mb-2">线上路演</h3>
-      <p class="text-mute text-[13px] leading-6">直播 + 录播双模式，机构投资人可异步观看、留存意向、发起一对一约谈。</p>
-      <div class="mt-4 text-gold-2 text-xs group-hover:translate-x-1 transition">了解更多 →</div>
+    <div class="glass p-5 hover:border-yellow-500/50 transition">
+      <h3 class="font-serif-cn text-[16px] font-bold mb-1.5 text-gold-2">线上路演</h3>
+      <p class="text-mute text-[12px] leading-5">直播 + 录播双模式，机构投资人可异步观看、留存意向、发起一对一约谈。</p>
     </div>
     <!-- card 4 -->
-    <div class="glass p-6 hover:border-yellow-500/50 transition group">
-      <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
-           style="background:rgba(45,212,191,.10); border:1px solid rgba(45,212,191,.3);">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" stroke="#5eead4" stroke-width="1.6" stroke-linejoin="round"/></svg>
-      </div>
-      <h3 class="font-serif-cn text-[18px] font-bold mb-2">机构精准撮合</h3>
-      <p class="text-mute text-[13px] leading-6">基于 286 家头部 GP 的偏好画像，赛道、阶段、轮次三维匹配。</p>
-      <div class="mt-4 text-gold-2 text-xs group-hover:translate-x-1 transition">了解更多 →</div>
+    <div class="glass p-5 hover:border-yellow-500/50 transition">
+      <h3 class="font-serif-cn text-[16px] font-bold mb-1.5 text-gold-2">机构精准撮合</h3>
+      <p class="text-mute text-[12px] leading-5">基于头部 GP 偏好画像，赛道、阶段、轮次三维匹配。</p>
     </div>
     <!-- second row -->
-    <div class="glass p-6"><h3 class="font-serif-cn text-[16px] font-bold mb-2 text-gold-2">数据室 Data Room</h3>
-      <p class="text-mute text-[13px] leading-6">合规分级权限、文件水印、访问审计；尽调全流程留痕。</p></div>
-    <div class="glass p-6"><h3 class="font-serif-cn text-[16px] font-bold mb-2 text-gold-2">协同尽调</h3>
-      <p class="text-mute text-[13px] leading-6">财法税技四线并行，AI 自动生成 DD 清单与风险标记。</p></div>
-    <div class="glass p-6"><h3 class="font-serif-cn text-[16px] font-bold mb-2 text-gold-2">投后赋能</h3>
-      <p class="text-mute text-[13px] leading-6">协同生态资源对接：法律、财税、并购退出全周期支持。</p></div>
-    <div class="glass p-6"><h3 class="font-serif-cn text-[16px] font-bold mb-2 text-gold-2">监管合规</h3>
-      <p class="text-mute text-[13px] leading-6">符合中基协、网络安全等保三级、数据出境合规要求。</p></div>
+    <div class="glass p-5">
+      <h3 class="font-serif-cn text-[16px] font-bold mb-1.5 text-gold-2">数据室 Data Room</h3>
+      <p class="text-mute text-[12px] leading-5">合规分级权限、文件水印、访问审计；尽调全流程留痕。</p>
+    </div>
+    <div class="glass p-5">
+      <h3 class="font-serif-cn text-[16px] font-bold mb-1.5 text-gold-2">协同尽调</h3>
+      <p class="text-mute text-[12px] leading-5">财法税技四线并行，AI 自动生成 DD 清单与风险标记。</p>
+    </div>
+    <div class="glass p-5">
+      <h3 class="font-serif-cn text-[16px] font-bold mb-1.5 text-gold-2">投后赋能</h3>
+      <p class="text-mute text-[12px] leading-5">协同生态资源对接：法律、财税、并购退出全周期支持。</p>
+    </div>
+    <div class="glass p-5">
+      <h3 class="font-serif-cn text-[16px] font-bold mb-1.5 text-gold-2">监管合规</h3>
+      <p class="text-mute text-[12px] leading-5">符合中基协、网络安全等保三级、数据出境合规要求。</p>
+    </div>
   </div>
 </section>
 
@@ -531,7 +448,7 @@
     <p class="text-mute mt-4 max-w-xl mx-auto">无论您是寻求融资的创业者，还是寻找下一独角兽的投资人，星链创投以算法驱动决策，以数据加速匹配，让每一次投资更高效、更透明。</p>
     <div class="mt-7 flex flex-wrap justify-center gap-3">
       <a href="upload.html" class="btn btn-gold">提交项目 BP</a>
-      <a href="auth.html?tab=register" class="btn btn-ghost">机构入驻申请</a>
+      <a href="auth.html?tab=register" class="btn btn-ghost">机构注册</a>
     </div>
   </div>
 </section>
