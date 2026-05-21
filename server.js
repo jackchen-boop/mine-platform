@@ -59,7 +59,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "cdn.tailwindcss.com", "fonts.googleapis.com", "fonts.gstatic.com"],
       fontSrc: ["'self'", "fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "api.minimax.chat", "ws://localhost:*", "ws://127.0.0.1:*"],
+      connectSrc: ["'self'", "api.minimax.chat", "ws://localhost:*", "ws://127.0.0.1:*", "wss://vc-platform.onrender.com"],
       frameSrc: ["'none'"]
     }
   },
