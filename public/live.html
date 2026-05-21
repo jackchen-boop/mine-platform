@@ -221,6 +221,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!IS_PRESENTER) {
     VCPlat.api(`/api/live/${ROADSHOW_ID}/record-viewer`, { method: 'POST' }).catch(() => {});
   }
+  // 观众端：首次点击页面任意位置尝试解锁音频（绕过浏览器自动播放策略）
+  if (!IS_PRESENTER) {
+    const unlockAudioOnFirstClick = () => {
+      const rv = document.getElementById('presenter-video');
+      if (rv && rv.srcObject) rv.play().catch(() => {});
+    };
+    document.body.addEventListener('click', unlockAudioOnFirstClick, { once: true });
+  }
 });
 
 async function loadRoadshowInfo() {
@@ -295,12 +303,21 @@ function getActiveSpkEl() { return document.getElementById(IS_MOBILE ? 'active-s
 // ===== WebRTC =====
 async function startPresenterStream() {
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'user', width:{ideal:1280}, height:{ideal:720} }, audio: true });
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode:'user', width:{ideal:1280}, height:{ideal:720} },
+      audio: { echoCancellation:true, noiseSuppression:true, autoGainControl:true, sampleRate:48000, channelCount:2 }
+    });
+    // 确认音频轨道已获取
+    const audioTracks = localStream.getAudioTracks();
+    console.log('音频轨道:', audioTracks.length, audioTracks.map(t => ({label:t.label, enabled:t.enabled, muted:t.muted})));
+    if (audioTracks.length === 0) {
+      alert('未检测到麦克风，请检查设备连接和权限设置');
+    }
     document.getElementById('local-video').srcObject = localStream;
     document.getElementById('local-video').classList.remove('hidden');
     document.getElementById('video-overlay').classList.add('hidden');
   } catch (e) {
-    console.error('获取摄像头失败:', e);
+    console.error('获取摄像头/麦克风失败:', e);
     alert('无法获取摄像头/麦克风，请检查权限设置');
   }
 }
@@ -313,9 +330,17 @@ function createPeerConnection(targetWsId, targetUserId, targetUserName, isInitia
   if (stream) stream.getTracks().forEach(track => pc.addTrack(track, stream));
   pc.ontrack = (e) => {
     const rv = document.getElementById('presenter-video');
-    if (!rv.srcObject || rv.srcObject.id !== e.streams[0].id) {
-      rv.srcObject = e.streams[0]; presenterStream = e.streams[0];
+    const stream = e.streams[0];
+    if (!rv.srcObject || rv.srcObject.id !== stream.id) {
+      rv.srcObject = stream; presenterStream = stream;
       document.getElementById('video-overlay').classList.add('hidden');
+      // 检查收到的轨道
+      console.log('收到远程轨道:', stream.getTracks().map(t => ({kind:t.kind, enabled:t.enabled, muted:t.muted})));
+      // 显式播放以绕过浏览器自动播放策略
+      rv.play().catch(err => {
+        console.log('音频自动播放被阻止，需要用户交互:', err);
+        showAudioUnlock();
+      });
     }
   };
   pc.onicecandidate = (e) => { if (e.candidate) wsSend({type:'ice', targetWsId, candidate:e.candidate}); };
@@ -367,8 +392,16 @@ async function toggleScreen() {
   }
 }
 function replaceStreamForAllPeers(newStream) {
-  const vt = newStream.getVideoTracks()[0];
-  for (const [,pc] of peerConnections) { const s = pc.getSenders().find(s=>s.track?.kind==='video'); if(s&&vt) s.replaceTrack(vt); }
+  for (const [,pc] of peerConnections) {
+    // 替换视频轨道
+    const vt = newStream.getVideoTracks()[0];
+    const videoSender = pc.getSenders().find(s => s.track?.kind === 'video');
+    if (videoSender && vt) videoSender.replaceTrack(vt);
+    // 替换音频轨道（如果新流有音频；屏幕共享通常无音频，此时保留原麦克风音频）
+    const at = newStream.getAudioTracks()[0];
+    const audioSender = pc.getSenders().find(s => s.track?.kind === 'audio');
+    if (audioSender && at) audioSender.replaceTrack(at);
+  }
 }
 async function endLive() {
   if (!confirm('确定结束直播？')) return;
@@ -474,6 +507,29 @@ function toggleFullscreen() {
   const el = document.getElementById('presenter-video');
   if (el.requestFullscreen) el.requestFullscreen();
   else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+}
+
+// 音频自动播放解锁（浏览器策略要求用户交互后才能播放音频）
+function showAudioUnlock() {
+  const overlay = document.getElementById('video-overlay');
+  overlay.classList.remove('hidden');
+  overlay.innerHTML = `
+    <div class="text-center px-4">
+      <div class="text-3xl mb-3 opacity-60">🔇</div>
+      <div class="text-sm text-white/80 mb-4">浏览器阻止了自动播放，请点击开启声音</div>
+      <button onclick="unlockAudio()" class="btn btn-gold text-sm py-2 px-6">🔊 点击开启声音</button>
+    </div>`;
+}
+function unlockAudio() {
+  const rv = document.getElementById('presenter-video');
+  if (rv) rv.play().catch(() => {});
+  document.getElementById('video-overlay').classList.add('hidden');
+  // 恢复默认覆盖层内容
+  document.getElementById('video-overlay').innerHTML = `
+    <div class="text-center px-4">
+      <div class="text-3xl mb-2 opacity-30">📹</div>
+      <div id="overlay-text" class="text-dim text-xs sm:text-sm">等待主播开始直播...</div>
+    </div>`;
 }
 function esc(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 </script>
