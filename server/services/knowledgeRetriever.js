@@ -83,7 +83,7 @@ function retrieveComparableCompanies(text, industryName) {
     return [];
   }
 
-  // 按申万一级行业匹配，取市值前10名
+  // 按申万一级行业匹配，取营收前10名（年报数据中市值通常为空，按营收排序更可靠）
   const placeholders = swIndustries.map(() => '?').join(',');
   return db.prepare(
     `SELECT stock_code, company_name, industry_sw_l1, industry_sw_l2, listing_board,
@@ -92,7 +92,7 @@ function retrieveComparableCompanies(text, industryName) {
             market_cap, pe_ttm, pb, ps_ttm, ev_ebitda
      FROM kb_listed_companies
      WHERE industry_sw_l1 IN (${placeholders})
-     ORDER BY market_cap DESC
+     ORDER BY revenue DESC
      LIMIT 10`
   ).all(...swIndustries);
 }
@@ -228,22 +228,24 @@ function buildRAGContext(industry, valBenchmarks, redlines, policies, comparable
     parts.push('| 公司 | 代码 | 行业 | 板块 | 营收(亿) | 营收增速 | 净利润(亿) | 毛利率 | ROE | 市值(亿) | PE(TTM) | PB | PS(TTM) |');
     parts.push('|---|---|---|---|---|---|---|---|---|---|---|---|---|');
     for (const c of comparableCompanies) {
-      // 智能判断营收单位：>1e8认为原始单位是元，否则认为是亿元
-      const rev = c.revenue != null
-        ? (c.revenue > 1e8 ? (c.revenue / 1e8).toFixed(1) : c.revenue.toFixed(1))
-        : '-';
-      const revYoy = c.revenue_yoy != null
-        ? (Math.abs(c.revenue_yoy) <= 5 ? (c.revenue_yoy * 100).toFixed(1) : c.revenue_yoy.toFixed(1)) + '%'
-        : '-';
-      const np = c.net_profit != null
-        ? (c.net_profit > 1e8 ? (c.net_profit / 1e8).toFixed(1) : (c.net_profit < -1e8 ? (c.net_profit / 1e8).toFixed(1) : c.net_profit.toFixed(1)))
-        : '-';
-      const gm = c.gross_margin != null
-        ? (Math.abs(c.gross_margin) <= 1 ? (c.gross_margin * 100).toFixed(1) : c.gross_margin.toFixed(1)) + '%'
-        : '-';
-      const roe = c.roe != null
-        ? (Math.abs(c.roe) <= 1 ? (c.roe * 100).toFixed(1) : c.roe.toFixed(1)) + '%'
-        : '-';
+      // 智能判断数值单位：PDF导入数据原始单位为元，需转换为亿元显示
+      // 判断标准：>1e8 认为原始单位是元；<=1e8 认为已经是亿元
+      const fmtYi = (val) => {
+        if (val == null) return '-';
+        if (Math.abs(val) >= 1e8) return (val / 1e8).toFixed(1);
+        if (Math.abs(val) >= 1e4) return (val / 1e4).toFixed(0) + '万'; // 万元级别
+        return val.toFixed(1);
+      };
+      const fmtPct = (val) => {
+        if (val == null) return '-';
+        if (Math.abs(val) <= 5) return (val * 100).toFixed(1) + '%';
+        return val.toFixed(1) + '%';
+      };
+      const rev = fmtYi(c.revenue);
+      const revYoy = c.revenue_yoy != null ? fmtPct(c.revenue_yoy) : '-';
+      const np = fmtYi(c.net_profit);
+      const gm = c.gross_margin != null ? fmtPct(c.gross_margin) : '-';
+      const roe = c.roe != null ? fmtPct(c.roe) : '-';
       const mcap = c.market_cap != null
         ? (c.market_cap > 1e8 ? (c.market_cap / 1e8).toFixed(0) : c.market_cap.toFixed(0))
         : '-';
