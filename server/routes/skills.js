@@ -4,8 +4,16 @@ import db from '../db/connection.js';
 import { requireAuth } from '../middleware/auth.js';
 import { streamToResponseWithSave } from '../services/minimax.js';
 import { SKILL_PROMPTS, resolveSkillKey } from '../services/skillPrompts.js';
+import { retrieveKnowledgeContext } from '../services/knowledgeRetriever.js';
 
 const router = Router();
+
+// 需要RAG增强的技能集合（涉及行业/估值/市场分析的技能）
+const RAG_ENHANCED_SKILLS = [
+  'pe-vc:筛项目', 'pe-vc:尽调清单', 'pe-vc:投决备忘录', 'pe-vc:测收益', 'pe-vc:退出分析', 'pe-vc:审条款',
+  'equity:深度报告', 'equity:行业研究', 'equity:可比公司分析', 'equity:读年报',
+  'ib:招股书', 'ib:财务建模', 'ib:并购方案',
+];
 
 // POST /api/skill-run — 运行指定技能（SSE 流式）
 router.post('/skill-run', requireAuth, async (req, res, next) => {
@@ -32,10 +40,22 @@ router.post('/skill-run', requireAuth, async (req, res, next) => {
 
     const skillDef = SKILL_PROMPTS[skillKey];
 
+    // RAG 增强：对需要行业知识的技能注入知识库上下文
+    let systemPrompt = skillDef.system;
+    if (RAG_ENHANCED_SKILLS.includes(skillKey)) {
+      const sectorHint = projectId
+        ? (db.prepare('SELECT sector FROM projects WHERE id = ?').get(projectId)?.sector || '')
+        : '';
+      const ragResult = retrieveKnowledgeContext(finalInput, sectorHint);
+      if (ragResult.context) {
+        systemPrompt += `\n\n---\n${ragResult.context}`;
+      }
+    }
+
     await streamToResponseWithSave(
       res,
       {
-        system: skillDef.system,
+        system: systemPrompt,
         user: finalInput,
         temperature: skillDef.temp || 0.4,
         maxTokens: 6000

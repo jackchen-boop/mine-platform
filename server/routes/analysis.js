@@ -4,6 +4,7 @@ import db from '../db/connection.js';
 import { requireAuth } from '../middleware/auth.js';
 import { streamToResponseWithSave } from '../services/minimax.js';
 import { SKILL_PROMPTS } from '../services/skillPrompts.js';
+import { retrieveKnowledgeContext } from '../services/knowledgeRetriever.js';
 
 const router = Router();
 
@@ -54,7 +55,30 @@ router.post('/ai-analyze', requireAuth, async (req, res, next) => {
       ? `${contextText}\n\n额外分析要求：${customPrompt}`
       : contextText;
 
-    const systemPrompt = SKILL_PROMPTS['pe-vc:筛项目'].system + `
+    // RAG 检索：根据 BP 行业匹配知识库数据
+    let sectorHint = '';
+    if (bpUploadId) {
+      const uploadRec = db.prepare('SELECT parse_result FROM bp_uploads WHERE id = ?').get(bpUploadId);
+      if (uploadRec?.parse_result) {
+        try {
+          const parsed = typeof uploadRec.parse_result === 'string' ? JSON.parse(uploadRec.parse_result) : uploadRec.parse_result;
+          sectorHint = parsed.sector || '';
+        } catch { /* ignore */ }
+      }
+    } else if (projectId) {
+      const proj = db.prepare('SELECT sector FROM projects WHERE id = ?').get(projectId);
+      sectorHint = proj?.sector || '';
+    }
+    const ragResult = retrieveKnowledgeContext(contextText, sectorHint);
+
+    // 构建 system prompt：基础技能 prompt + RAG 知识库上下文 + 补充分析
+    let systemPrompt = SKILL_PROMPTS['pe-vc:筛项目'].system;
+
+    if (ragResult.context) {
+      systemPrompt += `\n\n---\n${ragResult.context}`;
+    }
+
+    systemPrompt += `
 
 ---
 在完成上述筛选备忘录后，请继续输出以下补充分析：

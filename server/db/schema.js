@@ -147,6 +147,63 @@ export function initSchema() {
       created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
     );
 
+    -- ===== RAG 知识库表 =====
+
+    -- 行业档案（市场空间/增速/竞争格局/产业链/关键指标）
+    CREATE TABLE IF NOT EXISTS kb_industries (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      industry_name   TEXT    NOT NULL UNIQUE,
+      tier            TEXT    NOT NULL DEFAULT '3',
+      keywords        TEXT    NOT NULL,
+      market_size     TEXT,
+      cagr            TEXT,
+      cr3             TEXT,
+      cr5             TEXT,
+      value_chain     TEXT,
+      key_players     TEXT,
+      key_metrics     TEXT,
+      trends          TEXT,
+      risk_factors    TEXT,
+      updated_at      TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- 估值基准（按赛道/轮次的估值倍数区间）
+    CREATE TABLE IF NOT EXISTS kb_valuation_benchmarks (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      sector          TEXT    NOT NULL,
+      round           TEXT    NOT NULL,
+      ps_range        TEXT,
+      pe_range        TEXT,
+      ev_ebitda_range TEXT,
+      typical_valuation TEXT,
+      typical_dilution  TEXT,
+      data_source     TEXT,
+      effective_date  TEXT,
+      UNIQUE(sector, round)
+    );
+
+    -- 行业红线规则库
+    CREATE TABLE IF NOT EXISTS kb_redlines (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      industry_name   TEXT    NOT NULL,
+      category        TEXT    NOT NULL,
+      rule            TEXT    NOT NULL,
+      severity        TEXT    NOT NULL DEFAULT 'high',
+      reference       TEXT
+    );
+
+    -- 政策法规库
+    CREATE TABLE IF NOT EXISTS kb_policies (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      industry_name   TEXT    NOT NULL,
+      policy_name     TEXT    NOT NULL,
+      issuer          TEXT,
+      summary         TEXT    NOT NULL,
+      impact          TEXT,
+      effective_date  TEXT,
+      doc_number      TEXT
+    );
+
     -- 索引
     CREATE INDEX IF NOT EXISTS idx_projects_sector   ON projects(sector);
     CREATE INDEX IF NOT EXISTS idx_projects_round    ON projects(round);
@@ -155,6 +212,10 @@ export function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_follows_user      ON follows(user_id);
     CREATE INDEX IF NOT EXISTS idx_reports_user      ON reports(user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_roadshows_status  ON roadshows(status, scheduled_at);
+    CREATE INDEX IF NOT EXISTS idx_kb_industry_tier  ON kb_industries(tier);
+    CREATE INDEX IF NOT EXISTS idx_kb_val_sector     ON kb_valuation_benchmarks(sector);
+    CREATE INDEX IF NOT EXISTS idx_kb_redlines_ind   ON kb_redlines(industry_name);
+    CREATE INDEX IF NOT EXISTS idx_kb_policies_ind   ON kb_policies(industry_name);
   `);
 
   // 迁移：reports 表增加 bp_upload_id 列（SQLite 不支持 IF NOT EXISTS，用 try/catch）

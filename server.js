@@ -10,6 +10,7 @@ dotenv.config();
 
 import { initSchema } from './server/db/schema.js';
 import { runSeed } from './server/db/seed.js';
+import { runKnowledgeSeed } from './server/db/knowledgeSeed.js';
 import errorHandler from './server/middleware/errorHandler.js';
 
 import authRoutes from './server/routes/auth.js';
@@ -25,6 +26,7 @@ import userRoutes from './server/routes/users.js';
 import adminRoutes from './server/routes/admin.js';
 import partnerRoutes from './server/routes/partners.js';
 import statsRoutes from './server/routes/stats.js';
+import knowledgeRoutes from './server/routes/knowledge.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -41,6 +43,7 @@ const PORT = process.env.PORT || 3000;
 // 初始化数据库
 initSchema();
 runSeed();
+runKnowledgeSeed();
 
 // 安全头部
 app.use(helmet({
@@ -101,6 +104,7 @@ app.use('/api/users',     userRoutes);
 app.use('/api/admin',     adminRoutes);
 app.use('/api/partners',  partnerRoutes);
 app.use('/api/stats',     statsRoutes);
+app.use('/api',           knowledgeRoutes);  // /api/knowledge/*
 
 // 所有其他 GET 请求回退到 index.html（SPA 支持）
 app.get('*', (req, res, next) => {
