@@ -2,7 +2,7 @@ import db from './connection.js';
 
 export function initSchema() {
   db.exec(`
-    -- 用户表
+    -- 用户表（矿业机构 / 投资机构 / 管理员）
     CREATE TABLE IF NOT EXISTS users (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,
       name          TEXT    NOT NULL,
@@ -10,105 +10,116 @@ export function initSchema() {
       phone         TEXT    UNIQUE,
       password_hash TEXT    NOT NULL,
       role          TEXT    NOT NULL DEFAULT 'investor',
+      org_type      TEXT    DEFAULT 'investor',
       organization  TEXT,
       avatar_letter TEXT,
       status        TEXT    NOT NULL DEFAULT 'active',
+      verified      INTEGER DEFAULT 0,
       created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
       updated_at    TEXT
     );
 
-    -- 融资项目表
-    CREATE TABLE IF NOT EXISTS projects (
+    -- 矿产项目表
+    CREATE TABLE IF NOT EXISTS mine_projects (
       id                INTEGER PRIMARY KEY AUTOINCREMENT,
+      code              TEXT    NOT NULL UNIQUE,
       name              TEXT    NOT NULL,
       name_en           TEXT,
-      code_letter       TEXT    NOT NULL DEFAULT '项',
-      sector            TEXT    NOT NULL,
-      sub_sector        TEXT,
-      location          TEXT,
-      round             TEXT    NOT NULL,
-      amount            TEXT,
-      amount_raw        REAL,
-      valuation         TEXT,
-      valuation_raw     REAL,
-      ai_score          REAL,
-      progress_pct      INTEGER DEFAULT 0,
-      fans_count        INTEGER DEFAULT 0,
+      mineral_types     TEXT    NOT NULL,
+      province          TEXT,
+      city              TEXT,
+      area_km2          REAL,
+      estimated_reserve TEXT,
+      reserve_grade     TEXT,
+      depth_range       TEXT,
+      mine_type         TEXT    DEFAULT 'open-pit',
+      development_stage TEXT    DEFAULT 'exploration',
+      license_status    TEXT    DEFAULT 'valid',
+      license_expires   TEXT,
+      asking_price      TEXT,
+      asking_price_raw  REAL,
       description       TEXT,
+      description_masked TEXT,
+      highlights        TEXT,
+      disposal_options  TEXT,
+      contact_masked    TEXT,
       is_hot            INTEGER DEFAULT 0,
+      is_featured       INTEGER DEFAULT 0,
+      is_confidential   INTEGER DEFAULT 1,
+      view_count        INTEGER DEFAULT 0,
+      ai_score          REAL,
+      ai_summary        TEXT,
       status            TEXT    DEFAULT 'active',
-      team_info         TEXT,
-      financial_summary TEXT,
-      business_model    TEXT,
+      owner_id          INTEGER REFERENCES users(id),
       created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
       updated_at        TEXT
     );
 
-    -- BP 上传记录
-    CREATE TABLE IF NOT EXISTS bp_uploads (
+    -- 矿业报告上传记录（详查报告/备案报告/资源报告等）
+    CREATE TABLE IF NOT EXISTS mine_reports (
       id                INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id           INTEGER NOT NULL REFERENCES users(id),
-      project_id        INTEGER REFERENCES projects(id),
+      project_id        INTEGER REFERENCES mine_projects(id),
+      report_type       TEXT    NOT NULL DEFAULT 'exploration',
       original_filename TEXT    NOT NULL,
       stored_filename   TEXT    NOT NULL,
       file_size         INTEGER,
       file_type         TEXT,
       extracted_text    TEXT,
-      parse_result      TEXT,
       parse_status      TEXT    DEFAULT 'pending',
       created_at        TEXT    NOT NULL DEFAULT (datetime('now'))
     );
 
     -- AI 分析报告
-    CREATE TABLE IF NOT EXISTS reports (
-      id           INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id      INTEGER NOT NULL REFERENCES users(id),
-      project_id   INTEGER REFERENCES projects(id),
-      report_type  TEXT    NOT NULL DEFAULT 'ai_analysis',
-      skill_key    TEXT,
-      input_params TEXT,
-      content      TEXT,
-      ai_score     REAL,
-      model_used   TEXT,
-      token_usage  TEXT,
-      title        TEXT,
-      created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+    CREATE TABLE IF NOT EXISTS ai_analyses (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id       INTEGER NOT NULL REFERENCES users(id),
+      project_id    INTEGER REFERENCES mine_projects(id),
+      report_id     INTEGER REFERENCES mine_reports(id),
+      analysis_type TEXT    NOT NULL DEFAULT 'value_assessment',
+      content       TEXT,
+      ai_score      REAL,
+      model_used    TEXT,
+      token_usage   TEXT,
+      created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
     );
 
-    -- 路演表
-    CREATE TABLE IF NOT EXISTS roadshows (
-      id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-      project_id          INTEGER NOT NULL REFERENCES projects(id),
-      type                TEXT    NOT NULL DEFAULT 'recorded',
-      title               TEXT,
-      presenter           TEXT,
-      scheduled_at        TEXT,
-      duration_min        INTEGER DEFAULT 60,
-      viewer_count        INTEGER DEFAULT 0,
-      reservation_count   INTEGER DEFAULT 0,
-      status              TEXT    DEFAULT 'scheduled',
-      created_at          TEXT    NOT NULL DEFAULT (datetime('now'))
+    -- AI 咨询对话记录
+    CREATE TABLE IF NOT EXISTS ai_conversations (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id       INTEGER NOT NULL REFERENCES users(id),
+      project_id    INTEGER REFERENCES mine_projects(id),
+      role          TEXT    NOT NULL,
+      content       TEXT    NOT NULL,
+      created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
     );
 
-    -- 用户关注
-    CREATE TABLE IF NOT EXISTS follows (
+    -- 用户关注项目
+    CREATE TABLE IF NOT EXISTS favorites (
       id         INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id    INTEGER NOT NULL REFERENCES users(id),
-      project_id INTEGER NOT NULL REFERENCES projects(id),
+      project_id INTEGER NOT NULL REFERENCES mine_projects(id),
       created_at TEXT    NOT NULL DEFAULT (datetime('now')),
       UNIQUE(user_id, project_id)
+    );
+
+    -- 意向沟通申请
+    CREATE TABLE IF NOT EXISTS inquiries (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id    INTEGER NOT NULL REFERENCES users(id),
+      project_id INTEGER NOT NULL REFERENCES mine_projects(id),
+      message    TEXT,
+      budget     TEXT,
+      status     TEXT    DEFAULT 'pending',
+      created_at TEXT    NOT NULL DEFAULT (datetime('now'))
     );
 
     -- 合作机构
     CREATE TABLE IF NOT EXISTS partners (
       id               INTEGER PRIMARY KEY AUTOINCREMENT,
       name             TEXT    NOT NULL,
-      name_en          TEXT,
-      type             TEXT    NOT NULL DEFAULT 'gp',
-      stage_preference TEXT,
-      sector_count     INTEGER DEFAULT 0,
-      platform_deals   INTEGER DEFAULT 0,
-      fund_size        TEXT,
+      type             TEXT    NOT NULL DEFAULT 'mine_enterprise',
+      description      TEXT,
       is_featured      INTEGER DEFAULT 0,
       sort_order       INTEGER DEFAULT 0,
       created_at       TEXT    NOT NULL DEFAULT (datetime('now'))
@@ -125,6 +136,36 @@ export function initSchema() {
       created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
     );
 
+    -- 直播房间表
+    CREATE TABLE IF NOT EXISTS live_streams (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      title         TEXT    NOT NULL,
+      project_id    INTEGER REFERENCES mine_projects(id),
+      presenter_id  INTEGER NOT NULL REFERENCES users(id),
+      presenter_name TEXT,
+      status        TEXT    NOT NULL DEFAULT 'scheduled',
+      scheduled_at  TEXT,
+      started_at    TEXT,
+      ended_at      TEXT,
+      viewer_count  INTEGER DEFAULT 0,
+      description   TEXT,
+      cover_image   TEXT,
+      room_token    TEXT    UNIQUE,
+      created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- 直播发言申请（上麦）
+    CREATE TABLE IF NOT EXISTS live_speaker_requests (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      stream_id     INTEGER NOT NULL REFERENCES live_streams(id),
+      user_id       INTEGER NOT NULL REFERENCES users(id),
+      user_name     TEXT,
+      status        TEXT    NOT NULL DEFAULT 'pending',
+      approved_by   INTEGER REFERENCES users(id),
+      created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(stream_id, user_id)
+    );
+
     -- 平台 KPI 缓存
     CREATE TABLE IF NOT EXISTS system_stats (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,94 +176,18 @@ export function initSchema() {
       updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
     );
 
-    -- 技能文件上传临时缓存（非 BP，2小时过期）
-    CREATE TABLE IF NOT EXISTS skill_uploads (
-      id              TEXT PRIMARY KEY,
-      user_id         INTEGER NOT NULL REFERENCES users(id),
-      skill_key       TEXT    NOT NULL,
-      extracted_text  TEXT,
-      file_count      INTEGER DEFAULT 1,
-      file_meta       TEXT,
-      supplement      TEXT,
-      created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
-    );
-
-    -- ===== RAG 知识库表 =====
-
-    -- 行业档案（市场空间/增速/竞争格局/产业链/关键指标）
-    CREATE TABLE IF NOT EXISTS kb_industries (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
-      industry_name   TEXT    NOT NULL UNIQUE,
-      tier            TEXT    NOT NULL DEFAULT '3',
-      keywords        TEXT    NOT NULL,
-      market_size     TEXT,
-      cagr            TEXT,
-      cr3             TEXT,
-      cr5             TEXT,
-      value_chain     TEXT,
-      key_players     TEXT,
-      key_metrics     TEXT,
-      trends          TEXT,
-      risk_factors    TEXT,
-      updated_at      TEXT    NOT NULL DEFAULT (datetime('now'))
-    );
-
-    -- 估值基准（按赛道/轮次的估值倍数区间）
-    CREATE TABLE IF NOT EXISTS kb_valuation_benchmarks (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
-      sector          TEXT    NOT NULL,
-      round           TEXT    NOT NULL,
-      ps_range        TEXT,
-      pe_range        TEXT,
-      ev_ebitda_range TEXT,
-      typical_valuation TEXT,
-      typical_dilution  TEXT,
-      data_source     TEXT,
-      effective_date  TEXT,
-      UNIQUE(sector, round)
-    );
-
-    -- 行业红线规则库
-    CREATE TABLE IF NOT EXISTS kb_redlines (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
-      industry_name   TEXT    NOT NULL,
-      category        TEXT    NOT NULL,
-      rule            TEXT    NOT NULL,
-      severity        TEXT    NOT NULL DEFAULT 'high',
-      reference       TEXT
-    );
-
-    -- 政策法规库
-    CREATE TABLE IF NOT EXISTS kb_policies (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
-      industry_name   TEXT    NOT NULL,
-      policy_name     TEXT    NOT NULL,
-      issuer          TEXT,
-      summary         TEXT    NOT NULL,
-      impact          TEXT,
-      effective_date  TEXT,
-      doc_number      TEXT
-    );
-
     -- 索引
-    CREATE INDEX IF NOT EXISTS idx_projects_sector   ON projects(sector);
-    CREATE INDEX IF NOT EXISTS idx_projects_round    ON projects(round);
-    CREATE INDEX IF NOT EXISTS idx_projects_status   ON projects(status);
-    CREATE INDEX IF NOT EXISTS idx_projects_hot      ON projects(is_hot DESC);
-    CREATE INDEX IF NOT EXISTS idx_follows_user      ON follows(user_id);
-    CREATE INDEX IF NOT EXISTS idx_reports_user      ON reports(user_id, created_at DESC);
-    CREATE INDEX IF NOT EXISTS idx_roadshows_status  ON roadshows(status, scheduled_at);
-    CREATE INDEX IF NOT EXISTS idx_kb_industry_tier  ON kb_industries(tier);
-    CREATE INDEX IF NOT EXISTS idx_kb_val_sector     ON kb_valuation_benchmarks(sector);
-    CREATE INDEX IF NOT EXISTS idx_kb_redlines_ind   ON kb_redlines(industry_name);
-    CREATE INDEX IF NOT EXISTS idx_kb_policies_ind   ON kb_policies(industry_name);
+    CREATE INDEX IF NOT EXISTS idx_mine_projects_mineral  ON mine_projects(mineral_types);
+    CREATE INDEX IF NOT EXISTS idx_mine_projects_province ON mine_projects(province);
+    CREATE INDEX IF NOT EXISTS idx_mine_projects_status   ON mine_projects(status);
+    CREATE INDEX IF NOT EXISTS idx_mine_projects_hot      ON mine_projects(is_hot DESC);
+    CREATE INDEX IF NOT EXISTS idx_favorites_user         ON favorites(user_id);
+    CREATE INDEX IF NOT EXISTS idx_ai_analyses_user       ON ai_analyses(user_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_inquiries_project      ON inquiries(project_id);
+    CREATE INDEX IF NOT EXISTS idx_live_streams_status    ON live_streams(status, scheduled_at);
+    CREATE INDEX IF NOT EXISTS idx_live_streams_project   ON live_streams(project_id);
+    CREATE INDEX IF NOT EXISTS idx_speaker_requests       ON live_speaker_requests(stream_id, status);
   `);
 
-  // 迁移：reports 表增加 bp_upload_id 列（SQLite 不支持 IF NOT EXISTS，用 try/catch）
-  try { db.exec('ALTER TABLE reports ADD COLUMN bp_upload_id INTEGER REFERENCES bp_uploads(id)'); } catch {}
-
-  // bp_upload_id 索引（必须在列存在后创建）
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_reports_bp ON reports(bp_upload_id)'); } catch {}
-
-  console.log('✓ 数据库 schema 初始化完成');
+  console.log('✓ 矿业平台数据库 schema 初始化完成');
 }

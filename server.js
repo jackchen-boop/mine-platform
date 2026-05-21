@@ -14,19 +14,16 @@ import { runKnowledgeSeed } from './server/db/knowledgeSeed.js';
 import errorHandler from './server/middleware/errorHandler.js';
 
 import authRoutes from './server/routes/auth.js';
-import projectRoutes from './server/routes/projects.js';
-import bpRoutes from './server/routes/bp.js';
-import analysisRoutes from './server/routes/analysis.js';
-import skillRoutes from './server/routes/skills.js';
-import skillUploadRoutes from './server/routes/skillUpload.js';
-import roadshowRoutes from './server/routes/roadshow.js';
-import followRoutes from './server/routes/follows.js';
-import reportRoutes from './server/routes/reports.js';
-import userRoutes from './server/routes/users.js';
+import mineProjectRoutes from './server/routes/mine-projects.js';
+import mineReportRoutes from './server/routes/mine-reports.js';
+import mineAnalysisRoutes from './server/routes/mine-analysis.js';
+import mineStatsRoutes from './server/routes/mine-stats.js';
+import minePartnersRoutes from './server/routes/mine-partners.js';
+import mineInquiryRoutes from './server/routes/mine-inquiries.js';
+import liveRoutes from './server/routes/live.js';
 import adminRoutes from './server/routes/admin.js';
-import partnerRoutes from './server/routes/partners.js';
-import statsRoutes from './server/routes/stats.js';
-import knowledgeRoutes from './server/routes/knowledge.js';
+
+import { setupLiveWebSocket } from './server/websocket/live-signal.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -35,10 +32,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 确保必要目录存在
-['data', 'public/uploads'].forEach(dir => {
-  const p = join(__dirname, dir);
-  if (!existsSync(p)) mkdirSync(p, { recursive: true });
-});
+const uploadDir = join(__dirname, 'public/uploads');
+if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true });
+// data 目录由 db/connection.js 负责创建
 
 // 初始化数据库
 initSchema();
@@ -55,7 +51,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "cdn.tailwindcss.com", "fonts.googleapis.com", "fonts.gstatic.com"],
       fontSrc: ["'self'", "fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "api.minimax.chat"],
+      connectSrc: ["'self'", "api.minimax.chat", "ws:", "wss:"],
       frameSrc: ["'none'"]
     }
   },
@@ -81,7 +77,6 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(join(__dirname, 'public'), {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html')) {
-      // HTML 文件不缓存，确保总是最新版
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
     } else if (filePath.includes('/assets/')) {
@@ -91,22 +86,17 @@ app.use(express.static(join(__dirname, 'public'), {
 }));
 
 // API 路由
-app.use('/api/auth',      authRoutes);
-app.use('/api/projects',  projectRoutes);
-app.use('/api/bp',        bpRoutes);
-app.use('/api',           analysisRoutes);   // POST /api/ai-analyze
-app.use('/api',           skillRoutes);      // POST /api/skill-run
-app.use('/api',           skillUploadRoutes); // POST /api/skill-upload, /api/skill-validate
-app.use('/api/roadshow',  roadshowRoutes);
-app.use('/api/follows',   followRoutes);
-app.use('/api/reports',   reportRoutes);
-app.use('/api/users',     userRoutes);
-app.use('/api/admin',     adminRoutes);
-app.use('/api/partners',  partnerRoutes);
-app.use('/api/stats',     statsRoutes);
-app.use('/api',           knowledgeRoutes);  // /api/knowledge/*
+app.use('/api/auth',           authRoutes);
+app.use('/api/mine-projects',  mineProjectRoutes);
+app.use('/api/mine-reports',   mineReportRoutes);
+app.use('/api/mine-analysis',  mineAnalysisRoutes);
+app.use('/api/mine-stats',     mineStatsRoutes);
+app.use('/api/mine-partners',  minePartnersRoutes);
+app.use('/api/mine-inquiries', mineInquiryRoutes);
+app.use('/api/live',           liveRoutes);
+app.use('/api/admin',          adminRoutes);
 
-// 所有其他 GET 请求回退到 index.html（SPA 支持）
+// 所有其他 GET 请求回退到 index.html
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/')) return next();
   res.sendFile(join(__dirname, 'public', 'index.html'));
@@ -115,10 +105,14 @@ app.get('*', (req, res, next) => {
 // 全局错误处理
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 星链创投 VC 平台已启动`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n⛏️  矿资资本 MineCapital 平台已启动`);
   console.log(`   地址: http://localhost:${PORT}`);
+  console.log(`   监听: 0.0.0.0:${PORT}`);
   console.log(`   环境: ${process.env.NODE_ENV || 'development'}\n`);
 });
+
+// 启动 WebSocket 直播信令服务器
+setupLiveWebSocket(server);
 
 export default app;

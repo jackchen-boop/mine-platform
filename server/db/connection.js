@@ -7,10 +7,11 @@ import { mkdirSync, existsSync } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Railway 持久卷挂载路径 /data，本地默认为项目 data/ 目录
 const dataDir = process.env.DATA_DIR || join(__dirname, '../../data');
 if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
 
-const DB_PATH = process.env.DB_PATH || join(dataDir, 'vcplatform.db');
+const DB_PATH = process.env.DB_PATH || join(dataDir, 'mineplatform.db');
 
 let _db;
 

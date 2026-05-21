@@ -1,7 +1,7 @@
 {
-  "name": "starlink-vc-platform",
+  "name": "mine-capital-platform",
   "version": "1.0.0",
-  "description": "星链创投 StarLink VC — 算法解码创新，资本加速变革",
+  "description": "矿资资本 — 贵金属矿权交易与AI分析平台",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "pdf-parse": "^1.1.1",
-    "unzipper": "^0.12.3",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "ws": "^8.20.1"
   }
 }
