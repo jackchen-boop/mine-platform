@@ -27,12 +27,12 @@
   </div>
 </header>
 
-<!-- 移动端管理后台屏蔽提示 -->
-<div class="mobile-admin-block fixed inset-0 z-50 flex-col items-center justify-center bg-[#0a0a0f] text-center px-8">
+<!-- 移动端管理后台提示（已改为响应式布局，此提示不再显示） -->
+<div class="mobile-admin-block fixed inset-0 z-50 flex-col items-center justify-center bg-[#0a0a0f] text-center px-8" style="display:none;">
   <div class="text-6xl mb-6 opacity-30">&#128187;</div>
-  <div class="font-serif-cn text-2xl font-bold mb-3">请使用电脑端访问</div>
-  <div class="text-mute text-sm mb-6">管理后台功能仅支持电脑端操作，请在电脑浏览器中打开此页面。</div>
-  <a href="/dashboard.html" class="btn btn-gold">返回用户中心</a>
+  <div class="font-serif-cn text-2xl font-bold mb-3">管理后台</div>
+  <div class="text-mute text-sm mb-6">建议使用电脑端获得最佳操作体验</div>
+  <button onclick="this.parentElement.style.display='none'" class="btn btn-gold">继续使用</button>
 </div>
 
 <div class="flex max-w-[1440px] mx-auto px-6 pt-8 pb-20 gap-6 admin-sidebar-hide">
@@ -63,7 +63,7 @@
       <h2 class="font-serif-cn text-2xl font-bold">管理控制台</h2>
 
       <!-- KPI Grid -->
-      <div class="grid grid-cols-3 md:grid-cols-6 gap-4" id="kpi-grid">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4" id="kpi-grid">
         <div class="glass p-4 text-center"><div class="text-[10px] text-dim">注册用户</div><div class="stat-num text-2xl mt-1" id="kpi-users">—</div></div>
         <div class="glass p-4 text-center"><div class="text-[10px] text-dim">在库项目</div><div class="stat-num text-2xl mt-1" id="kpi-projects">—</div></div>
         <div class="glass p-4 text-center"><div class="text-[10px] text-dim">AI 报告</div><div class="stat-num text-2xl mt-1" id="kpi-reports">—</div></div>
@@ -75,7 +75,7 @@
       <!-- 今日数据 -->
       <div class="glass p-6">
         <h3 class="font-bold text-sm mb-4">今日新增</h3>
-        <div class="grid grid-cols-3 gap-4 text-center">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-center">
           <div class="hairline rounded-xl p-4"><div class="text-[10px] text-dim">新用户</div><div class="text-gold-2 text-xl font-mono mt-1" id="today-users">0</div></div>
           <div class="hairline rounded-xl p-4"><div class="text-[10px] text-dim">AI 报告</div><div class="text-gold-2 text-xl font-mono mt-1" id="today-reports">0</div></div>
           <div class="hairline rounded-xl p-4"><div class="text-[10px] text-dim">BP 上传</div><div class="text-gold-2 text-xl font-mono mt-1" id="today-bps">0</div></div>
@@ -187,7 +187,7 @@
       <h2 class="font-serif-cn text-2xl font-bold mb-4">AI 训练操作台</h2>
 
       <!-- 训练状态概览 -->
-      <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <div class="glass p-4 text-center"><div class="text-[10px] text-dim">训练样本</div><div class="stat-num text-2xl mt-1 text-gold-2" id="train-sample-count">—</div></div>
         <div class="glass p-4 text-center"><div class="text-[10px] text-dim">用户反馈</div><div class="stat-num text-2xl mt-1 text-gold-2" id="train-feedback-count">—</div></div>
         <div class="glass p-4 text-center"><div class="text-[10px] text-dim">平均评分</div><div class="stat-num text-2xl mt-1" id="train-avg-rating">—</div></div>
@@ -195,7 +195,7 @@
       </div>
 
       <!-- 训练操作区 -->
-      <div class="grid grid-cols-2 gap-6 mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
         <div class="glass p-6">
           <h3 class="font-bold text-sm mb-4">执行训练</h3>
           <p class="text-xs text-dim mb-4">训练将把样本库中的范例注入AI分析prompt，使AI学习标准分析风格和判定逻辑。用户反馈中高质量的修正也会被纳入训练。</p>
@@ -222,7 +222,7 @@
       <div class="glass p-6 mb-6">
         <h3 class="font-bold text-sm mb-2">批量导入训练素材</h3>
         <p class="text-xs text-dim mb-4">上传行业研究报告、公司财报、分析文档等，系统自动提取内容并切分为训练样本。支持 PDF、DOCX、PPTX、TXT 格式，单次最多10个文件。</p>
-        <div class="grid grid-cols-3 gap-4 mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
           <div>
             <label class="text-xs text-dim block mb-1">样本分类 *</label>
             <select id="import-category" class="input text-sm w-full py-1.5">
@@ -267,7 +267,7 @@
       </div>
 
       <!-- 样本分类分布 + 反馈评分分布 -->
-      <div class="grid grid-cols-2 gap-6 mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
         <div class="glass p-6">
           <h3 class="font-bold text-sm mb-3">样本分类分布</h3>
           <div id="train-cat-dist" class="space-y-2"><div class="text-dim text-xs">暂无数据</div></div>
