@@ -43,8 +43,10 @@
 </header>
 
 <!-- ========== HERO ========== -->
-<section class="relative overflow-hidden">
-  <div class="max-w-[1280px] mx-auto px-6 pt-20 pb-16 text-center">
+<section class="relative overflow-hidden" style="background: url('assets/hero-bg.png') center top / cover no-repeat;">
+  <!-- 渐变遮罩：确保文字可读性，从上到下由暗到更暗 -->
+  <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(6,11,22,0.35) 0%, rgba(6,11,22,0.55) 50%, rgba(6,11,22,0.92) 100%); pointer-events: none;"></div>
+  <div class="relative max-w-[1280px] mx-auto px-6 pt-20 pb-16 text-center">
     <div class="flex items-center justify-center gap-3 mb-7">
       <span class="chip chip-gold">AI + VC · 智能投资</span>
       <span class="chip"><span class="pulse-dot"></span>2026 Q2 · 平台升级中</span>
