@@ -48,6 +48,8 @@
         <div class="flex items-center gap-3">
           <span id="user-name" class="hidden sm:inline text-sm text-mine-text2"></span>
           <a href="/" class="text-sm text-mine-text2 hover:text-mine-gold transition-colors">首页</a>
+          <a href="/upload.html" class="text-sm text-mine-text2 hover:text-mine-gold transition-colors">资料上传</a>
+          <a href="/ai-analysis.html" class="text-sm text-mine-text2 hover:text-mine-gold transition-colors">AI分析</a>
           <a href="/live.html" class="text-sm text-mine-text2 hover:text-mine-gold transition-colors">直播</a>
           <button onclick="logout()" class="text-sm text-mine-text3 hover:text-mine-danger transition-colors">退出</button>
         </div>
@@ -132,7 +134,11 @@
     <!-- 报告上传 -->
     <div id="tab-reports" class="tab-content hidden">
       <div class="p-6 rounded-2xl bg-mine-surface border border-mine-border">
-        <h3 class="text-lg font-semibold mb-4">上传矿权报告</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">上传矿权报告</h3>
+          <a href="/upload.html" class="px-4 py-2 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium hover:bg-mine-goldLight transition-colors">专业上传页面 →</a>
+        </div>
+        <p class="text-xs text-mine-text3 mb-4">推荐使用专业上传页面，包含完整资料清单引导，资料越完整AI分析越精准</p>
         <div class="border-2 border-dashed border-mine-border rounded-xl p-8 text-center mb-4">
           <div class="w-12 h-12 rounded-lg bg-mine-gold/15 flex items-center justify-center mx-auto mb-3">
             <svg class="w-6 h-6 text-mine-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
