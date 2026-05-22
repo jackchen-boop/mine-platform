@@ -145,6 +145,7 @@ function handleJoin(ws, msg) {
     roomId,
     viewerCount: room.viewers.size,
     chatLog: room.chatLog.slice(-30),
+    presenterWsId: room.presenterWs ? getWsId(room.presenterWs) : null,
     speakRequests: Array.from(room.speakRequests.entries()).map(([w, reason]) => ({
       userId: w.userInfo?.userId,
       userName: w.userInfo?.userName,

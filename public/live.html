@@ -200,6 +200,8 @@ let screenSharing = false;
 let screenStream = null;
 let chatOpen = !IS_MOBILE; // 桌面端默认展开聊天
 let pendingViewers = []; // 主播摄像头未准备好时缓存的新观众
+let broadcastStream = null; // 当前发送给观众的流（屏幕分享合成流时覆盖localStream）
+let presenterWsId = null; // 主播的WebSocket ID（观众端使用）
 
 // Canvas 合成（屏幕共享 + 摄像头画中画）
 let compositeCanvas = null;
@@ -316,6 +318,7 @@ function onJoined(msg) {
   const chatEl = getChatEl();
   if (msg.chatLog?.length > 0) { chatEl.innerHTML = ''; msg.chatLog.forEach(m => appendChat(m.userName, m.text, m.time)); }
   if (msg.speakRequests?.length > 0) msg.speakRequests.forEach(r => addSpeakRequestUI(r.userId, r.userName, r.reason));
+  if (msg.presenterWsId) presenterWsId = msg.presenterWsId;
   if (IS_PRESENTER) startPresenterStream();
   else document.getElementById('overlay-text').textContent = '正在连接主播...';
 }
@@ -362,9 +365,22 @@ function createPeerConnection(targetWsId, targetUserId, targetUserName, isInitia
   if (peerConnections.has(targetWsId)) return peerConnections.get(targetWsId);
   const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
   peerConnections.set(targetWsId, pc);
-  const stream = localStream || presenterStream;
+  const stream = broadcastStream || localStream || presenterStream;
   if (stream) stream.getTracks().forEach(track => pc.addTrack(track, stream));
   pc.ontrack = (e) => {
+    const track = e.track;
+    // 主播端收到观众的音频轨道（发言者），单独播放避免混到自己视频流
+    if (isInitiator && track.kind === 'audio') {
+      const audioEl = document.createElement('audio');
+      audioEl.autoplay = true;
+      audioEl.srcObject = new MediaStream([track]);
+      audioEl.play().catch(() => {});
+      // 绑定到speaker UI以便结束发言时清理
+      const spkBar = document.getElementById('speakers-bar');
+      const spkDiv = spkBar.querySelector(`[data-speaker-user="${targetUserId}"]`);
+      if (spkDiv) spkDiv._audioEl = audioEl;
+      return;
+    }
     const rv = document.getElementById('presenter-video');
     const stream = e.streams[0];
     // WebRTC 视频和音频轨道分批到达，每次 ontrack 的 stream 只有当前到达的轨道
@@ -389,6 +405,14 @@ function createPeerConnection(targetWsId, targetUserId, targetUserName, isInitia
   };
   pc.onicecandidate = (e) => { if (e.candidate) wsSend({type:'ice', targetWsId, candidate:e.candidate}); };
   pc.onconnectionstatechange = () => { if (pc.connectionState==='failed'||pc.connectionState==='closed') peerConnections.delete(targetWsId); };
+  // 处理重新协商（观众添加麦克风轨道后会触发）
+  pc.onnegotiationneeded = async () => {
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      wsSend({type:'offer', targetWsId, sdp: pc.localDescription});
+    } catch (err) { console.error('negotiationneeded failed:', err); }
+  };
   if (isInitiator) pc.createOffer().then(o => pc.setLocalDescription(o)).then(() => wsSend({type:'offer', targetWsId, sdp:pc.localDescription}));
   return pc;
 }
@@ -422,6 +446,7 @@ async function toggleScreen() {
     screenStream?.getTracks().forEach(t => t.stop()); screenSharing = false;
     document.getElementById('btn-screen').classList.remove('active');
     stopCompositeStream();
+    broadcastStream = null;
     // 恢复摄像头
     localStream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode:'user', width:{ideal:1280}, height:{ideal:720} },
@@ -445,7 +470,10 @@ async function toggleScreen() {
       document.getElementById('video-overlay').classList.add('hidden');
       // 启动 canvas 合成（屏幕共享 + 摄像头画中画），发送给观众
       startCompositeStream();
-      if (compositeStream) replaceStreamForAllPeers(compositeStream);
+      if (compositeStream) {
+        broadcastStream = compositeStream;
+        replaceStreamForAllPeers(compositeStream);
+      }
       screenStream.getVideoTracks()[0].onended = () => toggleScreen();
     } catch(e) { console.error('屏幕共享失败:', e); }
   }
@@ -594,16 +622,57 @@ function approveSpeak(userId) { wsSend({type:'speak-approve',userId}); document.
 function rejectSpeak(userId) { wsSend({type:'speak-reject',userId}); document.querySelectorAll(`[data-req-user="${userId}"]`).forEach(e=>e.remove()); }
 async function onSpeakApproved() {
   isSpeaker = true;
-  document.getElementById('btn-speak-req').textContent = '🎙️ 发言中';
-  document.getElementById('btn-speak-req').classList.add('text-emerald-400');
-  try { localStream = await navigator.mediaDevices.getUserMedia({audio:true}); appendChat('系统','你的发言申请已批准，现在可以发言了',new Date().toISOString()); }
-  catch(e) { alert('无法获取麦克风权限'); }
+  const btn = document.getElementById('btn-speak-req');
+  btn.textContent = '🎙️ 发言中';
+  btn.classList.add('text-emerald-400');
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    appendChat('系统','你的发言申请已批准，现在可以发言了',new Date().toISOString());
+    // 将麦克风轨道添加到与主播的 peer connection（触发重新协商）
+    if (presenterWsId && peerConnections.has(presenterWsId)) {
+      const pc = peerConnections.get(presenterWsId);
+      localStream.getTracks().forEach(track => {
+        if (!pc.getSenders().find(s => s.track === track)) {
+          pc.addTrack(track, localStream);
+        }
+      });
+    }
+  } catch(e) {
+    alert('无法获取麦克风权限');
+    btn.disabled = false;
+    btn.textContent = '✋ 申请发言';
+    btn.classList.remove('text-emerald-400');
+    isSpeaker = false;
+  }
 }
 function onSpeakRejected() { const b=document.getElementById('btn-speak-req'); b.textContent='✋ 申请发言'; b.disabled=false; alert('发言申请未被批准'); }
-function onSpeakEnded() { isSpeaker=false; const b=document.getElementById('btn-speak-req'); b.textContent='✋ 申请发言'; b.disabled=false; b.classList.remove('text-emerald-400'); localStream?.getTracks().forEach(t=>t.stop()); }
+function onSpeakEnded() {
+  isSpeaker=false;
+  const b=document.getElementById('btn-speak-req');
+  b.textContent='✋ 申请发言'; b.disabled=false; b.classList.remove('text-emerald-400');
+  // 从 peer connection 中移除麦克风轨道并停止
+  if (presenterWsId && peerConnections.has(presenterWsId) && localStream) {
+    const pc = peerConnections.get(presenterWsId);
+    localStream.getTracks().forEach(track => {
+      const sender = pc.getSenders().find(s => s.track === track);
+      if (sender) pc.removeTrack(sender);
+      track.stop();
+    });
+  } else {
+    localStream?.getTracks().forEach(t=>t.stop());
+  }
+  localStream = null;
+}
 
 function onSpeakerAdded(msg) { addActiveSpeakerUI(msg.userId, msg.userName); appendChat('系统',`${msg.userName} 开始发言`,new Date().toISOString()); }
-function onSpeakerRemoved(msg) { document.querySelectorAll(`[data-speaker-user="${msg.userId}"]`).forEach(e=>e.remove()); if(!document.getElementById('speakers-bar').children.length) document.getElementById('speakers-bar').classList.add('hidden'); appendChat('系统',`${msg.userName} 结束发言`,new Date().toISOString()); }
+function onSpeakerRemoved(msg) {
+  document.querySelectorAll(`[data-speaker-user="${msg.userId}"]`).forEach(e => {
+    if (e._audioEl) { e._audioEl.pause(); e._audioEl.srcObject = null; }
+    e.remove();
+  });
+  if(!document.getElementById('speakers-bar').children.length) document.getElementById('speakers-bar').classList.add('hidden');
+  appendChat('系统',`${msg.userName} 结束发言`,new Date().toISOString());
+}
 function addActiveSpeakerUI(userId, userName) {
   const bar = document.getElementById('speakers-bar'); bar.classList.remove('hidden');
   bar.innerHTML += `<div class="flex-1 relative rounded-lg overflow-hidden bg-[#0a1020] border border-white/5" data-speaker-user="${userId}">
