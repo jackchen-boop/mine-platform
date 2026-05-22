@@ -8,7 +8,8 @@
 <link rel="stylesheet" href="assets/theme.css" />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  #local-video, #presenter-video { transform: scaleX(-1); }
+  /* 仅主播本地预览镜像（符合自然习惯），观众看到的主播画面不翻转 */
+  #local-video { transform: scaleX(-1); }
   .chat-msg { animation: msgIn .2s ease; }
   @keyframes msgIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
   .speak-req-item { animation: reqIn .25s ease; }
@@ -364,6 +365,12 @@ async function startPresenterStream() {
     }
     document.getElementById('local-video').srcObject = localStream;
     document.getElementById('local-video').classList.remove('hidden');
+    // 主播大画面也显示本地流（镜像，符合主播操作习惯）
+    const pv = document.getElementById('presenter-video');
+    pv.srcObject = localStream;
+    pv.style.transform = 'scaleX(-1)';
+    pv.muted = true; // 防止主播自己听到回声
+    pv.play().catch(() => {});
     document.getElementById('video-overlay').classList.add('hidden');
     // 处理断线重连期间缓存的新观众
     if (pendingViewers.length > 0) {
@@ -398,24 +405,20 @@ function createPeerConnection(targetWsId, targetUserId, targetUserName, isInitia
       return;
     }
     const rv = document.getElementById('presenter-video');
-    const stream = e.streams[0];
     // WebRTC 视频和音频轨道分批到达，每次 ontrack 的 stream 只有当前到达的轨道
     // 必须把新轨道添加到视频元素的流中，否则音频轨道会被漏掉
     if (!rv.srcObject) {
-      rv.srcObject = stream; presenterStream = stream;
+      rv.srcObject = e.streams[0] || new MediaStream([e.track]);
+      presenterStream = rv.srcObject;
     } else {
       // 将新轨道追加到已有流中（避免遗漏音频轨道）
-      e.track && rv.srcObject.addTrack(e.track);
+      if (e.track) rv.srcObject.addTrack(e.track);
     }
     document.getElementById('video-overlay').classList.add('hidden');
-    // 强制取消静音、音量最大，然后显式播放
+    // 强制取消静音、音量最大，然后显式播放（每次新轨道到来都重新 play，确保音频生效）
     rv.muted = false;
     rv.volume = 1;
-    const audioTracks = rv.srcObject.getAudioTracks();
-    console.log('视频元素当前轨道:', rv.srcObject.getTracks().map(t => ({kind:t.kind, enabled:t.enabled})));
-    if (audioTracks.length === 0) console.warn('⚠️ 尚未收到音频轨道');
     rv.play().catch(err => {
-      console.log('自动播放被阻止，需要用户交互:', err);
       showAudioUnlock();
     });
   };
@@ -469,7 +472,12 @@ async function toggleScreen() {
       audio: { echoCancellation:true, noiseSuppression:true }
     });
     document.getElementById('local-video').srcObject = localStream;
-    document.getElementById('presenter-video').style.transform = 'scaleX(-1)';
+    // 恢复主播大画面为摄像头（镜像）
+    const pv = document.getElementById('presenter-video');
+    pv.srcObject = localStream;
+    pv.style.transform = 'scaleX(-1)';
+    pv.muted = true;
+    pv.play().catch(() => {});
     replaceStreamForAllPeers(localStream);
     // 处理断线重连期间缓存的新观众
     if (pendingViewers.length > 0) {
