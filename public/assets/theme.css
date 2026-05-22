@@ -410,14 +410,18 @@ html, body {
   .skill-modal { max-width: 100%; padding: 16px; }
 }
 
-/* 移动端管理后台提示 */
+/* 移动端管理后台 — 响应式布局 */
 .mobile-admin-block {
   display: none;
 }
 @media (max-width: 767px) {
-  .mobile-admin-block { display: flex; }
-  .admin-sidebar-hide { display: none !important; }
-  .admin-content-hide { display: none !important; }
+  .mobile-admin-block { display: none; }
+  .admin-sidebar-hide { flex-direction: column; }
+  .admin-sidebar-hide > .w-48 { width: 100%; flex-shrink: 1; }
+  .admin-sidebar-hide > .w-48 > .glass { position: static; display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; }
+  .admin-sidebar-hide > .w-48 .admin-nav { font-size: 11px; padding: 6px 10px; }
+  .admin-sidebar-hide > .flex-1 { width: 100%; }
+  .admin-content-hide { width: 100%; }
 }
 
 /* ============================================================

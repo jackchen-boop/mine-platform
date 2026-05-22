@@ -168,9 +168,13 @@
     const u = VCPlat.getUser();
     if (u) {
       const roleLabel = { admin: '管理员', investor: '投资人', entrepreneur: '创业者' }[u.role] || u.role;
+      const credits = u.credits || 0;
       slot.innerHTML =
         '<div class="flex items-center gap-3">' +
-        '  <span class="chip chip-gold">已认证 · ' + roleLabel + '</span>' +
+        '  <button onclick="VCPlat.showRecharge()" class="chip chip-gold flex items-center gap-1 cursor-pointer hover:opacity-90" title="点击充值">' +
+        '    <span>💎</span><span id="nav-credits">' + credits + '</span>' +
+        '  </button>' +
+        '  <span class="chip">已认证 · ' + roleLabel + '</span>' +
         '  <div class="flex items-center gap-2">' +
         '    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-700 flex items-center justify-center text-xs font-bold text-black">' +
               (u.avatar_letter || u.name || 'U').slice(0, 1) +
@@ -188,6 +192,55 @@
         '</div>';
     }
   }
+
+  // ── 刷新积分显示 ──────────────────────────────────────
+  VCPlat.refreshCredits = async function () {
+    try {
+      const { credits } = await VCPlat.api('/api/credits');
+      const u = VCPlat.getUser();
+      if (u) { u.credits = credits; VCPlat.setUser(u); }
+      const el = document.getElementById('nav-credits');
+      if (el) el.textContent = credits;
+      return credits;
+    } catch (e) { console.warn('刷新积分失败:', e.message); return null; }
+  };
+
+  // ── 充值弹窗 ──────────────────────────────────────────
+  VCPlat.showRecharge = function () {
+    let modal = document.getElementById('recharge-modal');
+    if (modal) { modal.remove(); }
+    modal = document.createElement('div');
+    modal.id = 'recharge-modal';
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center';
+    modal.innerHTML = `
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="this.closest('#recharge-modal').remove()"></div>
+      <div class="relative glass corner-deco p-8 w-full max-w-sm mx-4 text-center">
+        <h2 class="font-serif-cn text-xl font-bold mb-2">充值积分</h2>
+        <p class="text-xs text-dim mb-5">1 元 = 100 积分</p>
+        <div class="grid grid-cols-3 gap-2 mb-5">
+          <button onclick="VCPlat.doRecharge(10)" class="btn btn-ghost text-sm py-2">10元<br><span class="text-gold-2">1000积分</span></button>
+          <button onclick="VCPlat.doRecharge(50)" class="btn btn-ghost text-sm py-2">50元<br><span class="text-gold-2">5000积分</span></button>
+          <button onclick="VCPlat.doRecharge(100)" class="btn btn-gold text-sm py-2">100元<br><span class="text-white">10000积分</span></button>
+        </div>
+        <div class="flex gap-2 mb-5">
+          <input id="recharge-custom" type="number" min="1" class="input text-sm flex-1" placeholder="自定义金额">
+          <button onclick="VCPlat.doRecharge(parseFloat(document.getElementById('recharge-custom').value)||0)" class="btn btn-gold text-sm">充值</button>
+        </div>
+        <button onclick="this.closest('#recharge-modal').remove()" class="text-xs text-dim hover:text-white">取消</button>
+      </div>`;
+    document.body.appendChild(modal);
+  };
+
+  VCPlat.doRecharge = async function (amount) {
+    if (!amount || amount <= 0) return alert('请输入有效的充值金额');
+    try {
+      const result = await VCPlat.api('/api/credits/recharge', { method: 'POST', body: { amount } });
+      alert('充值成功！获得 ' + result.added + ' 积分');
+      VCPlat.refreshCredits();
+      const modal = document.getElementById('recharge-modal');
+      if (modal) modal.remove();
+    } catch (e) { alert('充值失败：' + e.message); }
+  };
 
   VCPlat.renderAuthArea = renderAuthArea;
 
