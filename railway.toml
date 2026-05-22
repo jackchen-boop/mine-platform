@@ -5,13 +5,12 @@ builder = "nixpacks"
 startCommand = "node server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 30
-restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 
 [[volumes]]
-name = "vc_data"
+name = "mine_data"
 mountPath = "/data"
 
 [[volumes]]
-name = "vc_uploads"
+name = "mine_uploads"
 mountPath = "/app/public/uploads"
