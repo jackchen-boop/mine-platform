@@ -345,5 +345,23 @@ export function initSchema() {
     `);
   } catch {}
 
+  // ===== 积分系统 =====
+  // 用户积分余额（新用户默认500）
+  try { db.exec('ALTER TABLE users ADD COLUMN credits INTEGER NOT NULL DEFAULT 500'); } catch {}
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS credit_transactions (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id       INTEGER NOT NULL REFERENCES users(id),
+      type          TEXT    NOT NULL,
+      amount        INTEGER NOT NULL,
+      balance_after INTEGER NOT NULL,
+      description   TEXT,
+      related_id    INTEGER,
+      created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_credit_tx_user ON credit_transactions(user_id, created_at DESC);
+  `);
+
   console.log('✓ 数据库 schema 初始化完成');
 }

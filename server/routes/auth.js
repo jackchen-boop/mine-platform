@@ -34,11 +34,11 @@ router.post('/register', async (req, res, next) => {
     const userRole = allowedRoles.includes(role) ? role : 'investor';
 
     const result = db.prepare(`
-      INSERT INTO users (name, email, phone, password_hash, role, organization, avatar_letter, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+      INSERT INTO users (name, email, phone, password_hash, role, organization, avatar_letter, status, credits)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 500)
     `).run(name, email, phone || null, passwordHash, userRole, organization || null, avatarLetter);
 
-    const user = db.prepare('SELECT id, name, email, role, organization, avatar_letter FROM users WHERE id = ?').get(result.lastInsertRowid);
+    const user = db.prepare('SELECT id, name, email, role, organization, avatar_letter, credits FROM users WHERE id = ?').get(result.lastInsertRowid);
     const token = signToken({ id: user.id, email: user.email, role: user.role });
 
     res.status(201).json({ token, user });
@@ -77,7 +77,7 @@ router.post('/login', async (req, res, next) => {
 // GET /api/auth/me — 获取当前用户信息
 router.get('/me', requireAuth, (req, res) => {
   const user = db.prepare(
-    'SELECT id, name, email, phone, role, organization, avatar_letter, status, created_at FROM users WHERE id = ?'
+    'SELECT id, name, email, phone, role, organization, avatar_letter, status, credits, created_at FROM users WHERE id = ?'
   ).get(req.user.id);
 
   if (!user) return res.status(404).json({ error: '用户不存在' });

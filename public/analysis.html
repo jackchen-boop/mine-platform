@@ -379,6 +379,15 @@ async function viewReport(bpId) {
 
 /* ===== State 3: 开始 AI 分析 ===== */
 async function startAnalysis(bpId) {
+  // 检查积分：AI 分析 1 次 100 积分
+  const credits = await VCPlat.refreshCredits();
+  if (credits !== null && credits < 100) {
+    if (confirm('积分不足（需要 100 积分），是否立即充值？')) {
+      VCPlat.showRecharge();
+    }
+    return;
+  }
+
   currentBpId = bpId;
   showState('analyze');
 

@@ -6,6 +6,7 @@ import { streamToResponseWithSave } from '../services/minimax.js';
 import { SKILL_PROMPTS } from '../services/skillPrompts.js';
 import { retrieveKnowledgeContext } from '../services/knowledgeRetriever.js';
 import { buildTrainingContext } from '../services/trainingEngine.js';
+import { consumeCredits } from '../services/credits.js';
 
 const router = Router();
 
@@ -16,6 +17,12 @@ router.post('/ai-analyze', requireAuth, async (req, res, next) => {
 
     if (!bpUploadId && !projectId) {
       return res.status(400).json({ error: '请指定要分析的 BP ID 或项目 ID' });
+    }
+
+    // 扣减积分：AI 分析 1 次 100 积分
+    const creditResult = consumeCredits(req.user.id, 100, 'AI 智能分析', bpUploadId || projectId);
+    if (!creditResult.success) {
+      return res.status(402).json({ error: creditResult.error, needed: creditResult.needed, current: creditResult.current });
     }
 
     let contextText = '';

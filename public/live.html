@@ -67,6 +67,10 @@
           <div id="live-title" class="font-serif-cn font-bold text-xs sm:text-sm truncate"></div>
           <div id="live-presenter" class="text-[10px] sm:text-xs text-white/60 truncate"></div>
         </div>
+        <div id="live-credit-info" class="hidden text-[10px] text-gold-2 font-mono whitespace-nowrap ml-2 text-right">
+          <div id="live-duration">00:00</div>
+          <div id="live-credit-cost" class="text-white/50">已扣 0 积分</div>
+        </div>
       </div>
     </div>
 
@@ -202,6 +206,8 @@ let chatOpen = !IS_MOBILE; // 桌面端默认展开聊天
 let pendingViewers = []; // 主播摄像头未准备好时缓存的新观众
 let broadcastStream = null; // 当前发送给观众的流（屏幕分享合成流时覆盖localStream）
 let presenterWsId = null; // 主播的WebSocket ID（观众端使用）
+let liveCreditTimer = null; // 直播积分扣减定时器
+let liveMinutes = 0; // 已直播分钟数
 
 // Canvas 合成（屏幕共享 + 摄像头画中画）
 let compositeCanvas = null;
@@ -313,14 +319,24 @@ function handleWSMessage(msg) {
   }
 }
 
-function onJoined(msg) {
+async function onJoined(msg) {
   updateViewerCount(msg.viewerCount);
   const chatEl = getChatEl();
   if (msg.chatLog?.length > 0) { chatEl.innerHTML = ''; msg.chatLog.forEach(m => appendChat(m.userName, m.text, m.time)); }
   if (msg.speakRequests?.length > 0) msg.speakRequests.forEach(r => addSpeakRequestUI(r.userId, r.userName, r.reason));
   if (msg.presenterWsId) presenterWsId = msg.presenterWsId;
-  if (IS_PRESENTER) startPresenterStream();
-  else document.getElementById('overlay-text').textContent = '正在连接主播...';
+  if (IS_PRESENTER) {
+    const credits = await VCPlat.refreshCredits();
+    if (credits !== null && credits < 100) {
+      alert('积分不足，直播需要至少 100 积分（1分钟）。请先充值。');
+      location.href = 'roadshow.html';
+      return;
+    }
+    startPresenterStream();
+    startLiveCreditTimer();
+  } else {
+    document.getElementById('overlay-text').textContent = '正在连接主播...';
+  }
 }
 
 function updateViewerCount(n) {
@@ -549,8 +565,47 @@ function replaceStreamForAllPeers(newStream) {
     if (audioSender && at) audioSender.replaceTrack(at);
   }
 }
-async function endLive() {
-  if (!confirm('确定结束直播？')) return;
+function startLiveCreditTimer() {
+  liveMinutes = 0;
+  document.getElementById('live-credit-info').classList.remove('hidden');
+  updateLiveCreditUI();
+  // 首次扣费立即执行（开播即扣第1分钟）
+  deductLiveMinute();
+  liveCreditTimer = setInterval(deductLiveMinute, 60000);
+}
+function updateLiveCreditUI() {
+  const m = Math.floor(liveMinutes / 60);
+  const s = liveMinutes % 60;
+  document.getElementById('live-duration').textContent =
+    String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  document.getElementById('live-credit-cost').textContent = '已扣 ' + (liveMinutes * 100) + ' 积分';
+}
+async function deductLiveMinute() {
+  try {
+    const res = await fetch('/api/credits/consume', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: 100, description: '直播消耗', related_id: ROADSHOW_ID })
+    });
+    if (res.status === 402) {
+      const data = await res.json();
+      alert('积分不足：' + (data.error || '余额不足') + '，直播将在10秒后自动结束。');
+      setTimeout(() => endLive(true), 10000);
+      if (liveCreditTimer) { clearInterval(liveCreditTimer); liveCreditTimer = null; }
+      return;
+    }
+    if (!res.ok) throw new Error('扣费失败');
+    liveMinutes++;
+    updateLiveCreditUI();
+    VCPlat.refreshCredits();
+  } catch (e) {
+    console.error('直播扣费异常:', e);
+  }
+}
+async function endLive(force) {
+  if (!force && !confirm('确定结束直播？')) return;
+  if (liveCreditTimer) { clearInterval(liveCreditTimer); liveCreditTimer = null; }
+  liveMinutes = 0;
   wsSend({type:'end-stream'});
   try { await VCPlat.api(`/api/live/${ROADSHOW_ID}/end`, {method:'POST'}); } catch{}
   localStream?.getTracks().forEach(t=>t.stop()); location.href = 'roadshow.html';
