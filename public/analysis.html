@@ -33,12 +33,22 @@
   </div>
 </header>
 
+<!-- ========== Page header ========== -->
+<section class="relative overflow-hidden" style="background: url('assets/hero-bg.png') center top / cover no-repeat;">
+  <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(6,11,22,0.35) 0%, rgba(6,11,22,0.55) 50%, rgba(6,11,22,0.92) 100%); pointer-events: none;"></div>
+  <div class="relative max-w-[1280px] mx-auto px-6 pt-10 pb-6">
+    <div class="chip chip-gold mb-3">AI 智能投研分析</div>
+    <h1 class="font-serif-cn text-3xl md:text-4xl font-black leading-tight">AI 智能分析</h1>
+    <p class="text-mute text-sm mt-2">多模态 BP 识别与 AI 投研分析一体化平台</p>
+  </div>
+</section>
+
 <!-- ========== 主容器 ========== -->
-<div id="app-container" class="max-w-[1280px] mx-auto px-6 pt-10 pb-20">
+<div id="app-container" class="max-w-[1280px] mx-auto px-6 pt-6 pb-20">
 
   <!-- State 1: BP 选择列表 -->
   <div id="state-list" style="display:none;">
-    <div class="glass corner-deco p-7 mb-6">
+    <div class="p-7 mb-6">
       <div class="flex items-center gap-3 mb-3">
         <span class="chip chip-gold">AI 智能投研分析</span>
       </div>
@@ -125,7 +135,7 @@
 
   <!-- State 2: 查看报告 -->
   <div id="state-report" style="display:none;">
-    <div class="glass corner-deco p-5 md:p-7">
+    <div class="p-5 md:p-7">
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div class="flex items-center gap-3 mb-3">
@@ -165,7 +175,7 @@
 
   <!-- State 3: 流式分析 -->
   <div id="state-analyze" style="display:none;">
-    <div class="glass corner-deco p-5 md:p-7">
+    <div class="p-5 md:p-7">
       <div class="flex items-center gap-3 mb-3">
         <span class="chip chip-gold">AI 智能投研分析</span>
         <div class="ai-status" id="analyze-status"><span class="dot"></span><span id="analyze-status-text">连接星链 AI 中…</span></div>

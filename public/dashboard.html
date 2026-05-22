@@ -33,23 +33,28 @@
   </div>
 </header>
 
-<div class="max-w-[1280px] mx-auto px-6 pt-10 pb-20">
-
-  <!-- 顶部用户信息卡 -->
-  <div class="glass p-5 md:p-8 corner-deco mb-8 flex flex-col md:flex-row items-start md:items-center gap-6">
-    <div id="user-avatar" class="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-700 flex items-center justify-center text-2xl font-bold text-black flex-shrink-0">U</div>
-    <div class="flex-1">
-      <div class="flex items-center gap-3 flex-wrap">
-        <h1 id="user-name" class="font-serif-cn text-2xl font-bold">加载中...</h1>
-        <span id="user-role-badge" class="chip chip-gold"></span>
+<!-- ========== Page header ========== -->
+<section class="relative overflow-hidden" style="background: url('assets/hero-bg.png') center top / cover no-repeat;">
+  <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(6,11,22,0.35) 0%, rgba(6,11,22,0.55) 50%, rgba(6,11,22,0.92) 100%); pointer-events: none;"></div>
+  <div class="relative max-w-[1280px] mx-auto px-6 pt-10 pb-8">
+    <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
+      <div id="user-avatar" class="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-700 flex items-center justify-center text-2xl font-bold text-black flex-shrink-0">U</div>
+      <div class="flex-1">
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 id="user-name" class="font-serif-cn text-2xl font-bold">加载中...</h1>
+          <span id="user-role-badge" class="chip chip-gold"></span>
+        </div>
+        <div id="user-info" class="text-mute text-sm mt-1"></div>
       </div>
-      <div id="user-info" class="text-mute text-sm mt-1"></div>
-    </div>
-    <div class="flex gap-3">
-      <a href="/upload.html" class="btn btn-gold">上传 BP →</a>
-      <a href="/analysis.html" class="btn btn-ghost">AI 分析</a>
+      <div class="flex gap-3">
+        <a href="/upload.html" class="btn btn-gold">上传 BP →</a>
+        <a href="/analysis.html" class="btn btn-ghost">AI 分析</a>
+      </div>
     </div>
   </div>
+</section>
+
+<div class="max-w-[1280px] mx-auto px-6 pt-6 pb-20">
 
   <!-- KPI 卡片 -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-8">
