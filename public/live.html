@@ -462,7 +462,7 @@ async function toggleScreen() {
     }
   } else {
     try {
-      screenStream = await navigator.mediaDevices.getDisplayMedia({video:true, audio:true});
+      screenStream = await navigator.mediaDevices.getDisplayMedia({video:true});
       screenSharing = true; document.getElementById('btn-screen').classList.add('active');
       // 主播自己看到屏幕共享
       document.getElementById('presenter-video').srcObject = screenStream;
