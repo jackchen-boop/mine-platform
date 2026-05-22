@@ -110,6 +110,17 @@
                 <h2 class="text-lg font-semibold mb-4">核心亮点</h2>
                 <div class="flex flex-wrap gap-2">${highlights}</div>
               </div>
+
+              ${isLoggedIn && p.ai_summary ? `
+                <div class="p-6 rounded-2xl ai-panel">
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="text-lg">🤖</span>
+                    <h2 class="text-lg font-semibold gold-gradient">AI 分析摘要</h2>
+                  </div>
+                  <p class="text-sm text-mine-text2 leading-relaxed">${p.ai_summary}</p>
+                  ${p.ai_score ? `<div class="mt-3 flex items-center gap-2"><span class="text-xs text-mine-text3">综合评分</span><span class="text-lg font-bold text-mine-success">${p.ai_score}</span><span class="text-xs text-mine-text3">/100</span></div>` : ''}
+                </div>
+              ` : ''}
             </div>
 
             <div class="space-y-6">
@@ -160,7 +171,21 @@
                     生成深度分析报告
                   </button>
                 </div>
-              ` : ''}
+              ` : `
+                <div class="p-6 rounded-2xl ai-panel">
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="text-lg">🤖</span>
+                    <h3 class="text-sm font-semibold gold-gradient">AI 投资价值分析</h3>
+                  </div>
+                  <p class="text-xs text-mine-text3 mb-2">基于紫金矿业五阶段评价体系，系统评估矿产项目投资价值</p>
+                  <div class="space-y-1.5 mb-3">
+                    <div class="flex items-center gap-1.5 text-xs text-mine-text2"><span class="text-mine-gold">◆</span>五阶段评分（草根→运营）</div>
+                    <div class="flex items-center gap-1.5 text-xs text-mine-text2"><span class="text-mine-gold">◆</span>财务指标估算（NPV/IRR/AISC）</div>
+                    <div class="flex items-center gap-1.5 text-xs text-mine-text2"><span class="text-mine-gold">◆</span>风险评价与处置建议</div>
+                  </div>
+                  <a href="/auth.html" class="block w-full py-2.5 rounded-lg bg-mine-gold text-mine-bg font-semibold text-sm text-center hover:bg-mine-goldLight transition-colors">登录查看AI分析</a>
+                </div>
+              `}
             </div>
           </div>
         `;
