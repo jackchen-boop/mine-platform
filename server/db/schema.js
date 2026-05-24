@@ -166,6 +166,63 @@ export function initSchema() {
       UNIQUE(stream_id, user_id)
     );
 
+    -- 工作组
+    CREATE TABLE IF NOT EXISTS workgroups (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      name        TEXT    NOT NULL,
+      description TEXT,
+      code        TEXT    NOT NULL UNIQUE,
+      owner_id    INTEGER NOT NULL REFERENCES users(id),
+      status      TEXT    NOT NULL DEFAULT 'active',
+      created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+      updated_at  TEXT
+    );
+
+    -- 工作组成员
+    CREATE TABLE IF NOT EXISTS workgroup_members (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      workgroup_id  INTEGER NOT NULL REFERENCES workgroups(id),
+      user_id       INTEGER NOT NULL REFERENCES users(id),
+      role          TEXT    NOT NULL DEFAULT 'member',
+      joined_at     TEXT    NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(workgroup_id, user_id)
+    );
+
+    -- 矿业项目工作流任务（项目推进阶段追踪）
+    CREATE TABLE IF NOT EXISTS project_tasks (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id   INTEGER NOT NULL REFERENCES mine_projects(id),
+      phase        TEXT    NOT NULL,
+      title        TEXT    NOT NULL,
+      description  TEXT,
+      assignee_id  INTEGER REFERENCES users(id),
+      status       TEXT    NOT NULL DEFAULT 'pending',
+      priority     TEXT    NOT NULL DEFAULT 'normal',
+      due_date     TEXT,
+      completed_at TEXT,
+      notes        TEXT,
+      created_by   INTEGER NOT NULL REFERENCES users(id),
+      created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
+      updated_at   TEXT
+    );
+
+    -- 项目动态/评论（工作组成员协作记录）
+    CREATE TABLE IF NOT EXISTS project_activities (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id   INTEGER NOT NULL REFERENCES mine_projects(id),
+      user_id      INTEGER NOT NULL REFERENCES users(id),
+      activity_type TEXT   NOT NULL DEFAULT 'comment',
+      content      TEXT    NOT NULL,
+      created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- 索引（工作组）
+    CREATE INDEX IF NOT EXISTS idx_workgroup_members_user ON workgroup_members(user_id);
+    CREATE INDEX IF NOT EXISTS idx_workgroup_members_wg   ON workgroup_members(workgroup_id);
+    CREATE INDEX IF NOT EXISTS idx_project_tasks_project  ON project_tasks(project_id);
+    CREATE INDEX IF NOT EXISTS idx_project_tasks_status   ON project_tasks(status);
+    CREATE INDEX IF NOT EXISTS idx_project_activities     ON project_activities(project_id, created_at DESC);
+
     -- 平台 KPI 缓存
     CREATE TABLE IF NOT EXISTS system_stats (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -188,6 +245,9 @@ export function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_live_streams_project   ON live_streams(project_id);
     CREATE INDEX IF NOT EXISTS idx_speaker_requests       ON live_speaker_requests(stream_id, status);
   `);
+
+  // workgroup_id 列可能已存在（ALTER TABLE IF NOT EXISTS 在 SQLite < 3.37 不支持）
+  try { db.exec('ALTER TABLE mine_projects ADD COLUMN workgroup_id INTEGER REFERENCES workgroups(id)'); } catch(e) {}
 
   console.log('✓ 矿业平台数据库 schema 初始化完成');
 }
