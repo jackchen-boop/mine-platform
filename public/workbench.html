@@ -57,6 +57,13 @@
     .status-blocked { background:rgba(239,68,68,0.15); color:#f87171; }
     .phase-card { transition:border-color 0.2s; }
     .phase-card:hover { border-color:rgba(201,169,110,0.4); }
+    /* 优先级徽章 */
+    .level-S { background:rgba(239,68,68,0.15); color:#f87171; border-color:rgba(239,68,68,0.3); }
+    .level-A { background:rgba(249,115,22,0.15); color:#fb923c; border-color:rgba(249,115,22,0.3); }
+    .level-B { background:rgba(234,179,8,0.15);  color:#facc15; border-color:rgba(234,179,8,0.3); }
+    .level-C { background:rgba(100,116,139,0.15);color:#94a3b8; border-color:rgba(100,116,139,0.3); }
+    /* 评分条 */
+    .score-bar-inner { transition:width 0.5s ease; }
 
     /* 手机端安全区 */
     .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
@@ -385,6 +392,127 @@
   </div>
 </div>
 
+<!-- ══ 优先级评分 & 参与人 Modal ══ -->
+<div id="modal-priority" class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center modal-overlay" onclick="closeModal('modal-priority')">
+  <div class="bg-mine-surface border border-mine-border rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[92vh] flex flex-col" onclick="event.stopPropagation()">
+    <div class="p-5 border-b border-mine-border">
+      <div class="w-10 h-1 bg-mine-border rounded-full mx-auto mb-3 sm:hidden"></div>
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-semibold">项目优先级评分</h2>
+          <div id="priority-project-name" class="text-xs text-mine-text3 mt-0.5"></div>
+        </div>
+        <!-- 综合评分大展示 -->
+        <div class="flex items-center gap-2">
+          <div id="priority-score-circle" class="w-14 h-14 rounded-full border-2 flex flex-col items-center justify-center">
+            <div id="priority-score-num" class="text-lg font-bold leading-none"></div>
+            <div class="text-[9px] text-mine-text3">综合</div>
+          </div>
+          <div id="priority-level-badge" class="px-2 py-1 rounded border text-sm font-bold"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overflow-y-auto flex-1 p-5 space-y-5">
+
+      <!-- 评分明细 -->
+      <div class="p-3 rounded-xl bg-mine-surface2 border border-mine-border space-y-2.5">
+        <div class="text-xs text-mine-text3 font-medium mb-1">评分明细（满分100）</div>
+        <!-- AI 得分（只读） -->
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-mine-text2">🤖 AI分析得分</span>
+            <span class="text-mine-gold font-medium"><span id="bd-ai"></span> / 40分</span>
+          </div>
+          <div class="w-full h-1.5 bg-mine-surface rounded-full"><div id="bar-ai" class="h-1.5 bg-mine-gold rounded-full score-bar-inner" style="width:0%"></div></div>
+          <div class="text-[11px] text-mine-text3 mt-0.5">原始 AI 分：<span id="raw-ai-score"></span>分</div>
+        </div>
+        <!-- 决策人 -->
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-mine-text2">🎯 资源方决策人</span>
+            <span class="text-mine-gold font-medium"><span id="bd-dm"></span> / 25分</span>
+          </div>
+          <div class="w-full h-1.5 bg-mine-surface rounded-full mb-1.5"><div id="bar-dm" class="h-1.5 bg-orange-400 rounded-full score-bar-inner" style="width:0%"></div></div>
+          <input id="input-dm" type="range" min="0" max="25" step="1" class="w-full accent-mine-gold" oninput="onDmInput(this.value)" />
+          <div class="flex justify-between text-[10px] text-mine-text3 mt-0.5">
+            <span>0 = 非决策人</span><span>25 = 直接决策人</span>
+          </div>
+        </div>
+        <!-- 资金方概率 -->
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-mine-text2">💰 资金方参与概率</span>
+            <span class="text-mine-gold font-medium"><span id="bd-fund"></span> / 20分</span>
+          </div>
+          <div class="w-full h-1.5 bg-mine-surface rounded-full mb-1.5"><div id="bar-fund" class="h-1.5 bg-green-500 rounded-full score-bar-inner" style="width:0%"></div></div>
+          <input id="input-fund" type="range" min="0" max="100" step="5" class="w-full accent-mine-gold" oninput="onFundInput(this.value)" />
+          <div class="flex justify-between text-[10px] text-mine-text3 mt-0.5">
+            <span>0% 无意向</span><span>100% 高度确定</span>
+          </div>
+        </div>
+        <!-- 参与人 -->
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-mine-text2">👥 工作组参与人数</span>
+            <span class="text-mine-gold font-medium"><span id="bd-people"></span> / 15分</span>
+          </div>
+          <div class="w-full h-1.5 bg-mine-surface rounded-full"><div id="bar-people" class="h-1.5 bg-blue-400 rounded-full score-bar-inner" style="width:0%"></div></div>
+          <div class="text-[11px] text-mine-text3 mt-0.5">当前参与人：<span id="people-count">0</span> 人（满分为5人）</div>
+        </div>
+        <!-- 备注 -->
+        <div class="pt-1">
+          <label class="text-xs text-mine-text3 mb-1 block">评分备注</label>
+          <textarea id="priority-notes" rows="2" class="w-full px-3 py-2 rounded-xl bg-mine-surface border border-mine-border text-mine-text text-xs focus:outline-none focus:border-mine-gold/50 resize-none" placeholder="记录评分依据..."></textarea>
+        </div>
+        <button onclick="savePriorityScore()" class="w-full py-2.5 rounded-xl bg-mine-gold text-mine-bg font-semibold text-sm active:bg-mine-goldLight">保存评分</button>
+      </div>
+
+      <!-- 参与人管理 -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm font-semibold">项目参与人</span>
+          <button onclick="toggleAddParticipant()" class="text-xs px-3 py-1.5 rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/20 active:bg-mine-gold/20">+ 添加</button>
+        </div>
+
+        <!-- 添加参与人表单 -->
+        <div id="add-participant-form" class="hidden mb-3 p-3 rounded-xl bg-mine-surface2 border border-mine-border space-y-2">
+          <input id="pp-email" type="email" inputmode="email" class="w-full px-3 py-2.5 rounded-lg bg-mine-surface border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="成员邮箱" />
+          <div class="grid grid-cols-2 gap-2">
+            <select id="pp-role" class="px-2 py-2.5 rounded-lg bg-mine-surface border border-mine-border text-mine-text text-xs focus:outline-none focus:border-mine-gold/50">
+              <option value="member">参与人</option>
+              <option value="owner">项目负责人</option>
+              <option value="analyst">分析师</option>
+              <option value="bd">资源对接</option>
+              <option value="finance">资金对接</option>
+            </select>
+            <div class="flex items-center gap-2 px-2 py-2 rounded-lg bg-mine-surface border border-mine-border">
+              <input id="pp-is-dm" type="checkbox" class="w-4 h-4 accent-mine-gold" />
+              <label class="text-xs text-mine-text2">决策人联系</label>
+            </div>
+          </div>
+          <div>
+            <label class="text-[11px] text-mine-text3 mb-1 block">资金方信心度：<span id="pp-fund-val">50</span>%</label>
+            <input id="pp-fund-conf" type="range" min="0" max="100" step="10" value="50" class="w-full accent-mine-gold" oninput="document.getElementById('pp-fund-val').textContent=this.value" />
+          </div>
+          <textarea id="pp-notes" rows="1" class="w-full px-3 py-2 rounded-lg bg-mine-surface border border-mine-border text-mine-text text-xs focus:outline-none focus:border-mine-gold/50 resize-none" placeholder="备注（角色说明等）"></textarea>
+          <div class="flex gap-2">
+            <button onclick="addParticipant()" class="flex-1 py-2 rounded-lg bg-mine-gold text-mine-bg text-xs font-semibold">添加</button>
+            <button onclick="toggleAddParticipant()" class="px-3 py-2 rounded-lg border border-mine-border text-mine-text3 text-xs">取消</button>
+          </div>
+        </div>
+
+        <!-- 参与人列表 -->
+        <div id="participants-list" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <div class="p-4 border-t border-mine-border">
+      <button onclick="closeModal('modal-priority')" class="w-full py-3 rounded-xl border border-mine-border text-mine-text2 text-sm">关闭</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const token = localStorage.getItem('mine_token');
 if (!token) location.href = '/auth.html';
@@ -648,8 +776,10 @@ async function loadWgProjects() {
         <div class="flex items-center gap-2 text-xs">
           <span class="text-mine-text3">💬${p.activity_count||0}</span>
           <span class="text-mine-gold font-bold">${p.ai_score?p.ai_score+'分':'AI未评'}</span>
+          <span id="level-badge-${p.id}" class="px-1.5 py-0.5 rounded border text-[11px] font-bold level-${p.priority_level||'C'}">${p.priority_level||'C'}级</span>
         </div>
         <div class="flex gap-1.5">
+          <button onclick="event.stopPropagation();openPriorityModal(${p.id},'${p.name.replace(/'/g,'&#39;')}')" class="px-2.5 py-1.5 rounded-lg bg-mine-surface2 text-mine-text2 text-xs border border-mine-border active:bg-mine-surface3" title="评分&参与人">⭐</button>
           <button onclick="event.stopPropagation();openProjectWorkbench(${p.id},'${p.name.replace(/'/g,'&#39;')}')" class="px-2.5 py-1.5 rounded-lg bg-mine-gold/10 text-mine-gold text-xs border border-mine-gold/20 active:bg-mine-gold/20">工作台</button>
           <a href="/project-detail.html?id=${p.id}" onclick="event.stopPropagation()" class="px-2.5 py-1.5 rounded-lg bg-mine-surface2 text-mine-text2 text-xs border border-mine-border active:bg-mine-surface3">详情</a>
         </div>
@@ -886,6 +1016,166 @@ function openFromUrl() {
   const pid = p.get('project');
   const pname = p.get('name');
   if (pid) openProjectWorkbench(Number(pid), pname||'项目工作台');
+}
+
+// ── 优先级评分 & 参与人 ───────────────────────────────
+let priorityProjectId = null;
+let priorityData = null;
+
+async function openPriorityModal(projectId, projectName) {
+  priorityProjectId = projectId;
+  document.getElementById('priority-project-name').textContent = projectName;
+  openModal('modal-priority');
+  await loadPriorityData(projectId);
+}
+
+async function loadPriorityData(projectId) {
+  const data = await fetch(`/api/project-priority/${projectId}`, { headers: authH() }).then(r => r.json());
+  priorityData = data;
+
+  const { priority_score, priority_level, breakdown, score_decision_maker, score_funding_prob, ai_score, priority_notes, participants } = data;
+
+  // 综合评分展示
+  const scoreEl   = document.getElementById('priority-score-num');
+  const circleEl  = document.getElementById('priority-score-circle');
+  const badgeEl   = document.getElementById('priority-level-badge');
+  scoreEl.textContent = priority_score || 0;
+  circleEl.className  = `w-14 h-14 rounded-full border-2 flex flex-col items-center justify-center level-${priority_level||'C'}`;
+  badgeEl.className   = `px-2 py-1 rounded border text-sm font-bold level-${priority_level||'C'}`;
+  badgeEl.textContent = (priority_level||'C') + '级';
+
+  // 明细
+  document.getElementById('bd-ai').textContent    = breakdown?.ai    ?? 0;
+  document.getElementById('bd-dm').textContent    = breakdown?.dm    ?? 0;
+  document.getElementById('bd-fund').textContent  = breakdown?.fund  ?? 0;
+  document.getElementById('bd-people').textContent= breakdown?.people?? 0;
+  document.getElementById('raw-ai-score').textContent = ai_score || 0;
+  document.getElementById('people-count').textContent = participants?.length || 0;
+
+  // 滑块
+  document.getElementById('input-dm').value   = score_decision_maker || 0;
+  document.getElementById('input-fund').value = score_funding_prob   || 0;
+  document.getElementById('priority-notes').value = priority_notes || '';
+
+  // 进度条
+  const pct = (v, max) => Math.round((v / max) * 100) + '%';
+  document.getElementById('bar-ai').style.width     = pct(breakdown?.ai    || 0, 40);
+  document.getElementById('bar-dm').style.width     = pct(breakdown?.dm    || 0, 25);
+  document.getElementById('bar-fund').style.width   = pct(breakdown?.fund  || 0, 20);
+  document.getElementById('bar-people').style.width = pct(breakdown?.people|| 0, 15);
+
+  // 参与人列表
+  renderParticipants(participants || []);
+}
+
+function onDmInput(v) {
+  document.getElementById('bd-dm').textContent = Math.round(v);
+  document.getElementById('bar-dm').style.width = Math.round((v / 25) * 100) + '%';
+}
+function onFundInput(v) {
+  document.getElementById('bd-fund').textContent = Math.round(v * 0.2);
+  document.getElementById('bar-fund').style.width = v + '%';
+}
+
+async function savePriorityScore() {
+  if (!priorityProjectId) return;
+  const body = {
+    score_decision_maker: parseInt(document.getElementById('input-dm').value),
+    score_funding_prob:   parseInt(document.getElementById('input-fund').value),
+    priority_notes:       document.getElementById('priority-notes').value
+  };
+  const r = await fetch(`/api/project-priority/${priorityProjectId}`, { method: 'PUT', headers: authH(), body: JSON.stringify(body) });
+  const d = await r.json();
+  if (!r.ok) { alert(d.error); return; }
+  // 刷新显示
+  await loadPriorityData(priorityProjectId);
+  // 更新卡片上的徽章
+  const badge = document.getElementById(`level-badge-${priorityProjectId}`);
+  if (badge) {
+    badge.className = `px-1.5 py-0.5 rounded border text-[11px] font-bold level-${d.priority_level}`;
+    badge.textContent = d.priority_level + '级';
+  }
+  showToast('评分已保存');
+}
+
+function renderParticipants(list) {
+  const roleLabels = { owner:'负责人', analyst:'分析师', bd:'资源对接', finance:'资金对接', member:'参与人' };
+  const el = document.getElementById('participants-list');
+  document.getElementById('people-count').textContent = list.length;
+  if (!list.length) {
+    el.innerHTML = '<div class="text-xs text-mine-text3 text-center py-4">暂无参与人，点击"添加"录入</div>';
+    return;
+  }
+  el.innerHTML = list.map(p => `
+    <div class="flex items-center gap-3 p-3 rounded-xl bg-mine-surface2 border border-mine-border">
+      <div class="w-9 h-9 rounded-full bg-mine-gold/20 flex items-center justify-center text-sm font-bold text-mine-gold flex-shrink-0">
+        ${p.avatar_letter || (p.user_name||'?').charAt(0)}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="text-sm font-medium">${p.user_name||p.email}</span>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-mine-surface border border-mine-border text-mine-text3">
+            ${roleLabels[p.role]||p.role}
+          </span>
+          ${p.is_decision_contact ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/10 border border-orange-500/20 text-orange-400">决策人</span>' : ''}
+        </div>
+        <div class="text-[11px] text-mine-text3 mt-0.5">
+          ${p.organization||p.email}
+          ${p.funding_confidence > 0 ? ' · 资金信心 ' + p.funding_confidence + '%' : ''}
+          ${p.notes ? ' · ' + p.notes : ''}
+        </div>
+      </div>
+      <button onclick="removeParticipant(${p.user_id})" class="text-mine-text3 hover:text-mine-danger text-xs px-2 py-1 rounded-lg border border-mine-border active:bg-mine-danger/10 flex-shrink-0">移除</button>
+    </div>
+  `).join('');
+}
+
+function toggleAddParticipant() {
+  document.getElementById('add-participant-form').classList.toggle('hidden');
+}
+
+async function addParticipant() {
+  const email = document.getElementById('pp-email').value.trim();
+  if (!email) { alert('请输入邮箱'); return; }
+  const body = {
+    email,
+    role:               document.getElementById('pp-role').value,
+    is_decision_contact:document.getElementById('pp-is-dm').checked,
+    funding_confidence: parseInt(document.getElementById('pp-fund-conf').value),
+    notes:              document.getElementById('pp-notes').value.trim()
+  };
+  const r = await fetch(`/api/project-priority/${priorityProjectId}/participants`, { method: 'POST', headers: authH(), body: JSON.stringify(body) });
+  const d = await r.json();
+  if (!r.ok) { alert(d.error); return; }
+  // 清空表单
+  document.getElementById('pp-email').value = '';
+  document.getElementById('pp-notes').value = '';
+  document.getElementById('pp-is-dm').checked = false;
+  document.getElementById('pp-fund-conf').value = 50;
+  document.getElementById('pp-fund-val').textContent = '50';
+  document.getElementById('add-participant-form').classList.add('hidden');
+  await loadPriorityData(priorityProjectId);
+  showToast(d.message || '已添加');
+}
+
+async function removeParticipant(userId) {
+  if (!confirm('确定移除该参与人？')) return;
+  const r = await fetch(`/api/project-priority/${priorityProjectId}/participants/${userId}`, { method: 'DELETE', headers: authH() });
+  if (r.ok) { await loadPriorityData(priorityProjectId); showToast('已移除'); }
+}
+
+function showToast(msg) {
+  let t = document.getElementById('wb-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'wb-toast';
+    t.className = 'fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-[200] px-4 py-2 rounded-full text-sm text-white bg-black/80 backdrop-blur whitespace-nowrap transition-opacity';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.style.opacity = '0'; }, 2000);
 }
 
 init().then(() => openFromUrl());

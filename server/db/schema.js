@@ -249,5 +249,31 @@ export function initSchema() {
   // workgroup_id 列可能已存在（ALTER TABLE IF NOT EXISTS 在 SQLite < 3.37 不支持）
   try { db.exec('ALTER TABLE mine_projects ADD COLUMN workgroup_id INTEGER REFERENCES workgroups(id)'); } catch(e) {}
 
+  // 项目优先级评分相关字段
+  try { db.exec('ALTER TABLE mine_projects ADD COLUMN priority_score REAL DEFAULT 0'); } catch(e) {}
+  try { db.exec('ALTER TABLE mine_projects ADD COLUMN priority_level TEXT DEFAULT \'C\''); } catch(e) {}
+  try { db.exec('ALTER TABLE mine_projects ADD COLUMN score_ai REAL DEFAULT 0'); } catch(e) {}
+  try { db.exec('ALTER TABLE mine_projects ADD COLUMN score_decision_maker INTEGER DEFAULT 0'); } catch(e) {}
+  try { db.exec('ALTER TABLE mine_projects ADD COLUMN score_funding_prob INTEGER DEFAULT 0'); } catch(e) {}
+  try { db.exec('ALTER TABLE mine_projects ADD COLUMN priority_notes TEXT'); } catch(e) {}
+  try { db.exec('ALTER TABLE mine_projects ADD COLUMN priority_updated_at TEXT'); } catch(e) {}
+
+  // 项目参与人表（工作组成员参与具体项目的角色记录）
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS project_participants (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id   INTEGER NOT NULL REFERENCES mine_projects(id),
+      user_id      INTEGER NOT NULL REFERENCES users(id),
+      role         TEXT    NOT NULL DEFAULT 'member',
+      -- role: owner(项目负责人) / analyst(分析师) / bd(资源对接) / finance(资金方对接) / member(参与人)
+      is_decision_contact INTEGER DEFAULT 0,  -- 是否为决策人对接联系人
+      funding_confidence  INTEGER DEFAULT 0,  -- 资金方参与信心度 0-100
+      notes        TEXT,
+      joined_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(project_id, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_proj_participants ON project_participants(project_id);
+  `);
+
   console.log('✓ 矿业平台数据库 schema 初始化完成');
 }

@@ -24,6 +24,7 @@ import liveRoutes from './server/routes/live.js';
 import adminRoutes from './server/routes/admin.js';
 import workgroupRoutes from './server/routes/workgroups.js';
 import projectTaskRoutes from './server/routes/project-tasks.js';
+import projectPriorityRoutes from './server/routes/project-priority.js';
 
 import { setupLiveWebSocket } from './server/websocket/live-signal.js';
 
@@ -97,8 +98,9 @@ app.use('/api/mine-partners',  minePartnersRoutes);
 app.use('/api/mine-inquiries', mineInquiryRoutes);
 app.use('/api/live',           liveRoutes);
 app.use('/api/admin',          adminRoutes);
-app.use('/api/workgroups',     workgroupRoutes);
-app.use('/api/project-tasks',  projectTaskRoutes);
+app.use('/api/workgroups',        workgroupRoutes);
+app.use('/api/project-tasks',     projectTaskRoutes);
+app.use('/api/project-priority',  projectPriorityRoutes);
 
 // 所有其他 GET 请求回退到 index.html
 app.get('*', (req, res, next) => {
