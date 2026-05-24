@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>项目管理工作台 — 矿资资本 MineCapital</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>项目管理工作台 — 矿资资本</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -25,246 +25,337 @@
     }
   </script>
   <style>
+    * { -webkit-tap-highlight-color: transparent; }
     body { font-family:'Noto Sans SC',sans-serif; background:#0a0a0f; color:#e2e8f0; }
     .gold-gradient { background:linear-gradient(135deg,#c9a96e,#e0c88a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .nav-blur { backdrop-filter:blur(20px); background:rgba(10,10,15,0.9); }
-    ::-webkit-scrollbar { width:5px; height:5px; }
-    ::-webkit-scrollbar-track { background:#0a0a0f; }
-    ::-webkit-scrollbar-thumb { background:#2a2a3a; border-radius:3px; }
+    .nav-blur { backdrop-filter:blur(20px); background:rgba(10,10,15,0.92); }
+    ::-webkit-scrollbar { width:4px; height:4px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#2a2a3a; border-radius:2px; }
+
+    /* 侧边栏（桌面） */
     .sidebar-item { transition:all 0.2s; }
     .sidebar-item:hover { background:rgba(201,169,110,0.08); color:#c9a96e; }
     .sidebar-item.active { background:rgba(201,169,110,0.12); color:#c9a96e; border-right:2px solid #c9a96e; }
-    .phase-card { transition:all 0.2s; }
-    .phase-card:hover { border-color:rgba(201,169,110,0.4); }
-    .task-item { transition:all 0.15s; }
-    .task-item:hover { background:rgba(201,169,110,0.05); }
+
+    /* 底部 Tab（手机） */
+    .bottom-tab { transition:all 0.2s; }
+    .bottom-tab.active .tab-icon { color:#c9a96e; }
+    .bottom-tab.active .tab-label { color:#c9a96e; }
+    .bottom-tab .tab-icon { color:#64748b; transition:color 0.2s; }
+    .bottom-tab .tab-label { color:#64748b; transition:color 0.2s; font-size:10px; }
+
+    /* 工作组抽屉（手机） */
+    .drawer-overlay { background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); transition:opacity 0.25s; }
+    .drawer-panel { transition:transform 0.3s cubic-bezier(.4,0,.2,1); }
+
     .modal-overlay { background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); }
     .progress-bar { transition:width 0.4s ease; }
-    .tab-active { border-bottom:2px solid #c9a96e; color:#c9a96e; }
     .status-pending { background:rgba(100,116,139,0.2); color:#94a3b8; }
     .status-in_progress { background:rgba(59,130,246,0.15); color:#60a5fa; }
     .status-done { background:rgba(34,197,94,0.15); color:#4ade80; }
     .status-blocked { background:rgba(239,68,68,0.15); color:#f87171; }
+    .phase-card { transition:border-color 0.2s; }
+    .phase-card:hover { border-color:rgba(201,169,110,0.4); }
+
+    /* 手机端安全区 */
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+    .mb-bottom-nav { margin-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen">
 
-<!-- 顶部导航 -->
-<nav class="fixed top-0 left-0 right-0 z-50 nav-blur border-b border-mine-border h-14">
+<!-- ══ 顶部导航 ══ -->
+<nav class="fixed top-0 left-0 right-0 z-40 nav-blur border-b border-mine-border h-14">
   <div class="flex items-center justify-between h-full px-4">
-    <div class="flex items-center gap-4">
-      <a href="/" class="flex items-center gap-2">
-        <span class="text-base font-bold gold-gradient">矿资资本</span>
-      </a>
-      <span class="text-mine-border">|</span>
-      <span class="text-sm font-medium text-mine-text2">项目管理工作台</span>
-    </div>
     <div class="flex items-center gap-3">
-      <span id="nav-user" class="text-sm text-mine-text3"></span>
-      <a href="/dashboard.html" class="text-xs text-mine-text3 hover:text-mine-gold transition-colors">会员中心</a>
-      <a href="/" class="text-xs text-mine-text3 hover:text-mine-gold transition-colors">首页</a>
+      <!-- 手机端：工作组切换按钮 -->
+      <button id="drawer-open-btn" class="md:hidden w-9 h-9 flex items-center justify-center rounded-lg bg-mine-surface2 border border-mine-border text-mine-text2" onclick="openDrawer()">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="/" class="flex items-center gap-2">
+        <span class="font-bold gold-gradient text-base">矿资资本</span>
+      </a>
+      <span class="hidden md:inline text-mine-border text-sm">|</span>
+      <span class="hidden md:inline text-sm text-mine-text2">项目管理工作台</span>
+      <!-- 手机端：当前工作组名称 -->
+      <button class="md:hidden flex items-center gap-1 text-sm text-mine-text2" onclick="openDrawer()">
+        <span id="mobile-wg-name" class="max-w-[120px] truncate">选择工作组</span>
+        <svg class="w-3 h-3 text-mine-text3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="nav-user" class="hidden md:inline text-xs text-mine-text3"></span>
+      <a href="/dashboard.html" class="hidden md:inline text-xs text-mine-text3 hover:text-mine-gold">会员中心</a>
+      <a href="/" class="hidden md:inline text-xs text-mine-text3 hover:text-mine-gold">首页</a>
+      <!-- 手机端用户头像 -->
+      <div id="mobile-user-avatar" class="md:hidden w-8 h-8 rounded-full bg-mine-gold/20 flex items-center justify-center text-xs font-bold text-mine-gold border border-mine-gold/30"></div>
     </div>
   </div>
 </nav>
 
-<!-- 主体布局 -->
-<div class="flex h-screen pt-14">
+<!-- ══ 主体：桌面版侧边栏 + 内容 ══ -->
+<div class="flex md:h-screen pt-14">
 
-  <!-- 左侧边栏 -->
-  <aside id="sidebar" class="w-56 flex-shrink-0 border-r border-mine-border bg-mine-surface flex flex-col overflow-y-auto">
-    <!-- 工作组切换 -->
+  <!-- 桌面侧边栏 -->
+  <aside id="sidebar" class="hidden md:flex w-56 flex-shrink-0 border-r border-mine-border bg-mine-surface flex-col overflow-y-auto">
     <div class="p-3 border-b border-mine-border">
       <div class="flex items-center justify-between mb-2">
         <span class="text-xs text-mine-text3 uppercase tracking-wide">工作组</span>
-        <button onclick="openCreateWorkgroupModal()" class="text-mine-gold hover:text-mine-goldLight text-base leading-none" title="新建工作组">+</button>
+        <button onclick="openCreateWorkgroupModal()" class="w-6 h-6 flex items-center justify-center rounded text-mine-gold hover:bg-mine-gold/10 text-lg leading-none">+</button>
       </div>
       <div id="workgroup-list" class="space-y-1">
         <div class="text-xs text-mine-text3 px-2 py-1">加载中...</div>
       </div>
     </div>
-
-    <!-- 当前工作组信息 -->
     <div id="wg-info-box" class="hidden p-3 border-b border-mine-border">
       <div class="text-xs text-mine-text3 mb-1">当前工作组</div>
-      <div id="wg-info-name" class="text-sm font-medium text-mine-text mb-1"></div>
-      <div id="wg-info-members" class="text-xs text-mine-text3"></div>
-      <div class="flex gap-2 mt-2">
-        <button onclick="openMemberModal()" class="text-xs px-2 py-1 rounded bg-mine-gold/10 text-mine-gold border border-mine-gold/20 hover:bg-mine-gold/20">管理成员</button>
-        <button onclick="openAssignProjectModal()" class="text-xs px-2 py-1 rounded bg-mine-surface3 text-mine-text2 border border-mine-border hover:border-mine-gold/30">加入项目</button>
+      <div id="wg-info-name" class="text-sm font-medium mb-1"></div>
+      <div id="wg-info-members" class="text-xs text-mine-text3 mb-2"></div>
+      <div class="flex gap-2">
+        <button onclick="openMemberModal()" class="text-xs px-2 py-1 rounded bg-mine-gold/10 text-mine-gold border border-mine-gold/20 hover:bg-mine-gold/20">成员</button>
+        <button onclick="openAssignProjectModal()" class="text-xs px-2 py-1 rounded bg-mine-surface3 text-mine-text2 border border-mine-border hover:border-mine-gold/30">加项目</button>
       </div>
     </div>
-
-    <!-- 导航菜单 -->
     <nav class="flex-1 p-2 space-y-0.5">
-      <button class="sidebar-item active w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2" onclick="showView('projects')" data-view="projects">
-        <span>📂</span> 项目看板
-      </button>
-      <button class="sidebar-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 text-mine-text2" onclick="showView('tasks')" data-view="tasks">
-        <span>✅</span> 任务中心
-      </button>
-      <button class="sidebar-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 text-mine-text2" onclick="showView('activities')" data-view="activities">
-        <span>💬</span> 动态记录
-      </button>
-      <button id="admin-nav-btn" class="hidden sidebar-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 text-mine-text2" onclick="showView('admin')">
-        <span>⚙️</span> 全局管理
-      </button>
+      <button class="sidebar-item active w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2" onclick="showView('projects')" data-view="projects"><span>📂</span>项目看板</button>
+      <button class="sidebar-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 text-mine-text2" onclick="showView('tasks')" data-view="tasks"><span>✅</span>任务中心</button>
+      <button class="sidebar-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 text-mine-text2" onclick="showView('activities')" data-view="activities"><span>💬</span>动态记录</button>
+      <button id="admin-nav-btn" class="hidden sidebar-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 text-mine-text2" onclick="showView('admin')"><span>⚙️</span>全局管理</button>
     </nav>
   </aside>
 
   <!-- 主内容区 -->
-  <main class="flex-1 overflow-y-auto">
+  <main class="flex-1 overflow-y-auto mb-bottom-nav md:mb-0">
 
-    <!-- ══ 视图：项目看板 ══ -->
-    <div id="view-projects" class="p-6">
-      <div class="flex items-center justify-between mb-6">
+    <!-- ── 视图：项目看板 ── -->
+    <div id="view-projects" class="p-4 md:p-6">
+      <div class="flex items-center justify-between mb-4">
         <div>
-          <h1 class="text-xl font-bold">项目看板</h1>
-          <p id="view-projects-desc" class="text-sm text-mine-text3 mt-0.5">选择工作组查看项目</p>
+          <h1 class="text-lg md:text-xl font-bold">项目看板</h1>
+          <p id="view-projects-desc" class="text-xs md:text-sm text-mine-text3 mt-0.5">选择工作组查看项目</p>
         </div>
-        <button onclick="openNewProjectModal()" class="px-4 py-2 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium hover:bg-mine-goldLight transition-colors">+ 新建项目</button>
+        <button onclick="openNewProjectModal()" class="flex items-center gap-1 px-3 py-2 md:px-4 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium active:bg-mine-goldLight">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span class="hidden sm:inline">新建项目</span>
+          <span class="sm:hidden">上传</span>
+        </button>
       </div>
-
-      <!-- 流程阶段快速筛选 -->
-      <div id="phase-filter-bar" class="flex gap-2 mb-6 overflow-x-auto pb-1 hidden">
-        <button class="phase-filter-btn text-xs px-3 py-1.5 rounded-full border border-mine-gold/40 bg-mine-gold/10 text-mine-gold whitespace-nowrap" data-phase="all">全部阶段</button>
+      <div id="phase-filter-bar" class="flex gap-2 mb-4 overflow-x-auto pb-1 hidden scrollbar-none">
+        <button class="phase-filter-btn text-xs px-3 py-1.5 rounded-full border border-mine-gold/40 bg-mine-gold/10 text-mine-gold whitespace-nowrap" data-phase="all">全部</button>
       </div>
-
-      <div id="projects-board" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-        <div class="col-span-3 text-center py-20 text-mine-text3 text-sm">请先选择左侧工作组，或创建新工作组</div>
+      <div id="projects-board" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div class="col-span-3 text-center py-16 text-mine-text3 text-sm">
+          <div class="text-4xl mb-3">📂</div>
+          <p>点击顶部菜单选择工作组</p>
+          <button onclick="openDrawer()" class="mt-3 md:hidden px-4 py-2 rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/20 text-sm">选择工作组</button>
+        </div>
       </div>
     </div>
 
-    <!-- ══ 视图：任务中心（项目工作台）══ -->
-    <div id="view-tasks" class="hidden p-6">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h1 class="text-xl font-bold" id="task-view-title">任务中心</h1>
-          <p class="text-sm text-mine-text3 mt-0.5" id="task-view-desc">点击项目看板中的项目进入工作台</p>
+    <!-- ── 视图：任务工作台 ── -->
+    <div id="view-tasks" class="hidden">
+      <!-- 顶部项目标题栏 -->
+      <div class="sticky top-14 z-20 bg-mine-bg border-b border-mine-border px-4 py-3 flex items-center gap-3">
+        <button onclick="showView('projects')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-mine-surface2 text-mine-text2 active:bg-mine-surface3">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-sm truncate" id="task-view-title">任务中心</div>
+          <div class="text-xs text-mine-text3" id="task-view-desc">选择项目</div>
         </div>
-        <div class="flex gap-2">
-          <button id="add-task-btn" class="hidden px-4 py-2 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium hover:bg-mine-goldLight" onclick="openAddTaskModal()">+ 添加任务</button>
-          <button id="back-to-projects-btn" class="hidden px-3 py-2 rounded-lg border border-mine-border text-mine-text2 text-sm hover:border-mine-gold/40" onclick="showView('projects')">← 返回看板</button>
-        </div>
+        <button id="add-task-btn" class="hidden flex items-center gap-1 px-3 py-1.5 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium active:bg-mine-goldLight" onclick="openAddTaskModal()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span>任务</span>
+        </button>
       </div>
 
-      <!-- 工作流阶段进度条 -->
-      <div id="workflow-progress" class="hidden mb-6 p-4 rounded-2xl bg-mine-surface border border-mine-border overflow-x-auto">
-        <div id="phase-steps" class="flex gap-0 min-w-max"></div>
+      <!-- 工作流进度（横向滚动，手机友好）-->
+      <div id="workflow-progress" class="hidden bg-mine-surface border-b border-mine-border overflow-x-auto">
+        <div id="phase-steps" class="flex gap-0 px-4 py-3 min-w-max"></div>
       </div>
 
-      <!-- 阶段任务列表 -->
-      <div id="task-phases-container" class="space-y-4"></div>
+      <!-- 任务列表 -->
+      <div id="task-phases-container" class="p-4 space-y-3"></div>
     </div>
 
-    <!-- ══ 视图：动态记录 ══ -->
-    <div id="view-activities" class="hidden p-6">
+    <!-- ── 视图：动态记录 ── -->
+    <div id="view-activities" class="hidden p-4 md:p-6">
       <div class="flex items-center justify-between mb-4">
-        <h1 class="text-xl font-bold">动态记录</h1>
-        <select id="activity-project-select" class="px-3 py-1.5 rounded-lg bg-mine-surface2 border border-mine-border text-sm text-mine-text focus:outline-none focus:border-mine-gold/50" onchange="loadActivities()">
+        <h1 class="text-lg font-bold">动态记录</h1>
+        <select id="activity-project-select" class="px-2 py-1.5 rounded-lg bg-mine-surface2 border border-mine-border text-sm text-mine-text focus:outline-none focus:border-mine-gold/50 max-w-[160px]" onchange="loadActivities()">
           <option value="">选择项目</option>
         </select>
       </div>
-      <div id="activity-feed" class="max-w-2xl space-y-3"></div>
-      <div id="activity-comment-box" class="hidden max-w-2xl mt-4">
-        <div class="flex gap-3">
-          <textarea id="activity-comment-input" rows="2" class="flex-1 px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm text-mine-text focus:outline-none focus:border-mine-gold/50" placeholder="发布工作记录或备注..."></textarea>
-          <button onclick="postActivity()" class="px-4 py-2 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium hover:bg-mine-goldLight self-end">发布</button>
+      <div id="activity-feed" class="space-y-3 mb-4"></div>
+      <div id="activity-comment-box" class="hidden">
+        <div class="flex gap-2">
+          <textarea id="activity-comment-input" rows="2" class="flex-1 px-3 py-2 rounded-xl bg-mine-surface2 border border-mine-border text-sm text-mine-text focus:outline-none focus:border-mine-gold/50 resize-none" placeholder="发布工作记录..."></textarea>
+          <button onclick="postActivity()" class="px-4 py-2 rounded-xl bg-mine-gold text-mine-bg text-sm font-medium active:bg-mine-goldLight self-end">发布</button>
         </div>
       </div>
     </div>
 
-    <!-- ══ 视图：全局管理（仅管理员）══ -->
-    <div id="view-admin" class="hidden p-6">
-      <h1 class="text-xl font-bold mb-6">全局工作组管理</h1>
-      <div id="admin-wg-table" class="rounded-2xl bg-mine-surface border border-mine-border overflow-hidden">
-        <table class="w-full text-sm">
-          <thead class="bg-mine-surface2 border-b border-mine-border">
-            <tr>
-              <th class="text-left px-4 py-3 text-mine-text2 font-medium">工作组</th>
-              <th class="text-left px-4 py-3 text-mine-text2 font-medium">创建人</th>
-              <th class="text-center px-4 py-3 text-mine-text2 font-medium">成员</th>
-              <th class="text-center px-4 py-3 text-mine-text2 font-medium">项目</th>
-              <th class="text-left px-4 py-3 text-mine-text2 font-medium">创建时间</th>
-            </tr>
-          </thead>
-          <tbody id="admin-wg-tbody"></tbody>
-        </table>
+    <!-- ── 视图：上传（手机端专属快捷入口）── -->
+    <div id="view-upload" class="hidden p-4">
+      <h1 class="text-lg font-bold mb-4">上传项目资料</h1>
+      <!-- 快捷上传卡片 -->
+      <div class="space-y-3 mb-6">
+        <a href="/upload.html" class="flex items-center gap-4 p-4 rounded-2xl bg-mine-surface border border-mine-border active:bg-mine-surface2">
+          <div class="w-12 h-12 rounded-xl bg-mine-gold/15 flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6 text-mine-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          </div>
+          <div>
+            <div class="font-semibold mb-0.5">矿权资料上传</div>
+            <div class="text-xs text-mine-text3">勘查报告、证照、可研报告等</div>
+          </div>
+          <svg class="w-4 h-4 text-mine-text3 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+        <a href="/ai-analysis.html" class="flex items-center gap-4 p-4 rounded-2xl bg-mine-surface border border-mine-border active:bg-mine-surface2">
+          <div class="w-12 h-12 rounded-xl bg-mine-gold/15 flex items-center justify-center flex-shrink-0">
+            <span class="text-2xl">🤖</span>
+          </div>
+          <div>
+            <div class="font-semibold mb-0.5">AI 矿产分析</div>
+            <div class="text-xs text-mine-text3">基于紫金矿业标准智能评估</div>
+          </div>
+          <svg class="w-4 h-4 text-mine-text3 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
       </div>
+
+      <!-- 上传进度概览（最近上传） -->
+      <div class="rounded-2xl bg-mine-surface border border-mine-border p-4">
+        <div class="text-sm font-medium mb-3">最近上传记录</div>
+        <div id="recent-uploads" class="space-y-2">
+          <p class="text-xs text-mine-text3">加载中...</p>
+        </div>
+        <a href="/upload.html" class="block mt-3 text-center text-xs text-mine-gold">查看全部 →</a>
+      </div>
+    </div>
+
+    <!-- ── 视图：全局管理（管理员）── -->
+    <div id="view-admin" class="hidden p-4 md:p-6">
+      <h1 class="text-lg md:text-xl font-bold mb-4">全局工作组管理</h1>
+      <div id="admin-wg-list" class="space-y-3"></div>
     </div>
 
   </main>
 </div>
 
-<!-- ══ 模态框区域 ══ -->
+<!-- ══ 手机端底部 Tab 导航 ══ -->
+<div class="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-mine-surface border-t border-mine-border pb-safe">
+  <div class="flex">
+    <button class="bottom-tab active flex-1 flex flex-col items-center py-2.5 gap-0.5" onclick="showView('projects')" data-view="projects">
+      <span class="tab-icon text-xl">📂</span>
+      <span class="tab-label">看板</span>
+    </button>
+    <button class="bottom-tab flex-1 flex flex-col items-center py-2.5 gap-0.5" onclick="showView('tasks')" data-view="tasks">
+      <span class="tab-icon text-xl">✅</span>
+      <span class="tab-label">任务</span>
+    </button>
+    <button class="bottom-tab flex-1 flex flex-col items-center py-2.5 gap-0.5" onclick="showView('upload')" data-view="upload">
+      <span class="tab-icon text-xl">📤</span>
+      <span class="tab-label">上传</span>
+    </button>
+    <button class="bottom-tab flex-1 flex flex-col items-center py-2.5 gap-0.5" onclick="showView('activities')" data-view="activities">
+      <span class="tab-icon text-xl">💬</span>
+      <span class="tab-label">动态</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ 手机端工作组抽屉 ══ -->
+<div id="drawer-overlay" class="hidden fixed inset-0 z-50 drawer-overlay md:hidden" onclick="closeDrawer()">
+  <div id="drawer-panel" class="drawer-panel absolute left-0 top-0 bottom-0 w-72 bg-mine-surface border-r border-mine-border flex flex-col overflow-hidden transform -translate-x-full" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between p-4 border-b border-mine-border">
+      <span class="font-semibold">工作组</span>
+      <div class="flex items-center gap-2">
+        <button onclick="openCreateWorkgroupModal()" class="px-3 py-1.5 rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/20 text-sm active:bg-mine-gold/20">+ 新建</button>
+        <button onclick="closeDrawer()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-mine-surface2 text-mine-text3">✕</button>
+      </div>
+    </div>
+    <!-- 工作组列表 -->
+    <div id="drawer-wg-list" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+    <!-- 当前工作组操作 -->
+    <div id="drawer-wg-actions" class="hidden p-3 border-t border-mine-border bg-mine-surface2">
+      <div class="text-xs text-mine-text3 mb-1">当前：<span id="drawer-wg-name" class="text-mine-text"></span></div>
+      <div class="flex gap-2">
+        <button onclick="openMemberModal(); closeDrawer()" class="flex-1 py-2 rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/20 text-xs active:bg-mine-gold/20">管理成员</button>
+        <button onclick="openAssignProjectModal(); closeDrawer()" class="flex-1 py-2 rounded-lg bg-mine-surface3 text-mine-text2 border border-mine-border text-xs active:bg-mine-surface2">加入项目</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 模态框 ══ -->
 
 <!-- 创建工作组 -->
-<div id="modal-create-wg" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay" onclick="closeModal('modal-create-wg')">
-  <div class="bg-mine-surface border border-mine-border rounded-2xl p-6 w-full max-w-md mx-4" onclick="event.stopPropagation()">
-    <h2 class="text-lg font-semibold mb-4">创建工作组</h2>
+<div id="modal-create-wg" class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center modal-overlay" onclick="closeModal('modal-create-wg')">
+  <div class="bg-mine-surface border border-mine-border rounded-t-2xl sm:rounded-2xl p-5 w-full sm:max-w-md" onclick="event.stopPropagation()">
+    <div class="w-10 h-1 bg-mine-border rounded-full mx-auto mb-4 sm:hidden"></div>
+    <h2 class="text-base font-semibold mb-4">创建工作组</h2>
     <div class="space-y-3">
       <div>
         <label class="text-xs text-mine-text2 mb-1 block">工作组名称 *</label>
-        <input id="wg-name" type="text" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：紫金矿业项目组" />
+        <input id="wg-name" type="text" class="w-full px-3 py-3 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：西藏金矿项目组" />
       </div>
       <div>
         <label class="text-xs text-mine-text2 mb-1 block">描述（可选）</label>
-        <textarea id="wg-desc" rows="2" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="工作组职责说明..."></textarea>
+        <textarea id="wg-desc" rows="2" class="w-full px-3 py-2 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50 resize-none" placeholder="工作组职责..."></textarea>
       </div>
     </div>
-    <div class="flex gap-3 mt-5">
-      <button onclick="createWorkgroup()" class="flex-1 py-2 rounded-lg bg-mine-gold text-mine-bg font-medium text-sm hover:bg-mine-goldLight">创建</button>
-      <button onclick="closeModal('modal-create-wg')" class="px-4 py-2 rounded-lg border border-mine-border text-mine-text2 text-sm hover:border-mine-gold/30">取消</button>
+    <div class="flex gap-3 mt-4">
+      <button onclick="createWorkgroup()" class="flex-1 py-3 rounded-xl bg-mine-gold text-mine-bg font-semibold text-sm active:bg-mine-goldLight">创建</button>
+      <button onclick="closeModal('modal-create-wg')" class="px-4 py-3 rounded-xl border border-mine-border text-mine-text2 text-sm">取消</button>
     </div>
   </div>
 </div>
 
 <!-- 管理成员 -->
-<div id="modal-members" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay" onclick="closeModal('modal-members')">
-  <div class="bg-mine-surface border border-mine-border rounded-2xl p-6 w-full max-w-lg mx-4" onclick="event.stopPropagation()">
-    <h2 class="text-lg font-semibold mb-4">成员管理</h2>
-    <div class="mb-4">
-      <div class="flex gap-2">
-        <input id="invite-email" type="email" class="flex-1 px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="输入用户邮箱邀请加入" />
-        <button onclick="inviteMember()" class="px-4 py-2 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium hover:bg-mine-goldLight">邀请</button>
-      </div>
+<div id="modal-members" class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center modal-overlay" onclick="closeModal('modal-members')">
+  <div class="bg-mine-surface border border-mine-border rounded-t-2xl sm:rounded-2xl p-5 w-full sm:max-w-lg max-h-[80vh] flex flex-col" onclick="event.stopPropagation()">
+    <div class="w-10 h-1 bg-mine-border rounded-full mx-auto mb-4 sm:hidden"></div>
+    <h2 class="text-base font-semibold mb-3">成员管理</h2>
+    <div class="flex gap-2 mb-3">
+      <input id="invite-email" type="email" inputmode="email" class="flex-1 px-3 py-3 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="输入邮箱邀请成员" />
+      <button onclick="inviteMember()" class="px-4 py-3 rounded-xl bg-mine-gold text-mine-bg text-sm font-semibold active:bg-mine-goldLight">邀请</button>
     </div>
-    <div id="members-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
-    <button onclick="closeModal('modal-members')" class="mt-4 w-full py-2 rounded-lg border border-mine-border text-mine-text2 text-sm">关闭</button>
+    <div id="members-list" class="space-y-2 overflow-y-auto flex-1"></div>
+    <button onclick="closeModal('modal-members')" class="mt-4 w-full py-3 rounded-xl border border-mine-border text-mine-text2 text-sm">关闭</button>
   </div>
 </div>
 
 <!-- 加入项目 -->
-<div id="modal-assign-project" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay" onclick="closeModal('modal-assign-project')">
-  <div class="bg-mine-surface border border-mine-border rounded-2xl p-6 w-full max-w-md mx-4" onclick="event.stopPropagation()">
-    <h2 class="text-lg font-semibold mb-4">将项目加入工作组</h2>
-    <div>
-      <label class="text-xs text-mine-text2 mb-1 block">选择项目</label>
-      <select id="assign-project-select" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50"></select>
-    </div>
-    <div class="flex gap-3 mt-5">
-      <button onclick="assignProject()" class="flex-1 py-2 rounded-lg bg-mine-gold text-mine-bg font-medium text-sm hover:bg-mine-goldLight">加入</button>
-      <button onclick="closeModal('modal-assign-project')" class="px-4 py-2 rounded-lg border border-mine-border text-mine-text2 text-sm">取消</button>
+<div id="modal-assign-project" class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center modal-overlay" onclick="closeModal('modal-assign-project')">
+  <div class="bg-mine-surface border border-mine-border rounded-t-2xl sm:rounded-2xl p-5 w-full sm:max-w-md" onclick="event.stopPropagation()">
+    <div class="w-10 h-1 bg-mine-border rounded-full mx-auto mb-4 sm:hidden"></div>
+    <h2 class="text-base font-semibold mb-3">将项目加入工作组</h2>
+    <select id="assign-project-select" class="w-full px-3 py-3 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50 mb-4"></select>
+    <div class="flex gap-3">
+      <button onclick="assignProject()" class="flex-1 py-3 rounded-xl bg-mine-gold text-mine-bg font-semibold text-sm">加入</button>
+      <button onclick="closeModal('modal-assign-project')" class="px-4 py-3 rounded-xl border border-mine-border text-mine-text2 text-sm">取消</button>
     </div>
   </div>
 </div>
 
-<!-- 添加任务 -->
-<div id="modal-add-task" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay" onclick="closeModal('modal-add-task')">
-  <div class="bg-mine-surface border border-mine-border rounded-2xl p-6 w-full max-w-lg mx-4" onclick="event.stopPropagation()">
-    <h2 class="text-lg font-semibold mb-4">添加任务</h2>
+<!-- 添加任务（底部弹出式，手机友好）-->
+<div id="modal-add-task" class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center modal-overlay" onclick="closeModal('modal-add-task')">
+  <div class="bg-mine-surface border border-mine-border rounded-t-2xl sm:rounded-2xl p-5 w-full sm:max-w-lg max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="w-10 h-1 bg-mine-border rounded-full mx-auto mb-4 sm:hidden"></div>
+    <h2 class="text-base font-semibold mb-4">添加任务</h2>
     <div class="space-y-3">
       <div>
         <label class="text-xs text-mine-text2 mb-1 block">阶段 *</label>
-        <select id="task-phase" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50"></select>
+        <select id="task-phase" class="w-full px-3 py-3 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50"></select>
       </div>
       <div>
         <label class="text-xs text-mine-text2 mb-1 block">任务标题 *</label>
-        <input id="task-title" type="text" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：完成地质储量核实报告审查" />
+        <input id="task-title" type="text" class="w-full px-3 py-3 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：审查地质储量核实报告" />
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-xs text-mine-text2 mb-1 block">优先级</label>
-          <select id="task-priority" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50">
+          <select id="task-priority" class="w-full px-3 py-3 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50">
             <option value="low">低</option>
             <option value="normal" selected>普通</option>
             <option value="high">高</option>
@@ -273,37 +364,36 @@
         </div>
         <div>
           <label class="text-xs text-mine-text2 mb-1 block">截止日期</label>
-          <input id="task-due" type="date" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" />
+          <input id="task-due" type="date" class="w-full px-3 py-3 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" />
         </div>
       </div>
       <div>
-        <label class="text-xs text-mine-text2 mb-1 block">负责人（邮箱）</label>
-        <select id="task-assignee" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50">
+        <label class="text-xs text-mine-text2 mb-1 block">负责人</label>
+        <select id="task-assignee" class="w-full px-3 py-3 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50">
           <option value="">不指定</option>
         </select>
       </div>
       <div>
-        <label class="text-xs text-mine-text2 mb-1 block">描述</label>
-        <textarea id="task-desc" rows="2" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="任务具体说明..."></textarea>
+        <label class="text-xs text-mine-text2 mb-1 block">备注</label>
+        <textarea id="task-desc" rows="2" class="w-full px-3 py-2 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50 resize-none" placeholder="任务说明..."></textarea>
       </div>
     </div>
-    <div class="flex gap-3 mt-5">
-      <button onclick="addTask()" class="flex-1 py-2 rounded-lg bg-mine-gold text-mine-bg font-medium text-sm hover:bg-mine-goldLight">添加任务</button>
-      <button onclick="closeModal('modal-add-task')" class="px-4 py-2 rounded-lg border border-mine-border text-mine-text2 text-sm">取消</button>
+    <div class="flex gap-3 mt-4">
+      <button onclick="addTask()" class="flex-1 py-3 rounded-xl bg-mine-gold text-mine-bg font-semibold text-sm active:bg-mine-goldLight">添加任务</button>
+      <button onclick="closeModal('modal-add-task')" class="px-4 py-3 rounded-xl border border-mine-border text-mine-text2 text-sm">取消</button>
     </div>
   </div>
 </div>
 
 <script>
-// ── 全局状态 ──────────────────────────────────────────
 const token = localStorage.getItem('mine_token');
 if (!token) location.href = '/auth.html';
 
 let currentUser = null;
-let currentWg = null;       // 当前选中工作组
-let currentProject = null;  // 当前查看的项目
-let wgMembers = [];         // 当前工作组成员
-let allPhases = [];         // 工作流阶段定义
+let currentWg = null;
+let currentProject = null;
+let wgMembers = [];
+let allPhases = [];
 
 const authH = () => ({ 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' });
 
@@ -314,22 +404,29 @@ async function init() {
     if (!me.user) { location.href = '/auth.html'; return; }
     currentUser = me.user;
     document.getElementById('nav-user').textContent = me.user.name;
+    document.getElementById('mobile-user-avatar').textContent = me.user.avatar_letter || me.user.name.charAt(0);
     if (me.user.role === 'admin') {
-      document.getElementById('admin-nav-btn').classList.remove('hidden');
+      document.getElementById('admin-nav-btn')?.classList.remove('hidden');
+      // 手机端底部 Tab 加管理入口
+      const tabBar = document.querySelector('.fixed.bottom-0 .flex');
+      const adminTab = document.createElement('button');
+      adminTab.className = 'bottom-tab flex-1 flex flex-col items-center py-2.5 gap-0.5';
+      adminTab.setAttribute('data-view', 'admin');
+      adminTab.onclick = () => showView('admin');
+      adminTab.innerHTML = '<span class="tab-icon text-xl">⚙️</span><span class="tab-label">管理</span>';
+      tabBar.appendChild(adminTab);
     }
     const phases = await fetch('/api/project-tasks/phases').then(r => r.json());
     allPhases = phases.phases || [];
-    // 填充阶段筛选栏
     const bar = document.getElementById('phase-filter-bar');
     allPhases.forEach(p => {
       const btn = document.createElement('button');
-      btn.className = 'phase-filter-btn text-xs px-3 py-1.5 rounded-full border border-mine-border text-mine-text2 whitespace-nowrap hover:border-mine-gold/40 hover:text-mine-gold';
+      btn.className = 'phase-filter-btn text-xs px-3 py-1.5 rounded-full border border-mine-border text-mine-text2 whitespace-nowrap';
       btn.dataset.phase = p.phase;
       btn.textContent = p.icon + ' ' + p.label;
       btn.onclick = () => filterByPhase(p.phase);
       bar.appendChild(btn);
     });
-    // 填充 task-phase select
     const sel = document.getElementById('task-phase');
     allPhases.forEach(p => {
       const opt = document.createElement('option');
@@ -337,25 +434,64 @@ async function init() {
       sel.appendChild(opt);
     });
     await loadWorkgroups();
+    loadRecentUploads();
   } catch (e) { console.error(e); }
 }
 
 // ── 视图切换 ──────────────────────────────────────────
 function showView(name) {
-  ['projects','tasks','activities','admin'].forEach(v => {
-    document.getElementById('view-' + v).classList.add('hidden');
+  ['projects','tasks','activities','upload','admin'].forEach(v => {
+    document.getElementById('view-' + v)?.classList.add('hidden');
   });
-  document.getElementById('view-' + name).classList.remove('hidden');
+  document.getElementById('view-' + name)?.classList.remove('hidden');
+  // 桌面侧边栏激活
   document.querySelectorAll('[data-view]').forEach(el => el.classList.remove('active'));
-  const btn = document.querySelector(`[data-view="${name}"]`);
-  if (btn) btn.classList.add('active');
+  document.querySelectorAll(`[data-view="${name}"]`).forEach(el => el.classList.add('active'));
 
   if (name === 'activities') loadActivityProjectSelect();
   if (name === 'admin' && currentUser?.role === 'admin') loadAdminView();
+  if (name === 'upload') loadRecentUploads();
 }
 
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+
+// ── 抽屉（手机端工作组选择）─────────────────────────
+function openDrawer() {
+  const overlay = document.getElementById('drawer-overlay');
+  const panel = document.getElementById('drawer-panel');
+  overlay.classList.remove('hidden');
+  requestAnimationFrame(() => { panel.classList.remove('-translate-x-full'); });
+  loadDrawerWorkgroups();
+}
+function closeDrawer() {
+  const overlay = document.getElementById('drawer-overlay');
+  const panel = document.getElementById('drawer-panel');
+  panel.classList.add('-translate-x-full');
+  setTimeout(() => overlay.classList.add('hidden'), 300);
+}
+async function loadDrawerWorkgroups() {
+  const data = await fetch('/api/workgroups', { headers: authH() }).then(r => r.json());
+  const list = document.getElementById('drawer-wg-list');
+  const wgs = data.workgroups || [];
+  if (wgs.length === 0) {
+    list.innerHTML = '<div class="text-sm text-mine-text3 p-2">暂无工作组</div>'; return;
+  }
+  list.innerHTML = wgs.map(wg => `
+    <button class="w-full text-left p-3 rounded-xl border ${currentWg?.id===wg.id?'border-mine-gold/40 bg-mine-gold/08':'border-mine-border bg-mine-surface2'} active:bg-mine-surface3"
+      onclick="selectWorkgroupAndClose(${wg.id})">
+      <div class="flex items-center justify-between">
+        <div class="font-medium text-sm truncate">📁 ${wg.name}</div>
+        <div class="text-xs text-mine-text3 ml-2 flex-shrink-0">${wg.project_count||0} 项目</div>
+      </div>
+      <div class="text-xs text-mine-text3 mt-0.5">${wg.member_count||0} 名成员</div>
+    </button>
+  `).join('');
+}
+async function selectWorkgroupAndClose(id) {
+  await selectWorkgroup(id);
+  closeDrawer();
+}
 
 // ── 工作组 ────────────────────────────────────────────
 async function loadWorkgroups() {
@@ -363,34 +499,33 @@ async function loadWorkgroups() {
   const list = document.getElementById('workgroup-list');
   const wgs = data.workgroups || [];
   if (wgs.length === 0) {
-    list.innerHTML = '<div class="text-xs text-mine-text3 px-2 py-1">暂无工作组，点击 + 创建</div>';
-    return;
+    list.innerHTML = '<div class="text-xs text-mine-text3 px-2 py-1">暂无工作组</div>'; return;
   }
   list.innerHTML = wgs.map(wg => `
-    <button class="workgroup-btn sidebar-item w-full text-left px-2 py-1.5 rounded text-xs flex items-center justify-between text-mine-text2 ${currentWg?.id===wg.id?'active':''}"
+    <button class="sidebar-item w-full text-left px-2 py-1.5 rounded text-xs flex items-center justify-between text-mine-text2 ${currentWg?.id===wg.id?'active':''}"
       onclick="selectWorkgroup(${wg.id})">
       <span class="truncate">📁 ${wg.name}</span>
       <span class="text-mine-text3 ml-1">${wg.project_count||0}</span>
     </button>
   `).join('');
 }
-
 async function selectWorkgroup(id) {
   const data = await fetch('/api/workgroups/' + id, { headers: authH() }).then(r => r.json());
   currentWg = data.workgroup;
-  // 加载成员
   const membersData = await fetch('/api/workgroups/' + id + '/members', { headers: authH() }).then(r => r.json());
   wgMembers = membersData.members || [];
-
-  // 更新工作组信息栏
-  document.getElementById('wg-info-box').classList.remove('hidden');
+  // 更新 UI
+  document.getElementById('wg-info-box')?.classList.remove('hidden');
   document.getElementById('wg-info-name').textContent = currentWg.name;
-  document.getElementById('wg-info-members').textContent = `${wgMembers.length} 名成员`;
+  document.getElementById('wg-info-members').textContent = wgMembers.length + ' 名成员';
+  document.getElementById('mobile-wg-name').textContent = currentWg.name;
+  document.getElementById('drawer-wg-name').textContent = currentWg.name;
+  document.getElementById('drawer-wg-actions')?.classList.remove('hidden');
+  refreshAssigneeSelect();
   loadWorkgroups();
   loadWgProjects();
   showView('projects');
 }
-
 async function createWorkgroup() {
   const name = document.getElementById('wg-name').value.trim();
   if (!name) return alert('请输入工作组名称');
@@ -398,10 +533,9 @@ async function createWorkgroup() {
   closeModal('modal-create-wg');
   document.getElementById('wg-name').value = '';
   document.getElementById('wg-desc').value = '';
-  loadWorkgroups();
+  await loadWorkgroups();
   if (currentWg) selectWorkgroup(currentWg.id);
 }
-
 function openCreateWorkgroupModal() { openModal('modal-create-wg'); }
 
 // ── 成员管理 ──────────────────────────────────────────
@@ -410,306 +544,254 @@ function openMemberModal() {
   renderMembers();
   openModal('modal-members');
 }
-
 function renderMembers() {
   const list = document.getElementById('members-list');
   list.innerHTML = wgMembers.map(m => `
-    <div class="flex items-center justify-between p-2 rounded-lg bg-mine-surface2">
-      <div class="flex items-center gap-2">
-        <div class="w-7 h-7 rounded-full bg-mine-gold/20 flex items-center justify-center text-xs font-bold text-mine-gold">${m.avatar_letter||m.name.charAt(0)}</div>
+    <div class="flex items-center justify-between p-3 rounded-xl bg-mine-surface2">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-mine-gold/20 flex items-center justify-center text-sm font-bold text-mine-gold">${m.avatar_letter||m.name.charAt(0)}</div>
         <div>
-          <div class="text-sm">${m.name}</div>
-          <div class="text-xs text-mine-text3">${m.email} · ${m.role==='owner'?'组长':'成员'}</div>
+          <div class="text-sm font-medium">${m.name}</div>
+          <div class="text-xs text-mine-text3">${m.role==='owner'?'组长':'成员'} · ${m.email}</div>
         </div>
       </div>
-      ${m.id !== currentUser.id && currentUser.role !== 'member' ? `<button onclick="removeMember(${m.id})" class="text-xs text-mine-text3 hover:text-mine-danger">移除</button>` : ''}
+      ${m.id!==currentUser.id?`<button onclick="removeMember(${m.id})" class="text-xs px-2 py-1 rounded-lg text-mine-danger border border-mine-danger/20 active:bg-mine-danger/10">移除</button>`:''}
     </div>
   `).join('');
 }
-
 async function inviteMember() {
   const email = document.getElementById('invite-email').value.trim();
   if (!email || !currentWg) return;
   const r = await fetch(`/api/workgroups/${currentWg.id}/members`, { method:'POST', headers:authH(), body:JSON.stringify({ email }) });
   const d = await r.json();
   if (!r.ok) { alert(d.error); return; }
-  alert(d.message);
   document.getElementById('invite-email').value = '';
-  const membersData = await fetch('/api/workgroups/' + currentWg.id + '/members', { headers: authH() }).then(r => r.json());
+  const membersData = await fetch('/api/workgroups/' + currentWg.id + '/members', { headers:authH() }).then(r=>r.json());
   wgMembers = membersData.members || [];
-  renderMembers();
-  // 更新 task assignee select
-  refreshAssigneeSelect();
+  renderMembers(); refreshAssigneeSelect();
 }
-
 async function removeMember(userId) {
-  if (!confirm('确定移除该成员？')) return;
+  if (!confirm('确定移除？')) return;
   await fetch(`/api/workgroups/${currentWg.id}/members/${userId}`, { method:'DELETE', headers:authH() });
-  const membersData = await fetch('/api/workgroups/' + currentWg.id + '/members', { headers: authH() }).then(r => r.json());
+  const membersData = await fetch('/api/workgroups/' + currentWg.id + '/members', { headers:authH() }).then(r=>r.json());
   wgMembers = membersData.members || [];
-  renderMembers();
+  renderMembers(); refreshAssigneeSelect();
 }
-
 function refreshAssigneeSelect() {
   const sel = document.getElementById('task-assignee');
   sel.innerHTML = '<option value="">不指定</option>';
-  wgMembers.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m.id; opt.textContent = m.name + ' (' + m.email + ')';
-    sel.appendChild(opt);
-  });
+  wgMembers.forEach(m => { const o = document.createElement('option'); o.value=m.id; o.textContent=m.name; sel.appendChild(o); });
 }
 
-// ── 项目加入工作组 ────────────────────────────────────
+// ── 项目管理 ──────────────────────────────────────────
 async function openAssignProjectModal() {
   if (!currentWg) return;
-  const data = await fetch('/api/mine-projects?limit=50', { headers: authH() }).then(r => r.json());
+  const data = await fetch('/api/mine-projects?limit=50', { headers:authH() }).then(r=>r.json());
   const sel = document.getElementById('assign-project-select');
-  sel.innerHTML = (data.projects || []).map(p => `<option value="${p.id}">${p.name} (${p.code})</option>`).join('');
+  sel.innerHTML = (data.projects||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   openModal('modal-assign-project');
 }
-
 async function assignProject() {
   const project_id = document.getElementById('assign-project-select').value;
   if (!project_id || !currentWg) return;
   const r = await fetch(`/api/workgroups/${currentWg.id}/projects`, { method:'POST', headers:authH(), body:JSON.stringify({ project_id }) });
   const d = await r.json();
   closeModal('modal-assign-project');
-  alert(d.message || d.error);
-  loadWgProjects();
+  if (d.message) loadWgProjects();
 }
-
-function openNewProjectModal() {
-  window.open('/upload.html', '_blank');
-}
+function openNewProjectModal() { location.href = '/upload.html'; }
 
 // ── 项目看板 ──────────────────────────────────────────
-async function loadWgProjects(phaseFilter = 'all') {
+async function loadWgProjects() {
   if (!currentWg) return;
-  const board = document.getElementById('projects-board');
-  document.getElementById('view-projects-desc').textContent = currentWg.name + ' · ' + (currentWg.project_count || 0) + ' 个项目';
+  document.getElementById('view-projects-desc').textContent = currentWg.name;
   document.getElementById('phase-filter-bar').classList.remove('hidden');
+  const board = document.getElementById('projects-board');
   board.innerHTML = '<div class="col-span-3 text-center py-10 text-mine-text3 text-sm">加载中...</div>';
 
-  const data = await fetch(`/api/workgroups/${currentWg.id}/projects`, { headers: authH() }).then(r => r.json());
-  let projects = data.projects || [];
-  if (phaseFilter !== 'all') projects = projects.filter(p => {
-    // 通过 currentPhase 字段过滤——需要先拿进度，简化为 development_stage 匹配
-    return true; // 目前按 development_stage 展示，任务阶段过滤在任务视图
-  });
-
+  const data = await fetch(`/api/workgroups/${currentWg.id}/projects`, { headers:authH() }).then(r=>r.json());
+  const projects = data.projects || [];
   if (projects.length === 0) {
-    board.innerHTML = `<div class="col-span-3 text-center py-20">
+    board.innerHTML = `<div class="col-span-3 text-center py-16">
       <div class="text-4xl mb-3">📂</div>
-      <p class="text-mine-text3 text-sm">该工作组还没有项目</p>
-      <button onclick="openAssignProjectModal()" class="mt-3 px-4 py-2 rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/20 text-sm hover:bg-mine-gold/20">加入已有项目</button>
-    </div>`;
-    return;
+      <p class="text-mine-text3 text-sm mb-3">还没有项目</p>
+      <button onclick="openAssignProjectModal()" class="px-4 py-2.5 rounded-xl bg-mine-gold/10 text-mine-gold border border-mine-gold/20 text-sm">加入项目</button>
+    </div>`; return;
   }
-
-  const stageLabels = { 'general-exploration':'普查','detailed-exploration':'详查','prospecting':'勘探','feasibility':'可研','production-ready':'待产','production':'生产中' };
-  const mineralLabels = { gold:'金矿',silver:'银矿',copper:'铜矿',lead:'铅矿',zinc:'锌矿' };
-
+  const stageLabels = {'general-exploration':'普查','detailed-exploration':'详查','prospecting':'勘探','feasibility':'可研','production-ready':'待产','production':'生产中'};
+  const mineralLabels = {gold:'金矿',silver:'银矿',copper:'铜矿',lead:'铅矿',zinc:'锌矿'};
   board.innerHTML = '';
   for (const p of projects) {
-    const donePct = p.task_count > 0 ? Math.round((p.task_done / p.task_count) * 100) : 0;
-    const minerals = (p.mineral_types || '').split(',').map(m => mineralLabels[m] || m).join('·');
+    const donePct = p.task_count>0 ? Math.round((p.task_done/p.task_count)*100) : 0;
+    const minerals = (p.mineral_types||'').split(',').map(m=>mineralLabels[m]||m).join('·');
     const card = document.createElement('div');
-    card.className = 'rounded-2xl bg-mine-surface border border-mine-border p-5 cursor-pointer phase-card hover:border-mine-gold/30';
+    card.className = 'rounded-2xl bg-mine-surface border border-mine-border p-4 phase-card active:bg-mine-surface2 cursor-pointer';
     card.innerHTML = `
-      <div class="flex items-start justify-between mb-3">
-        <div>
-          <div class="text-xs text-mine-text3 font-mono mb-1">${p.code}</div>
-          <h3 class="font-semibold text-base leading-tight">${p.name}</h3>
+      <div class="flex items-start justify-between mb-2">
+        <div class="flex-1 min-w-0">
+          <div class="text-xs text-mine-text3 font-mono">${p.code}</div>
+          <h3 class="font-semibold text-sm mt-0.5 leading-tight">${p.name}</h3>
         </div>
-        <span class="text-xs px-2 py-0.5 rounded bg-mine-surface2 text-mine-text2 border border-mine-border ml-2 whitespace-nowrap">${stageLabels[p.development_stage]||p.development_stage}</span>
+        <span class="text-xs px-1.5 py-0.5 rounded bg-mine-surface2 text-mine-text3 border border-mine-border ml-2 flex-shrink-0">${stageLabels[p.development_stage]||p.development_stage}</span>
       </div>
       <div class="text-xs text-mine-text3 mb-3">${p.province||''} · ${minerals}</div>
       <div class="mb-3">
-        <div class="flex items-center justify-between text-xs mb-1">
-          <span class="text-mine-text3">任务进度</span>
-          <span class="text-mine-text2">${p.task_done||0}/${p.task_count||0} 已完成</span>
+        <div class="flex justify-between text-xs mb-1.5">
+          <span class="text-mine-text3">推进进度</span>
+          <span class="text-mine-text2">${p.task_done||0}/${p.task_count||0}</span>
         </div>
         <div class="w-full bg-mine-surface2 rounded-full h-1.5">
           <div class="bg-mine-gold h-1.5 rounded-full progress-bar" style="width:${donePct}%"></div>
         </div>
       </div>
       <div class="flex items-center justify-between pt-3 border-t border-mine-border">
-        <div class="flex items-center gap-3 text-xs text-mine-text3">
-          <span>💬 ${p.activity_count||0}</span>
-          <span class="text-mine-gold font-bold">${p.ai_score ? p.ai_score+'分' : 'AI未评'}</span>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="text-mine-text3">💬${p.activity_count||0}</span>
+          <span class="text-mine-gold font-bold">${p.ai_score?p.ai_score+'分':'AI未评'}</span>
         </div>
-        <div class="flex gap-1">
-          <button onclick="event.stopPropagation();openProjectWorkbench(${p.id},'${p.name.replace(/'/g,"&#39;")}');" class="text-xs px-2 py-1 rounded bg-mine-gold/10 text-mine-gold border border-mine-gold/20 hover:bg-mine-gold/20">工作台</button>
-          <a href="/project-detail.html?id=${p.id}" target="_blank" onclick="event.stopPropagation()" class="text-xs px-2 py-1 rounded bg-mine-surface2 text-mine-text2 border border-mine-border hover:border-mine-gold/30">详情</a>
+        <div class="flex gap-1.5">
+          <button onclick="event.stopPropagation();openProjectWorkbench(${p.id},'${p.name.replace(/'/g,'&#39;')}')" class="px-2.5 py-1.5 rounded-lg bg-mine-gold/10 text-mine-gold text-xs border border-mine-gold/20 active:bg-mine-gold/20">工作台</button>
+          <a href="/project-detail.html?id=${p.id}" onclick="event.stopPropagation()" class="px-2.5 py-1.5 rounded-lg bg-mine-surface2 text-mine-text2 text-xs border border-mine-border active:bg-mine-surface3">详情</a>
         </div>
-      </div>
-    `;
+      </div>`;
     card.onclick = () => openProjectWorkbench(p.id, p.name);
     board.appendChild(card);
   }
 }
-
 function filterByPhase(phase) {
   document.querySelectorAll('.phase-filter-btn').forEach(b => {
     b.className = 'phase-filter-btn text-xs px-3 py-1.5 rounded-full border whitespace-nowrap ' +
-      (b.dataset.phase === phase ? 'border-mine-gold/40 bg-mine-gold/10 text-mine-gold' : 'border-mine-border text-mine-text2 hover:border-mine-gold/40 hover:text-mine-gold');
+      (b.dataset.phase===phase ? 'border-mine-gold/40 bg-mine-gold/10 text-mine-gold' : 'border-mine-border text-mine-text2');
   });
-  loadWgProjects(phase);
 }
 
-// ── 项目工作台（任务管理）─────────────────────────────
+// ── 任务工作台 ────────────────────────────────────────
 async function openProjectWorkbench(projectId, projectName) {
   currentProject = projectId;
   document.getElementById('task-view-title').textContent = projectName;
   document.getElementById('task-view-desc').textContent = '矿业项目推进工作流';
   document.getElementById('add-task-btn').classList.remove('hidden');
-  document.getElementById('back-to-projects-btn').classList.remove('hidden');
   refreshAssigneeSelect();
   showView('tasks');
   await loadTaskPhases(projectId);
 }
-
 async function loadTaskPhases(projectId) {
-  // 加载进度
-  const progressData = await fetch(`/api/project-tasks/progress?project_id=${projectId}`, { headers: authH() }).then(r => r.json());
+  const [progressData, tasksData] = await Promise.all([
+    fetch(`/api/project-tasks/progress?project_id=${projectId}`, { headers:authH() }).then(r=>r.json()),
+    fetch(`/api/project-tasks?project_id=${projectId}`, { headers:authH() }).then(r=>r.json()),
+  ]);
   const phases = progressData.phases || [];
   const currentPhase = progressData.currentPhase;
 
-  // 渲染进度步骤条
+  // 进度步骤条
   const stepsEl = document.getElementById('phase-steps');
   document.getElementById('workflow-progress').classList.remove('hidden');
   stepsEl.innerHTML = phases.map((p, i) => {
-    const isDone = p.done > 0 && p.done === p.total && p.total > 0;
-    const isCurrent = p.phase === currentPhase;
-    const hasTask = p.total > 0;
-    const color = isDone ? 'text-mine-success' : isCurrent ? 'text-mine-gold' : 'text-mine-text3';
-    const bgColor = isDone ? 'bg-mine-success/20 border-mine-success/40' : isCurrent ? 'bg-mine-gold/15 border-mine-gold/40' : 'bg-mine-surface2 border-mine-border';
-    return `
-      <div class="flex items-center">
-        <div class="flex flex-col items-center px-3 cursor-pointer" onclick="scrollToPhase('${p.phase}')">
-          <div class="w-8 h-8 rounded-full ${bgColor} border flex items-center justify-center text-sm mb-1">${isDone ? '✓' : p.icon}</div>
-          <div class="text-[10px] ${color} text-center whitespace-nowrap">${p.label}</div>
-          ${hasTask ? `<div class="text-[9px] text-mine-text3">${p.done}/${p.total}</div>` : ''}
-        </div>
-        ${i < phases.length - 1 ? '<div class="w-6 h-px bg-mine-border mt-[-18px]"></div>' : ''}
+    const isDone = p.done>0 && p.done===p.total && p.total>0;
+    const isCurrent = p.phase===currentPhase;
+    const color = isDone?'text-mine-success':isCurrent?'text-mine-gold':'text-mine-text3';
+    const bg = isDone?'bg-mine-success/20 border-mine-success/40':isCurrent?'bg-mine-gold/15 border-mine-gold/40':'bg-mine-surface2 border-mine-border';
+    return `<div class="flex items-center">
+      <div class="flex flex-col items-center px-2.5 cursor-pointer" onclick="scrollToPhase('${p.phase}')">
+        <div class="w-8 h-8 rounded-full ${bg} border flex items-center justify-center text-sm mb-0.5">${isDone?'✓':p.icon}</div>
+        <div class="text-[9px] ${color} whitespace-nowrap">${p.label}</div>
+        ${p.total>0?`<div class="text-[8px] text-mine-text3">${p.done}/${p.total}</div>`:''}
       </div>
-    `;
+      ${i<phases.length-1?'<div class="w-4 h-px bg-mine-border mt-[-14px]"></div>':''}
+    </div>`;
   }).join('');
 
-  // 加载任务列表
-  const tasksData = await fetch(`/api/project-tasks?project_id=${projectId}`, { headers: authH() }).then(r => r.json());
+  // 任务列表
   const tasks = tasksData.tasks || [];
   const tasksByPhase = {};
-  tasks.forEach(t => { if (!tasksByPhase[t.phase]) tasksByPhase[t.phase] = []; tasksByPhase[t.phase].push(t); });
+  tasks.forEach(t => { if (!tasksByPhase[t.phase]) tasksByPhase[t.phase]=[]; tasksByPhase[t.phase].push(t); });
 
   const container = document.getElementById('task-phases-container');
   container.innerHTML = '';
-
-  for (const phaseDef of allPhases) {
-    const phaseTasks = tasksByPhase[phaseDef.phase] || [];
-    const doneCount = phaseTasks.filter(t => t.status === 'done').length;
-    const phaseEl = document.createElement('div');
-    phaseEl.id = 'phase-' + phaseDef.phase;
-    phaseEl.className = 'rounded-2xl bg-mine-surface border border-mine-border overflow-hidden';
-    phaseEl.innerHTML = `
-      <div class="px-5 py-3 bg-mine-surface2 flex items-center justify-between cursor-pointer" onclick="togglePhase('${phaseDef.phase}')">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">${phaseDef.icon}</span>
+  for (const pd of allPhases) {
+    const phaseTasks = tasksByPhase[pd.phase] || [];
+    const doneCount = phaseTasks.filter(t=>t.status==='done').length;
+    const el = document.createElement('div');
+    el.id = 'phase-' + pd.phase;
+    el.className = 'rounded-2xl bg-mine-surface border border-mine-border overflow-hidden';
+    el.innerHTML = `
+      <div class="px-4 py-3 bg-mine-surface2 flex items-center justify-between cursor-pointer active:bg-mine-surface3" onclick="togglePhase('${pd.phase}')">
+        <div class="flex items-center gap-2.5">
+          <span class="text-lg">${pd.icon}</span>
           <div>
-            <div class="font-semibold text-sm">${phaseDef.label}</div>
-            <div class="text-xs text-mine-text3">${phaseDef.desc}</div>
+            <div class="font-semibold text-sm">${pd.label}</div>
+            <div class="text-[11px] text-mine-text3 hidden sm:block">${pd.desc}</div>
           </div>
         </div>
-        <div class="flex items-center gap-3">
-          <span class="text-xs text-mine-text2">${doneCount}/${phaseTasks.length} 完成</span>
-          <button onclick="event.stopPropagation(); document.getElementById('task-phase').value='${phaseDef.phase}'; openAddTaskModal()" class="text-xs px-2 py-0.5 rounded bg-mine-gold/10 text-mine-gold border border-mine-gold/20 hover:bg-mine-gold/20">+ 任务</button>
-          <span class="text-mine-text3">▼</span>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <span class="text-xs text-mine-text2">${doneCount}/${phaseTasks.length}</span>
+          <button onclick="event.stopPropagation();document.getElementById('task-phase').value='${pd.phase}';openAddTaskModal()" class="text-xs px-2 py-1 rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/20 active:bg-mine-gold/20">+任务</button>
+          <span class="text-mine-text3 text-xs">▼</span>
         </div>
       </div>
-      <div id="phase-body-${phaseDef.phase}" class="divide-y divide-mine-border">
-        ${phaseTasks.length === 0 ? '<div class="px-5 py-3 text-xs text-mine-text3">暂无任务 — 点击右上角「+ 任务」添加</div>' :
-          phaseTasks.map(t => renderTaskItem(t)).join('')}
-      </div>
-    `;
-    container.appendChild(phaseEl);
+      <div id="phase-body-${pd.phase}" class="divide-y divide-mine-border">
+        ${phaseTasks.length===0
+          ? '<div class="px-4 py-3 text-xs text-mine-text3">暂无任务</div>'
+          : phaseTasks.map(t => renderTaskItem(t)).join('')}
+      </div>`;
+    container.appendChild(el);
   }
 }
-
 function renderTaskItem(t) {
-  const statusMap = { pending:'待处理', in_progress:'进行中', done:'已完成', blocked:'阻塞' };
-  const priorityColor = { low:'text-mine-text3', normal:'text-mine-text2', high:'text-mine-warning', urgent:'text-mine-danger' };
-  const priorityLabel = { low:'低', normal:'普通', high:'高', urgent:'紧急' };
+  const statusMap = {pending:'待处理',in_progress:'进行中',done:'已完成',blocked:'阻塞'};
+  const priorityColor = {low:'text-mine-text3',normal:'text-mine-text2',high:'text-mine-warning',urgent:'text-mine-danger'};
   return `
-    <div class="task-item px-5 py-3 flex items-start gap-3">
-      <input type="checkbox" class="mt-1 accent-mine-gold" ${t.status==='done'?'checked':''} onchange="updateTaskStatus(${t.id}, this.checked?'done':'in_progress')" />
+    <div class="px-4 py-3 flex items-start gap-3 active:bg-mine-surface2">
+      <input type="checkbox" class="mt-0.5 w-5 h-5 accent-mine-gold flex-shrink-0" ${t.status==='done'?'checked':''} onchange="updateTaskStatus(${t.id},this.checked?'done':'in_progress')" />
       <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span class="text-sm ${t.status==='done'?'line-through text-mine-text3':''}">${t.title}</span>
-          <span class="text-[10px] px-1.5 py-0.5 rounded status-${t.status}">${statusMap[t.status]||t.status}</span>
-          <span class="text-[10px] ${priorityColor[t.priority]||'text-mine-text3'}">${priorityLabel[t.priority]||t.priority}</span>
-        </div>
-        <div class="flex items-center gap-3 mt-1 text-xs text-mine-text3">
-          ${t.assignee_name ? '<span>👤 '+t.assignee_name+'</span>' : ''}
-          ${t.due_date ? '<span>📅 '+t.due_date+'</span>' : ''}
-          ${t.notes ? '<span class="text-mine-text2">💬 '+t.notes+'</span>' : ''}
+        <div class="text-sm ${t.status==='done'?'line-through text-mine-text3':''} mb-0.5">${t.title}</div>
+        <div class="flex items-center flex-wrap gap-1.5 text-[11px]">
+          <span class="px-1.5 py-0.5 rounded status-${t.status}">${statusMap[t.status]||t.status}</span>
+          ${t.assignee_name?`<span class="text-mine-text3">👤${t.assignee_name}</span>`:''}
+          ${t.due_date?`<span class="text-mine-text3">📅${t.due_date}</span>`:''}
+          <span class="${priorityColor[t.priority]||'text-mine-text3'}">${{low:'低',normal:'',high:'⚡高',urgent:'🔴紧急'}[t.priority]||''}</span>
         </div>
       </div>
-      <div class="flex gap-1">
-        <select class="text-xs bg-mine-surface2 border border-mine-border rounded px-1 py-0.5 text-mine-text2" onchange="updateTaskStatus(${t.id}, this.value)">
+      <div class="flex flex-col gap-1 flex-shrink-0">
+        <select class="text-xs bg-mine-surface2 border border-mine-border rounded-lg px-1.5 py-1 text-mine-text2" onchange="updateTaskStatus(${t.id},this.value)">
           <option value="pending" ${t.status==='pending'?'selected':''}>待处理</option>
           <option value="in_progress" ${t.status==='in_progress'?'selected':''}>进行中</option>
           <option value="done" ${t.status==='done'?'selected':''}>已完成</option>
           <option value="blocked" ${t.status==='blocked'?'selected':''}>阻塞</option>
         </select>
-        <button onclick="deleteTask(${t.id})" class="text-xs text-mine-text3 hover:text-mine-danger ml-1">✕</button>
+        <button onclick="deleteTask(${t.id})" class="text-[11px] text-mine-text3 text-center active:text-mine-danger">删除</button>
       </div>
-    </div>
-  `;
+    </div>`;
 }
-
 function scrollToPhase(phase) {
-  const el = document.getElementById('phase-' + phase);
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('phase-'+phase)?.scrollIntoView({behavior:'smooth',block:'start'});
 }
-
 function togglePhase(phase) {
-  const body = document.getElementById('phase-body-' + phase);
-  if (body) body.classList.toggle('hidden');
+  document.getElementById('phase-body-'+phase)?.classList.toggle('hidden');
 }
-
-function openAddTaskModal() {
-  if (!currentProject) return;
-  openModal('modal-add-task');
-}
-
+function openAddTaskModal() { if (!currentProject) return; openModal('modal-add-task'); }
 async function addTask() {
   const phase = document.getElementById('task-phase').value;
   const title = document.getElementById('task-title').value.trim();
   if (!title) return alert('请填写任务标题');
-  const body = {
-    project_id: currentProject, phase, title,
-    description: document.getElementById('task-desc').value,
-    priority: document.getElementById('task-priority').value,
-    due_date: document.getElementById('task-due').value,
-    assignee_id: document.getElementById('task-assignee').value || null,
-  };
+  const body = { project_id:currentProject, phase, title,
+    description:document.getElementById('task-desc').value,
+    priority:document.getElementById('task-priority').value,
+    due_date:document.getElementById('task-due').value,
+    assignee_id:document.getElementById('task-assignee').value||null };
   const r = await fetch('/api/project-tasks', { method:'POST', headers:authH(), body:JSON.stringify(body) });
-  const d = await r.json();
-  if (!r.ok) { alert(d.error); return; }
+  if (!r.ok) { const d=await r.json(); alert(d.error); return; }
   closeModal('modal-add-task');
-  document.getElementById('task-title').value = '';
-  document.getElementById('task-desc').value = '';
+  document.getElementById('task-title').value='';
+  document.getElementById('task-desc').value='';
   loadTaskPhases(currentProject);
 }
-
 async function updateTaskStatus(taskId, status) {
-  await fetch(`/api/project-tasks/${taskId}`, { method:'PUT', headers:authH(), body:JSON.stringify({ status }) });
+  await fetch(`/api/project-tasks/${taskId}`, { method:'PUT', headers:authH(), body:JSON.stringify({status}) });
   loadTaskPhases(currentProject);
 }
-
 async function deleteTask(taskId) {
-  if (!confirm('确定删除该任务？')) return;
+  if (!confirm('确定删除？')) return;
   await fetch(`/api/project-tasks/${taskId}`, { method:'DELETE', headers:authH() });
   loadTaskPhases(currentProject);
 }
@@ -717,79 +799,96 @@ async function deleteTask(taskId) {
 // ── 动态记录 ──────────────────────────────────────────
 async function loadActivityProjectSelect() {
   if (!currentWg) return;
-  const data = await fetch(`/api/workgroups/${currentWg.id}/projects`, { headers: authH() }).then(r => r.json());
+  const data = await fetch(`/api/workgroups/${currentWg.id}/projects`, { headers:authH() }).then(r=>r.json());
   const sel = document.getElementById('activity-project-select');
   const prev = sel.value;
   sel.innerHTML = '<option value="">选择项目</option>';
-  (data.projects || []).forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p.id; opt.textContent = p.name;
-    sel.appendChild(opt);
-  });
+  (data.projects||[]).forEach(p => { const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; sel.appendChild(o); });
   if (prev) sel.value = prev;
   if (sel.value) loadActivities();
 }
-
 async function loadActivities() {
   const projectId = document.getElementById('activity-project-select').value;
   const feed = document.getElementById('activity-feed');
-  const commentBox = document.getElementById('activity-comment-box');
-  if (!projectId) { feed.innerHTML = ''; commentBox.classList.add('hidden'); return; }
-  commentBox.classList.remove('hidden');
-  const data = await fetch(`/api/project-tasks/activities?project_id=${projectId}`, { headers: authH() }).then(r => r.json());
-  const activities = data.activities || [];
-  if (activities.length === 0) { feed.innerHTML = '<p class="text-xs text-mine-text3">暂无动态记录</p>'; return; }
-  const typeIcon = { comment:'💬', task_created:'✅', task_updated:'🔄' };
-  feed.innerHTML = activities.map(a => `
+  const box = document.getElementById('activity-comment-box');
+  if (!projectId) { feed.innerHTML=''; box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  const data = await fetch(`/api/project-tasks/activities?project_id=${projectId}`, { headers:authH() }).then(r=>r.json());
+  const acts = data.activities||[];
+  if (acts.length===0) { feed.innerHTML='<p class="text-xs text-mine-text3">暂无动态</p>'; return; }
+  const icon = {comment:'💬',task_created:'✅',task_updated:'🔄'};
+  feed.innerHTML = acts.map(a => `
     <div class="flex gap-3 p-3 rounded-xl bg-mine-surface border border-mine-border">
       <div class="w-8 h-8 rounded-full bg-mine-gold/20 flex items-center justify-center text-xs font-bold text-mine-gold flex-shrink-0">${a.avatar_letter||'?'}</div>
       <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2 mb-1">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
           <span class="text-sm font-medium">${a.user_name}</span>
           <span class="text-xs text-mine-text3">${new Date(a.created_at).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
         </div>
-        <p class="text-sm text-mine-text2">${typeIcon[a.activity_type]||'📌'} ${a.content}</p>
+        <p class="text-sm text-mine-text2">${icon[a.activity_type]||'📌'} ${a.content}</p>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
 async function postActivity() {
   const projectId = document.getElementById('activity-project-select').value;
   const content = document.getElementById('activity-comment-input').value.trim();
-  if (!projectId || !content) return;
-  await fetch('/api/project-tasks/activities', { method:'POST', headers:authH(), body:JSON.stringify({ project_id: projectId, content }) });
-  document.getElementById('activity-comment-input').value = '';
+  if (!projectId||!content) return;
+  await fetch('/api/project-tasks/activities', { method:'POST', headers:authH(), body:JSON.stringify({project_id:projectId,content}) });
+  document.getElementById('activity-comment-input').value='';
   loadActivities();
+}
+
+// ── 最近上传 ─────────────────────────────────────────
+async function loadRecentUploads() {
+  try {
+    const data = await fetch('/api/mine-reports', { headers:authH() }).then(r=>r.json());
+    const list = document.getElementById('recent-uploads');
+    const reports = (data.reports||[]).slice(0,5);
+    if (reports.length===0) { list.innerHTML='<p class="text-xs text-mine-text3">暂无上传记录</p>'; return; }
+    const catLabel = {geology:'地质勘查',processing:'选矿试验',feasibility:'技术经济',license:'矿权证照',operation:'生产运营',other:'其他'};
+    list.innerHTML = reports.map(r => {
+      const size = r.file_size ? (r.file_size<1024*1024?(r.file_size/1024).toFixed(0)+'KB':(r.file_size/1024/1024).toFixed(1)+'MB') : '';
+      return `<div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-mine-surface2 flex items-center justify-center text-sm flex-shrink-0">📄</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm truncate">${r.original_filename}</div>
+          <div class="text-xs text-mine-text3">${catLabel[r.report_type]||r.report_type} · ${size}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {}
 }
 
 // ── 管理员视图 ────────────────────────────────────────
 async function loadAdminView() {
-  const data = await fetch('/api/workgroups', { headers: authH() }).then(r => r.json());
-  const tbody = document.getElementById('admin-wg-tbody');
-  tbody.innerHTML = (data.workgroups || []).map(wg => `
-    <tr class="border-b border-mine-border hover:bg-mine-surface2">
-      <td class="px-4 py-3">
-        <div class="font-medium">${wg.name}</div>
-        <div class="text-xs text-mine-text3">${wg.code}</div>
-      </td>
-      <td class="px-4 py-3 text-mine-text2">${wg.owner_name||'-'}</td>
-      <td class="px-4 py-3 text-center text-mine-text2">${wg.member_count||0}</td>
-      <td class="px-4 py-3 text-center text-mine-text2">${wg.project_count||0}</td>
-      <td class="px-4 py-3 text-mine-text3 text-xs">${new Date(wg.created_at).toLocaleDateString('zh-CN')}</td>
-    </tr>
-  `).join('');
+  const data = await fetch('/api/workgroups', { headers:authH() }).then(r=>r.json());
+  const list = document.getElementById('admin-wg-list');
+  list.innerHTML = (data.workgroups||[]).map(wg => `
+    <div class="p-4 rounded-2xl bg-mine-surface border border-mine-border">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <div class="font-semibold">${wg.name}</div>
+          <div class="text-xs text-mine-text3">${wg.code}</div>
+        </div>
+      </div>
+      <div class="flex gap-4 text-sm text-mine-text2">
+        <span>👤 创建人：${wg.owner_name||'-'}</span>
+        <span>👥 ${wg.member_count||0} 成员</span>
+        <span>📂 ${wg.project_count||0} 项目</span>
+      </div>
+      <div class="text-xs text-mine-text3 mt-1">${new Date(wg.created_at).toLocaleDateString('zh-CN')}</div>
+    </div>`).join('');
 }
 
-// ── 首页导航导入工作台 ────────────────────────────────
-function openProjectWorkbenchFromUrl() {
-  const params = new URLSearchParams(location.search);
-  const projectId = params.get('project');
-  const projectName = params.get('name');
-  if (projectId) openProjectWorkbench(Number(projectId), projectName || '项目工作台');
+// ── URL 参数跳转 ─────────────────────────────────────
+function openFromUrl() {
+  const p = new URLSearchParams(location.search);
+  const pid = p.get('project');
+  const pname = p.get('name');
+  if (pid) openProjectWorkbench(Number(pid), pname||'项目工作台');
 }
 
-init().then(() => openProjectWorkbenchFromUrl());
+init().then(() => openFromUrl());
 </script>
 </body>
 </html>

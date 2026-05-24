@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>项目资料上传 — 矿资资本 MineCapital</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -25,285 +25,315 @@
     }
   </script>
   <style>
+    * { -webkit-tap-highlight-color: transparent; }
     body { font-family: 'Noto Sans SC', sans-serif; background: #0a0a0f; color: #e2e8f0; }
     .gold-gradient { background: linear-gradient(135deg, #c9a96e, #e0c88a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .nav-blur { backdrop-filter: blur(20px); background: rgba(10,10,15,0.85); }
+
+    /* 拖拽区 */
     .upload-zone { border: 2px dashed rgba(201,169,110,0.3); transition: all 0.3s; }
-    .upload-zone:hover, .upload-zone.dragover { border-color: rgba(201,169,110,0.7); background: rgba(201,169,110,0.05); }
-    .category-card { transition: all 0.2s; }
-    .category-card:hover { border-color: rgba(201,169,110,0.5); }
-    .category-card.selected { border-color: #c9a96e; background: rgba(201,169,110,0.08); }
-    .required-badge { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
-    .optional-badge { background: rgba(100,116,139,0.15); color: #94a3b8; border: 1px solid rgba(100,116,139,0.25); }
+    .upload-zone.dragover { border-color: rgba(201,169,110,0.7); background: rgba(201,169,110,0.05); }
+
+    /* 分类药丸 */
+    .cat-pill { transition: all 0.15s; cursor: pointer; white-space: nowrap; }
+    .cat-pill.active { background: rgba(201,169,110,0.15); border-color: #c9a96e; color: #c9a96e; }
+
+    /* 资料详情 Sheet */
+    .checklist-sheet { transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); }
+
+    /* 底部安全区 */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    }
+
+    /* 触摸按钮 */
+    button:active { opacity: 0.8; }
+
+    /* 进度条动画 */
+    @keyframes progress-pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+    .progress-pulse { animation: progress-pulse 1.5s ease-in-out infinite; }
   </style>
 </head>
 <body class="min-h-screen">
+
+  <!-- 顶部导航 -->
   <nav class="fixed top-0 left-0 right-0 z-50 nav-blur border-b border-mine-border">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <a href="/" class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-mine-gold/20 flex items-center justify-center border border-mine-gold/30"><span class="text-lg">⛏️</span></div>
-          <span class="text-lg font-bold gold-gradient">矿资资本</span>
-        </a>
-        <div class="flex items-center gap-6">
-          <a href="/dashboard.html" class="text-sm text-mine-text2 hover:text-mine-gold transition-colors">会员中心</a>
-          <a href="/" class="text-sm text-mine-text2 hover:text-mine-gold transition-colors">返回首页</a>
-        </div>
-      </div>
+    <div class="flex items-center justify-between h-14 px-4">
+      <a href="/workbench.html" class="flex items-center gap-2 text-mine-text2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        <span class="text-sm">工作台</span>
+      </a>
+      <span class="text-sm font-semibold gold-gradient">上传资料</span>
+      <a href="/dashboard.html" class="text-xs text-mine-text3 px-2 py-1">我的</a>
     </div>
   </nav>
 
-  <main class="pt-20 pb-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-8">
-      <h1 class="text-2xl sm:text-3xl font-bold mb-3 gold-gradient">矿业项目资料上传</h1>
-      <p class="text-sm text-mine-text2 max-w-xl mx-auto">上传项目相关资料，资料越完整AI分析越精准。请按以下资料清单准备并上传</p>
-    </div>
+  <!-- 主内容 -->
+  <main class="pt-14 pb-6 px-4 max-w-2xl mx-auto">
 
-    <!-- 资料清单引导 -->
-    <div class="mb-8 p-6 rounded-2xl bg-mine-surface border border-mine-border">
-      <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span class="text-mine-gold">◆</span>项目资料清单
-      </h2>
-      <p class="text-xs text-mine-text3 mb-4">根据紫金矿业评价标准，以下资料对项目价值评估至关重要。标记为"必须"的资料缺失将显著影响AI分析准确性。</p>
-
-      <div class="space-y-4">
-        <!-- 地质勘查类 -->
-        <div class="category-card p-4 rounded-xl bg-mine-surface2 border border-mine-border cursor-pointer" onclick="selectCategory('geology')">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-semibold flex items-center gap-2">
-              <span>📋</span> 地质勘查报告类
-            </h3>
-            <span class="required-badge text-[10px] px-1.5 py-0.5 rounded">必须</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-mine-text3">
-            <div class="flex items-center gap-1"><span class="text-mine-danger">●</span>普查/详查/勘探报告</div>
-            <div class="flex items-center gap-1"><span class="text-mine-danger">●</span>资源储量核实报告</div>
-            <div class="flex items-center gap-1"><span class="text-mine-danger">●</span>矿产资源储量评审备案证明</div>
-            <div class="flex items-center gap-1"><span class="text-mine-gold">●</span>地质图/矿体平面图/剖面图</div>
-            <div class="flex items-center gap-1"><span class="text-mine-gold">●</span>钻探工程编录数据</div>
-            <div class="flex items-center gap-1"><span class="text-mine-gold">●</span>物探/化探异常解释报告</div>
-          </div>
-        </div>
-
-        <!-- 选矿试验类 -->
-        <div class="category-card p-4 rounded-xl bg-mine-surface2 border border-mine-border cursor-pointer" onclick="selectCategory('processing')">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-semibold flex items-center gap-2">
-              <span>⚗️</span> 选矿试验报告类
-            </h3>
-            <span class="required-badge text-[10px] px-1.5 py-0.5 rounded">必须</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-mine-text3">
-            <div class="flex items-center gap-1"><span class="text-mine-danger">●</span>选矿试验报告（回收率、精矿品位）</div>
-            <div class="flex items-center gap-1"><span class="text-mine-gold">●</span>矿石工艺矿物学研究报告</div>
-            <div class="flex items-center gap-1"><span class="text-mine-gold">●</span>伴生元素综合利用评价</div>
-            <div class="flex items-center gap-1"><span class="text-mine-text3">○</span>选矿厂设计资料</div>
-          </div>
-        </div>
-
-        <!-- 技术经济类 -->
-        <div class="category-card p-4 rounded-xl bg-mine-surface2 border border-mine-border cursor-pointer" onclick="selectCategory('feasibility')">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-semibold flex items-center gap-2">
-              <span>📊</span> 技术经济评价类
-            </h3>
-            <span class="optional-badge text-[10px] px-1.5 py-0.5 rounded">推荐</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-mine-text3">
-            <div class="flex items-center gap-1"><span class="text-mine-gold">●</span>预可行性研究/可行性研究报告</div>
-            <div class="flex items-center gap-1"><span class="text-mine-gold">●</span>矿山设计说明书</div>
-            <div class="flex items-center gap-1"><span class="text-mine-gold">●</span>财务评价模型（NPV/IRR/回收期）</div>
-            <div class="flex items-center gap-1"><span class="text-mine-text3">○</span>成本分析报告（AISC/Cash Cost）</div>
-            <div class="flex items-center gap-1"><span class="text-mine-text3">○</span>敏感性分析报告</div>
-          </div>
-        </div>
-
-        <!-- 矿权证照类 -->
-        <div class="category-card p-4 rounded-xl bg-mine-surface2 border border-mine-border cursor-pointer" onclick="selectCategory('license')">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-semibold flex items-center gap-2">
-              <span>📄</span> 矿权证照类
-            </h3>
-            <span class="required-badge text-[10px] px-1.5 py-0.5 rounded">必须</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-mine-text3">
-            <div class="flex items-center gap-1"><span class="text-mine-danger">●</span>采矿许可证/探矿权证</div>
-            <div class="flex items-center gap-1"><span class="text-mine-danger">●</span>矿权范围坐标及面积</div>
-            <div class="flex items-center gap-1"><span class="text-mine-gold">●</span>矿权延续/变更审批文件</div>
-            <div class="flex items-center gap-1"><span class="text-mine-gold">●</span>环评批复文件</div>
-            <div class="flex items-center gap-1"><span class="text-mine-text3">○</span>安全生产许可证</div>
-            <div class="flex items-center gap-1"><span class="text-mine-text3">○</span>土地使用证/林地产权</div>
-          </div>
-        </div>
-
-        <!-- 生产运营类 -->
-        <div class="category-card p-4 rounded-xl bg-mine-surface2 border border-mine-border cursor-pointer" onclick="selectCategory('operation')">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-semibold flex items-center gap-2">
-              <span>🏭</span> 生产运营类
-            </h3>
-            <span class="optional-badge text-[10px] px-1.5 py-0.5 rounded">运营阶段必须</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-mine-text3">
-            <div class="flex items-center gap-1"><span class="text-mine-gold">●</span>年度生产报告/经营数据</div>
-            <div class="flex items-center gap-1"><span class="text-mine-gold">●</span>选矿/冶炼生产统计报表</div>
-            <div class="flex items-center gap-1"><span class="text-mine-text3">○</span>成本核算表</div>
-            <div class="flex items-center gap-1"><span class="text-mine-text3">○</span>设备清单及评估报告</div>
-            <div class="flex items-center gap-1"><span class="text-mine-text3">○</span>尾矿库安全评估报告</div>
-          </div>
-        </div>
-
-        <!-- 其他 -->
-        <div class="category-card p-4 rounded-xl bg-mine-surface2 border border-mine-border cursor-pointer" onclick="selectCategory('other')">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-semibold flex items-center gap-2">
-              <span>📎</span> 其他补充资料
-            </h3>
-            <span class="optional-badge text-[10px] px-1.5 py-0.5 rounded">可选</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-mine-text3">
-            <div class="flex items-center gap-1"><span class="text-mine-text3">○</span>矿山现场照片/视频</div>
-            <div class="flex items-center gap-1"><span class="text-mine-text3">○</span>交通位置图/基础设施说明</div>
-            <div class="flex items-center gap-1"><span class="text-mine-text3">○</span>矿权历史交易/评估报告</div>
-            <div class="text-mine-text3">○ 任何有助于项目评估的资料</div>
-          </div>
-        </div>
+    <!-- ① 选择资料分类 (横向滚动药丸) -->
+    <section class="mt-4 mb-4">
+      <p class="text-xs text-mine-text3 mb-2">选择资料类型</p>
+      <div class="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none" style="scrollbar-width:none">
+        <button class="cat-pill flex-none px-3 py-1.5 rounded-full text-xs border border-mine-border bg-mine-surface2 text-mine-text2 active"
+                data-val="geology" onclick="selectCat(this)">📋 地质勘查</button>
+        <button class="cat-pill flex-none px-3 py-1.5 rounded-full text-xs border border-mine-border bg-mine-surface2 text-mine-text2"
+                data-val="processing" onclick="selectCat(this)">⚗️ 选矿试验</button>
+        <button class="cat-pill flex-none px-3 py-1.5 rounded-full text-xs border border-mine-border bg-mine-surface2 text-mine-text2"
+                data-val="feasibility" onclick="selectCat(this)">📊 技术经济</button>
+        <button class="cat-pill flex-none px-3 py-1.5 rounded-full text-xs border border-mine-border bg-mine-surface2 text-mine-text2"
+                data-val="license" onclick="selectCat(this)">📄 矿权证照</button>
+        <button class="cat-pill flex-none px-3 py-1.5 rounded-full text-xs border border-mine-border bg-mine-surface2 text-mine-text2"
+                data-val="operation" onclick="selectCat(this)">🏭 生产运营</button>
+        <button class="cat-pill flex-none px-3 py-1.5 rounded-full text-xs border border-mine-border bg-mine-surface2 text-mine-text2"
+                data-val="other" onclick="selectCat(this)">📎 其他</button>
       </div>
+    </section>
 
-      <div class="mt-4 flex items-center gap-4 text-xs text-mine-text3">
-        <span class="flex items-center gap-1"><span class="text-mine-danger">●</span> 必须提供</span>
-        <span class="flex items-center gap-1"><span class="text-mine-gold">●</span> 强烈建议提供</span>
-        <span class="flex items-center gap-1"><span class="text-mine-text3">○</span> 可选提供</span>
+    <!-- 当前分类提示 + 查看清单入口 -->
+    <div class="flex items-center justify-between mb-3">
+      <div id="cat-hint" class="text-xs text-mine-text3">
+        <span class="text-mine-danger font-medium">必须</span>：普查/详查报告、储量核实报告、储量备案证明
       </div>
-    </div>
-
-    <!-- 上传区域 -->
-    <div class="mb-8 p-6 rounded-2xl bg-mine-surface border border-mine-border">
-      <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span class="text-mine-gold">◆</span>上传资料
-      </h2>
-
-      <!-- 关联项目 -->
-      <div class="mb-4">
-        <label class="text-sm text-mine-text2 mb-2 block">关联项目（可选）</label>
-        <select id="project-select" class="w-full px-3 py-2.5 rounded-lg bg-mine-surface2 border border-mine-border text-sm text-mine-text focus:outline-none focus:border-mine-gold/50">
-          <option value="">不关联项目（先上传资料）</option>
-        </select>
-      </div>
-
-      <!-- 资料分类 -->
-      <div class="mb-4">
-        <label class="text-sm text-mine-text2 mb-2 block">资料分类</label>
-        <select id="report-category" class="w-full px-3 py-2.5 rounded-lg bg-mine-surface2 border border-mine-border text-sm text-mine-text focus:outline-none focus:border-mine-gold/50">
-          <option value="geology">地质勘查报告</option>
-          <option value="processing">选矿试验报告</option>
-          <option value="feasibility">技术经济评价</option>
-          <option value="license">矿权证照</option>
-          <option value="operation">生产运营</option>
-          <option value="other">其他补充资料</option>
-        </select>
-      </div>
-
-      <!-- 拖拽上传区 -->
-      <div id="drop-zone" class="upload-zone rounded-xl p-8 text-center mb-4" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-        <div class="mb-3">
-          <svg class="w-12 h-12 mx-auto text-mine-text3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-        </div>
-        <p class="text-sm text-mine-text2 mb-1">拖拽文件到此处，或点击选择文件</p>
-        <p class="text-xs text-mine-text3">支持 PDF、Word、Excel、PPT、图片、压缩包，单文件最大 50MB</p>
-        <input type="file" id="file-input" multiple class="hidden" onchange="handleFileSelect(event)" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.jpg,.png,.csv" />
-        <button onclick="document.getElementById('file-input').click()" class="mt-3 px-6 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm text-mine-text hover:border-mine-gold/40 transition-colors">选择文件</button>
-      </div>
-
-      <!-- 已选文件列表 -->
-      <div id="file-list" class="space-y-2 mb-4"></div>
-
-      <!-- 上传按钮 -->
-      <button onclick="uploadFiles()" id="upload-btn" disabled class="w-full py-3 rounded-lg bg-mine-gold text-mine-bg font-semibold text-sm hover:bg-mine-goldLight transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-        上传资料
+      <button onclick="openChecklist()" class="text-xs text-mine-gold flex items-center gap-1 flex-none ml-2">
+        查看清单
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
       </button>
+    </div>
 
-      <!-- 上传进度 -->
-      <div id="upload-progress" class="hidden mt-4">
-        <div class="flex items-center justify-between text-xs text-mine-text3 mb-1">
-          <span id="progress-text">上传中...</span>
-          <span id="progress-pct">0%</span>
+    <!-- ② 关联项目 -->
+    <div class="mb-4">
+      <label class="text-xs text-mine-text3 mb-1.5 block">关联项目（可选）</label>
+      <select id="project-select" class="w-full px-3 py-3 rounded-xl bg-mine-surface border border-mine-border text-sm text-mine-text focus:outline-none focus:border-mine-gold/50 appearance-none">
+        <option value="">不关联项目（先上传资料）</option>
+      </select>
+    </div>
+
+    <!-- ③ 上传区：手机大按钮 / PC 拖拽区 -->
+    <!-- 手机端：大按钮一键选文件 -->
+    <div class="md:hidden mb-4">
+      <button onclick="document.getElementById('file-input').click()"
+              class="w-full py-5 rounded-2xl border-2 border-dashed border-mine-gold/40 bg-mine-surface flex flex-col items-center gap-2 active:border-mine-gold/70 active:bg-mine-gold/5 transition-all">
+        <div class="w-14 h-14 rounded-2xl bg-mine-gold/10 border border-mine-gold/30 flex items-center justify-center">
+          <svg class="w-7 h-7 text-mine-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 16v-8m0 0l-3 3m3-3l3 3M20 16.7A5 5 0 0017.8 7h-.8A7 7 0 104 14.3"/>
+          </svg>
         </div>
-        <div class="w-full bg-mine-surface2 rounded-full h-2">
-          <div id="progress-bar" class="bg-mine-gold rounded-full h-2 transition-all" style="width:0%"></div>
-        </div>
+        <span class="text-sm font-medium text-mine-text">点击选择文件</span>
+        <span class="text-xs text-mine-text3">PDF、Word、Excel、图片等，单文件 ≤ 50MB</span>
+      </button>
+    </div>
+
+    <!-- PC端：拖拽区 -->
+    <div class="hidden md:block mb-4">
+      <div id="drop-zone" class="upload-zone rounded-xl p-8 text-center" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        <svg class="w-12 h-12 mx-auto text-mine-text3 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        <p class="text-sm text-mine-text2 mb-1">拖拽文件到此处，或点击选择文件</p>
+        <p class="text-xs text-mine-text3 mb-3">支持 PDF、Word、Excel、PPT、图片、压缩包，单文件最大 50MB</p>
+        <button onclick="document.getElementById('file-input').click()"
+                class="px-6 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm text-mine-text hover:border-mine-gold/40 transition-colors">
+          选择文件
+        </button>
       </div>
     </div>
 
-    <!-- 已上传资料列表 -->
-    <div class="p-6 rounded-2xl bg-mine-surface border border-mine-border">
-      <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span class="text-mine-gold">◆</span>已上传资料
-      </h2>
+    <input type="file" id="file-input" multiple class="hidden" onchange="handleFileSelect(event)"
+           accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.jpg,.jpeg,.png,.csv" />
+
+    <!-- ④ 已选文件列表 -->
+    <div id="file-list" class="space-y-2 mb-4"></div>
+
+    <!-- ⑤ 上传按钮 & 进度 -->
+    <button onclick="uploadFiles()" id="upload-btn" disabled
+            class="w-full py-4 rounded-2xl bg-mine-gold text-mine-bg font-semibold text-base
+                   disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all">
+      开始上传
+    </button>
+
+    <div id="upload-progress" class="hidden mt-4">
+      <div class="flex items-center justify-between text-xs text-mine-text3 mb-1.5">
+        <span id="progress-text" class="progress-pulse">上传中...</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="w-full bg-mine-surface2 rounded-full h-2.5">
+        <div id="progress-bar" class="bg-mine-gold rounded-full h-2.5 transition-all" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- ⑥ 已上传资料 -->
+    <section class="mt-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-mine-text">已上传资料</h2>
+        <button onclick="loadUploadedReports()" class="text-xs text-mine-text3">刷新</button>
+      </div>
       <div id="uploaded-list" class="space-y-2">
-        <p class="text-xs text-mine-text3 text-center py-4">加载中...</p>
+        <p class="text-xs text-mine-text3 text-center py-6">加载中...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== 资料清单 Bottom Sheet ===== -->
+  <div id="checklist-overlay" class="fixed inset-0 z-50 hidden" onclick="closeChecklist()"></div>
+  <div id="checklist-sheet"
+       class="checklist-sheet fixed bottom-0 left-0 right-0 z-50 max-w-2xl mx-auto
+              bg-mine-surface border-t border-mine-border rounded-t-3xl
+              translate-y-full pb-safe"
+       style="max-height:85vh; overflow-y:auto">
+    <div class="sticky top-0 bg-mine-surface px-4 pt-4 pb-3 border-b border-mine-border flex items-center justify-between">
+      <h3 class="text-base font-semibold">资料清单参考</h3>
+      <button onclick="closeChecklist()" class="w-8 h-8 flex items-center justify-center text-mine-text3">✕</button>
+    </div>
+    <div class="p-4 space-y-4">
+
+      <div class="p-3 rounded-xl bg-mine-surface2 border border-mine-border">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-sm font-semibold">📋 地质勘查报告类</h4>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">必须</span>
+        </div>
+        <ul class="text-xs text-mine-text3 space-y-1">
+          <li class="flex gap-1.5"><span class="text-mine-danger mt-0.5">●</span>普查/详查/勘探报告</li>
+          <li class="flex gap-1.5"><span class="text-mine-danger mt-0.5">●</span>资源储量核实报告</li>
+          <li class="flex gap-1.5"><span class="text-mine-danger mt-0.5">●</span>矿产资源储量评审备案证明</li>
+          <li class="flex gap-1.5"><span class="text-mine-gold mt-0.5">●</span>地质图/矿体平面图/剖面图</li>
+          <li class="flex gap-1.5"><span class="text-mine-gold mt-0.5">●</span>钻探工程编录数据</li>
+          <li class="flex gap-1.5"><span class="text-mine-gold mt-0.5">●</span>物探/化探异常解释报告</li>
+        </ul>
+      </div>
+
+      <div class="p-3 rounded-xl bg-mine-surface2 border border-mine-border">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-sm font-semibold">⚗️ 选矿试验报告类</h4>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">必须</span>
+        </div>
+        <ul class="text-xs text-mine-text3 space-y-1">
+          <li class="flex gap-1.5"><span class="text-mine-danger mt-0.5">●</span>选矿试验报告（回收率、精矿品位）</li>
+          <li class="flex gap-1.5"><span class="text-mine-gold mt-0.5">●</span>矿石工艺矿物学研究报告</li>
+          <li class="flex gap-1.5"><span class="text-mine-gold mt-0.5">●</span>伴生元素综合利用评价</li>
+          <li class="flex gap-1.5"><span class="text-mine-text3 mt-0.5">○</span>选矿厂设计资料</li>
+        </ul>
+      </div>
+
+      <div class="p-3 rounded-xl bg-mine-surface2 border border-mine-border">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-sm font-semibold">📊 技术经济评价类</h4>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-mine-gold/10 text-mine-gold border border-mine-gold/20">推荐</span>
+        </div>
+        <ul class="text-xs text-mine-text3 space-y-1">
+          <li class="flex gap-1.5"><span class="text-mine-gold mt-0.5">●</span>预可行性研究/可行性研究报告</li>
+          <li class="flex gap-1.5"><span class="text-mine-gold mt-0.5">●</span>矿山设计说明书</li>
+          <li class="flex gap-1.5"><span class="text-mine-gold mt-0.5">●</span>财务评价模型（NPV/IRR/回收期）</li>
+          <li class="flex gap-1.5"><span class="text-mine-text3 mt-0.5">○</span>成本分析报告（AISC/Cash Cost）</li>
+          <li class="flex gap-1.5"><span class="text-mine-text3 mt-0.5">○</span>敏感性分析报告</li>
+        </ul>
+      </div>
+
+      <div class="p-3 rounded-xl bg-mine-surface2 border border-mine-border">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-sm font-semibold">📄 矿权证照类</h4>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">必须</span>
+        </div>
+        <ul class="text-xs text-mine-text3 space-y-1">
+          <li class="flex gap-1.5"><span class="text-mine-danger mt-0.5">●</span>采矿许可证/探矿权证</li>
+          <li class="flex gap-1.5"><span class="text-mine-danger mt-0.5">●</span>矿权范围坐标及面积</li>
+          <li class="flex gap-1.5"><span class="text-mine-gold mt-0.5">●</span>矿权延续/变更审批文件</li>
+          <li class="flex gap-1.5"><span class="text-mine-gold mt-0.5">●</span>环评批复文件</li>
+          <li class="flex gap-1.5"><span class="text-mine-text3 mt-0.5">○</span>安全生产许可证</li>
+          <li class="flex gap-1.5"><span class="text-mine-text3 mt-0.5">○</span>土地使用证/林地产权</li>
+        </ul>
+      </div>
+
+      <div class="p-3 rounded-xl bg-mine-surface2 border border-mine-border">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-sm font-semibold">🏭 生产运营类</h4>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-mine-text3/10 text-mine-text3 border border-mine-text3/20">运营阶段</span>
+        </div>
+        <ul class="text-xs text-mine-text3 space-y-1">
+          <li class="flex gap-1.5"><span class="text-mine-gold mt-0.5">●</span>年度生产报告/经营数据</li>
+          <li class="flex gap-1.5"><span class="text-mine-gold mt-0.5">●</span>选矿/冶炼生产统计报表</li>
+          <li class="flex gap-1.5"><span class="text-mine-text3 mt-0.5">○</span>成本核算表</li>
+          <li class="flex gap-1.5"><span class="text-mine-text3 mt-0.5">○</span>设备清单及评估报告</li>
+          <li class="flex gap-1.5"><span class="text-mine-text3 mt-0.5">○</span>尾矿库安全评估报告</li>
+        </ul>
+      </div>
+
+      <div class="p-3 rounded-xl bg-mine-surface2 border border-mine-border">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-sm font-semibold">📎 其他补充资料</h4>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-mine-text3/10 text-mine-text3 border border-mine-text3/20">可选</span>
+        </div>
+        <ul class="text-xs text-mine-text3 space-y-1">
+          <li class="flex gap-1.5"><span class="text-mine-text3 mt-0.5">○</span>矿山现场照片/视频</li>
+          <li class="flex gap-1.5"><span class="text-mine-text3 mt-0.5">○</span>交通位置图/基础设施说明</li>
+          <li class="flex gap-1.5"><span class="text-mine-text3 mt-0.5">○</span>矿权历史交易/评估报告</li>
+          <li class="flex gap-1.5"><span class="text-mine-text3 mt-0.5">○</span>任何有助于项目评估的资料</li>
+        </ul>
+      </div>
+
+      <div class="flex items-center gap-4 text-xs text-mine-text3 pt-1 pb-2">
+        <span class="flex items-center gap-1"><span class="text-mine-danger">●</span>必须提供</span>
+        <span class="flex items-center gap-1"><span class="text-mine-gold">●</span>强烈建议</span>
+        <span class="flex items-center gap-1"><span class="text-mine-text3">○</span>可选提供</span>
       </div>
     </div>
-  </main>
+  </div>
 
   <script>
     const token = localStorage.getItem('mine_token');
     if (!token) { location.href = '/auth.html'; }
 
     let selectedFiles = [];
-    const categoryLabels = {
-      geology: '地质勘查报告', processing: '选矿试验报告', feasibility: '技术经济评价',
-      license: '矿权证照', operation: '生产运营', other: '其他补充资料',
-      exploration: '勘查报告', filing: '备案报告', resource: '资源报告'
+    let currentCat = 'geology';
+
+    const catHints = {
+      geology:     '<span class="text-mine-danger font-medium">必须</span>：普查/详查报告、储量核实报告、储量备案证明',
+      processing:  '<span class="text-mine-danger font-medium">必须</span>：选矿试验报告（回收率、精矿品位）',
+      feasibility: '<span class="text-mine-gold font-medium">推荐</span>：预可研/可研报告、财务评价模型（NPV/IRR）',
+      license:     '<span class="text-mine-danger font-medium">必须</span>：采矿许可证/探矿权证、矿权范围坐标',
+      operation:   '<span class="text-mine-gold font-medium">建议</span>：年度生产报告、选矿/冶炼统计报表',
+      other:       '矿山照片、交通图、历史评估报告等补充资料'
     };
 
-    // 加载项目列表
-    async function loadProjects() {
-      try {
-        const res = await fetch('/api/mine-projects?limit=50', { headers: { 'Authorization': 'Bearer ' + token } });
-        const data = await res.json();
-        const sel = document.getElementById('project-select');
-        (data.projects || []).forEach(p => {
-          const opt = document.createElement('option');
-          opt.value = p.id; opt.textContent = p.name;
-          sel.appendChild(opt);
-        });
-      } catch (e) {}
+    const categoryLabels = {
+      geology: '地质勘查报告', processing: '选矿试验报告', feasibility: '技术经济评价',
+      license: '矿权证照', operation: '生产运营', other: '其他补充资料'
+    };
+
+    function selectCat(btn) {
+      document.querySelectorAll('.cat-pill').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+      currentCat = btn.dataset.val;
+      document.getElementById('cat-hint').innerHTML = catHints[currentCat] || '';
     }
 
-    function selectCategory(cat) {
-      document.getElementById('report-category').value = cat;
-      document.querySelectorAll('.category-card').forEach(el => el.classList.remove('selected'));
-      event.currentTarget.classList.add('selected');
+    // 查看清单 Bottom Sheet
+    function openChecklist() {
+      const overlay = document.getElementById('checklist-overlay');
+      const sheet   = document.getElementById('checklist-sheet');
+      overlay.classList.remove('hidden');
+      overlay.style.background = 'rgba(0,0,0,0.5)';
+      sheet.classList.remove('hidden');
+      requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
+    }
+    function closeChecklist() {
+      const overlay = document.getElementById('checklist-overlay');
+      const sheet   = document.getElementById('checklist-sheet');
+      sheet.style.transform = 'translateY(100%)';
+      overlay.style.background = 'rgba(0,0,0,0)';
+      setTimeout(() => { overlay.classList.add('hidden'); }, 350);
     }
 
-    // 文件选择
-    function handleFileSelect(e) {
-      addFiles(Array.from(e.target.files));
-    }
-
-    function handleDragOver(e) {
-      e.preventDefault();
-      document.getElementById('drop-zone').classList.add('dragover');
-    }
-
-    function handleDragLeave(e) {
-      document.getElementById('drop-zone').classList.remove('dragover');
-    }
-
-    function handleDrop(e) {
-      e.preventDefault();
-      document.getElementById('drop-zone').classList.remove('dragover');
-      addFiles(Array.from(e.dataTransfer.files));
-    }
+    // 文件处理
+    function handleFileSelect(e) { addFiles(Array.from(e.target.files)); }
+    function handleDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('dragover'); }
+    function handleDragLeave(e) { document.getElementById('drop-zone').classList.remove('dragover'); }
+    function handleDrop(e) { e.preventDefault(); document.getElementById('drop-zone').classList.remove('dragover'); addFiles(Array.from(e.dataTransfer.files)); }
 
     function addFiles(files) {
       const maxSize = 50 * 1024 * 1024;
       files.forEach(f => {
-        if (f.size > maxSize) { alert(`${f.name} 超过50MB限制`); return; }
-        if (!selectedFiles.find(sf => sf.name === f.name && sf.size === f.size)) {
-          selectedFiles.push(f);
-        }
+        if (f.size > maxSize) { showToast(`${f.name} 超过50MB限制`); return; }
+        if (!selectedFiles.find(sf => sf.name === f.name && sf.size === f.size)) selectedFiles.push(f);
       });
       renderFileList();
       document.getElementById('upload-btn').disabled = selectedFiles.length === 0;
@@ -317,93 +347,121 @@
 
     function renderFileList() {
       const list = document.getElementById('file-list');
-      if (selectedFiles.length === 0) { list.innerHTML = ''; return; }
+      if (!selectedFiles.length) { list.innerHTML = ''; return; }
       list.innerHTML = selectedFiles.map((f, i) => {
         const size = f.size < 1024*1024 ? (f.size/1024).toFixed(1)+'KB' : (f.size/1024/1024).toFixed(1)+'MB';
-        const ext = f.name.split('.').pop().toLowerCase();
-        const icon = {pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',ppt:'📽️',pptx:'📽️',zip:'📦',rar:'📦',jpg:'🖼️',png:'🖼️',csv:'📋'}[ext] || '📎';
-        return `<div class="flex items-center justify-between p-3 rounded-lg bg-mine-surface2 border border-mine-border">
+        const ext  = f.name.split('.').pop().toLowerCase();
+        const icon = {pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',ppt:'📽️',pptx:'📽️',zip:'📦',rar:'📦',jpg:'🖼️',jpeg:'🖼️',png:'🖼️',csv:'📋'}[ext] || '📎';
+        return `<div class="flex items-center justify-between p-3 rounded-xl bg-mine-surface border border-mine-border">
           <div class="flex items-center gap-2 min-w-0">
-            <span>${icon}</span>
-            <span class="text-sm text-mine-text truncate">${f.name}</span>
-            <span class="text-xs text-mine-text3">${size}</span>
+            <span class="text-lg">${icon}</span>
+            <div class="min-w-0">
+              <div class="text-sm text-mine-text truncate">${f.name}</div>
+              <div class="text-xs text-mine-text3">${size}</div>
+            </div>
           </div>
-          <button onclick="removeFile(${i})" class="text-mine-text3 hover:text-mine-danger text-sm ml-2">✕</button>
+          <button onclick="removeFile(${i})" class="w-8 h-8 flex items-center justify-center text-mine-text3 active:text-mine-danger ml-2 flex-none">✕</button>
         </div>`;
       }).join('');
     }
 
     // 上传文件
     async function uploadFiles() {
-      if (selectedFiles.length === 0) return;
+      if (!selectedFiles.length) return;
       const btn = document.getElementById('upload-btn');
       btn.disabled = true; btn.textContent = '上传中...';
       const progress = document.getElementById('upload-progress');
       progress.classList.remove('hidden');
 
       const projectId = document.getElementById('project-select').value;
-      const category = document.getElementById('report-category').value;
       let uploaded = 0;
 
       for (const file of selectedFiles) {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('report_type', category);
-        formData.append('report_category', category);
+        formData.append('report_type', currentCat);
+        formData.append('report_category', currentCat);
         if (projectId) formData.append('project_id', projectId);
-
         try {
-          const res = await fetch('/api/mine-reports/upload', {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token },
-            body: formData
+          const res  = await fetch('/api/mine-reports/upload', {
+            method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || '上传失败');
           uploaded++;
         } catch (err) {
-          alert(`${file.name} 上传失败: ${err.message}`);
+          showToast(`${file.name} 上传失败: ${err.message}`);
         }
-
         const pct = Math.round((uploaded / selectedFiles.length) * 100);
         document.getElementById('progress-bar').style.width = pct + '%';
-        document.getElementById('progress-pct').textContent = pct + '%';
+        document.getElementById('progress-pct').textContent  = pct + '%';
         document.getElementById('progress-text').textContent = `已上传 ${uploaded}/${selectedFiles.length}`;
       }
 
       selectedFiles = [];
       renderFileList();
-      btn.disabled = false; btn.textContent = '上传资料';
-      setTimeout(() => { progress.classList.add('hidden'); }, 2000);
+      btn.disabled = false; btn.textContent = '开始上传';
+      setTimeout(() => progress.classList.add('hidden'), 2000);
       loadUploadedReports();
+      if (uploaded > 0) showToast(`${uploaded} 个文件上传成功`);
+    }
 
-      if (uploaded > 0) alert(`${uploaded} 个文件上传成功！`);
+    // Toast 轻提示
+    function showToast(msg) {
+      let t = document.getElementById('toast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 rounded-full text-sm text-white bg-black/80 backdrop-blur whitespace-nowrap transition-all';
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.style.opacity = '1';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2500);
+    }
+
+    // 加载项目列表
+    async function loadProjects() {
+      try {
+        const res  = await fetch('/api/mine-projects?limit=50', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        const sel  = document.getElementById('project-select');
+        (data.projects || []).forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id; opt.textContent = p.name;
+          sel.appendChild(opt);
+        });
+      } catch (e) {}
     }
 
     // 加载已上传资料
     async function loadUploadedReports() {
       try {
-        const res = await fetch('/api/mine-reports', { headers: { 'Authorization': 'Bearer ' + token } });
+        const res  = await fetch('/api/mine-reports', { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
         const list = document.getElementById('uploaded-list');
-        if (!data.reports || data.reports.length === 0) {
-          list.innerHTML = '<p class="text-xs text-mine-text3 text-center py-4">暂无已上传资料</p>';
+        if (!data.reports || !data.reports.length) {
+          list.innerHTML = '<p class="text-xs text-mine-text3 text-center py-6">暂无已上传资料</p>';
           return;
         }
         list.innerHTML = data.reports.map(r => {
-          const cat = categoryLabels[r.report_type] || r.report_type;
+          const cat  = categoryLabels[r.report_type] || r.report_type;
           const size = r.file_size ? (r.file_size < 1024*1024 ? (r.file_size/1024).toFixed(1)+'KB' : (r.file_size/1024/1024).toFixed(1)+'MB') : '';
           const date = new Date(r.created_at).toLocaleDateString('zh-CN');
-          return `<div class="flex items-center justify-between p-3 rounded-lg bg-mine-surface2 border border-mine-border">
-            <div class="min-w-0">
+          return `<div class="flex items-center justify-between p-3 rounded-xl bg-mine-surface border border-mine-border">
+            <div class="min-w-0 flex-1">
               <div class="text-sm text-mine-text truncate">${r.original_filename}</div>
-              <div class="flex items-center gap-2 mt-0.5 text-xs text-mine-text3">
-                <span class="px-1.5 py-0.5 rounded bg-mine-gold/10 text-mine-gold">${cat}</span>
-                <span>${size}</span>
-                <span>${date}</span>
+              <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                <span class="text-[11px] px-1.5 py-0.5 rounded bg-mine-gold/10 text-mine-gold">${cat}</span>
+                <span class="text-[11px] text-mine-text3">${size}</span>
+                <span class="text-[11px] text-mine-text3">${date}</span>
               </div>
             </div>
-            <button onclick="deleteReport(${r.id})" class="text-mine-text3 hover:text-mine-danger text-xs ml-2">删除</button>
+            <button onclick="deleteReport(${r.id})"
+                    class="w-9 h-9 flex items-center justify-center text-mine-text3 active:text-mine-danger ml-2 flex-none rounded-lg">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
           </div>`;
         }).join('');
       } catch (e) {
@@ -416,7 +474,8 @@
       try {
         await fetch('/api/mine-reports/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
         loadUploadedReports();
-      } catch (e) { alert('删除失败'); }
+        showToast('已删除');
+      } catch (e) { showToast('删除失败'); }
     }
 
     loadProjects();
