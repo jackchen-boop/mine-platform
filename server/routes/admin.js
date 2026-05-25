@@ -77,7 +77,7 @@ router.get('/users/:id', (req, res) => {
 // POST /api/admin/users — 创建用户
 router.post('/users', async (req, res) => {
   try {
-    const { name, email, password, phone, role, org_type, organization } = req.body;
+    const { name, email, password, phone, role, org_type, organization, workgroup_id, new_workgroup_name } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ error: '姓名、邮箱和密码为必填项' });
     }
@@ -103,8 +103,32 @@ router.post('/users', async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', 0)
     `).run(name, email, phone || null, passwordHash, userRole, org_type || userRole, organization || null, avatarLetter);
 
-    const user = db.prepare('SELECT id, name, email, phone, role, org_type, organization, status, created_at FROM users WHERE id = ?').get(result.lastInsertRowid);
-    res.status(201).json({ user, message: '用户已创建' });
+    const userId = result.lastInsertRowid;
+
+    // 处理工作组分配
+    let assignedWorkgroup = null;
+    if (new_workgroup_name && new_workgroup_name.trim()) {
+      // 新建工作组并加入
+      const code = 'WG-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+      const wgResult = db.prepare(`
+        INSERT INTO workgroups (name, code, description, owner_id, status)
+        VALUES (?, ?, ?, ?, 'active')
+      `).run(new_workgroup_name.trim(), code, null, userId);
+      db.prepare('INSERT INTO workgroup_members (workgroup_id, user_id, role) VALUES (?,?,?)')
+        .run(wgResult.lastInsertRowid, userId, 'owner');
+      assignedWorkgroup = { id: wgResult.lastInsertRowid, name: new_workgroup_name.trim(), code, action: 'created' };
+    } else if (workgroup_id) {
+      // 加入现有工作组
+      const wg = db.prepare('SELECT id FROM workgroups WHERE id = ?').get(workgroup_id);
+      if (wg) {
+        db.prepare('INSERT OR IGNORE INTO workgroup_members (workgroup_id, user_id, role) VALUES (?,?,?)')
+          .run(workgroup_id, userId, 'member');
+        assignedWorkgroup = { id: workgroup_id, action: 'joined' };
+      }
+    }
+
+    const user = db.prepare('SELECT id, name, email, phone, role, org_type, organization, status, created_at FROM users WHERE id = ?').get(userId);
+    res.status(201).json({ user, workgroup: assignedWorkgroup, message: '用户已创建' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

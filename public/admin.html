@@ -223,8 +223,19 @@
       } catch (e) { console.error(e); }
     }
 
+    let cachedWorkgroups = [];
+
+    async function fetchWorkgroupsForSelect() {
+      try {
+        const res = await fetch('/api/admin/workgroups', { headers: authHeaders() });
+        const data = await res.json();
+        cachedWorkgroups = data.workgroups || [];
+      } catch (e) { cachedWorkgroups = []; }
+    }
+
     function openUserModal(id, name, email, phone, role, org_type, organization, status) {
       const isEdit = !!id;
+      const wgOptions = cachedWorkgroups.map(wg => `<option value="${wg.id}">${wg.name} (${wg.code})</option>`).join('');
       openModal(`
         <h2 class="text-lg font-bold mb-4">${isEdit ? '编辑用户' : '新增用户'}</h2>
         <div class="space-y-3">
@@ -250,12 +261,36 @@
             <div><label class="text-xs text-mine-text3 block mb-1">手机号</label><input id="u-phone" value="${isEdit ? phone : ''}" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" /></div>
             <div><label class="text-xs text-mine-text3 block mb-1">机构名称</label><input id="u-organization" value="${isEdit ? organization : ''}" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" /></div>
           </div>
+          ${!isEdit ? `
+          <div class="border-t border-mine-border pt-3 mt-2">
+            <label class="text-xs text-mine-text3 block mb-2">工作组分配（可选）</label>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <select id="u-workgroup" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" onchange="toggleNewWgInput()">
+                  <option value="">不分配工作组</option>
+                  ${wgOptions}
+                  <option value="new">+ 新建工作组</option>
+                </select>
+              </div>
+              <div id="new-wg-container" class="hidden">
+                <input id="u-new-workgroup" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" placeholder="新工作组名称" />
+              </div>
+            </div>
+          </div>` : ''}
         </div>
         <div class="flex gap-3 mt-6">
           <button onclick="${isEdit ? `saveUser(${id})` : 'createUser()'}" class="flex-1 py-2 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium hover:bg-mine-goldLight">保存</button>
           <button onclick="closeModal()" class="flex-1 py-2 rounded-lg border border-mine-border text-mine-text2 text-sm hover:border-mine-gold/40">取消</button>
         </div>
       `);
+    }
+
+    function toggleNewWgInput() {
+      const select = document.getElementById('u-workgroup');
+      const container = document.getElementById('new-wg-container');
+      if (select && container) {
+        container.classList.toggle('hidden', select.value !== 'new');
+      }
     }
 
     async function createUser() {
@@ -267,10 +302,27 @@
         role: document.getElementById('u-role').value,
         organization: document.getElementById('u-organization').value,
       };
+      const wgSelect = document.getElementById('u-workgroup');
+      if (wgSelect) {
+        if (wgSelect.value === 'new') {
+          const newWgName = document.getElementById('u-new-workgroup').value;
+          if (newWgName && newWgName.trim()) body.new_workgroup_name = newWgName.trim();
+        } else if (wgSelect.value) {
+          body.workgroup_id = parseInt(wgSelect.value);
+        }
+      }
       try {
         const res = await fetch('/api/admin/users', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
-        if (res.ok) { closeModal(); loadUsers(); loadDashboard(); showToast('用户已创建'); }
-        else { const d = await res.json(); alert(d.error || '创建失败'); }
+        const data = await res.json();
+        if (res.ok) {
+          closeModal();
+          loadUsers();
+          loadWorkgroups();
+          loadDashboard();
+          const wgMsg = data.workgroup ? (data.workgroup.action === 'created' ? `，已创建工作组「${data.workgroup.name}」` : '，已加入工作组') : '';
+          showToast('用户已创建' + wgMsg);
+        }
+        else { alert(data.error || '创建失败'); }
       } catch (e) { alert('创建失败'); }
     }
 
@@ -585,6 +637,7 @@
 
     // Init
     loadDashboard();
+    fetchWorkgroupsForSelect();
   </script>
 </body>
 </html>
