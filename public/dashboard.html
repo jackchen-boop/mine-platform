@@ -38,26 +38,6 @@
   </style>
 </head>
 <body class="min-h-screen">
-  <nav class="fixed top-0 left-0 right-0 z-50 nav-blur border-b border-mine-border">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <a href="/" class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-mine-gold/20 flex items-center justify-center border border-mine-gold/30"><span class="text-lg">⛏️</span></div>
-          <span class="text-lg font-bold gold-gradient">矿资资本</span>
-        </a>
-        <div class="flex items-center gap-3">
-          <span id="user-name" class="hidden sm:inline text-sm text-mine-text2"></span>
-          <a href="/" class="text-sm text-mine-text2 hover:text-mine-gold transition-colors">首页</a>
-          <a href="/upload.html" class="text-sm text-mine-text2 hover:text-mine-gold transition-colors">资料上传</a>
-          <a href="/ai-analysis.html" class="text-sm text-mine-text2 hover:text-mine-gold transition-colors">AI分析</a>
-          <a href="/workbench.html" class="text-sm text-mine-text2 hover:text-mine-gold transition-colors">工作台</a>
-          <a href="/live.html" class="text-sm text-mine-text2 hover:text-mine-gold transition-colors">直播</a>
-          <button onclick="logout()" class="text-sm text-mine-text3 hover:text-mine-danger transition-colors">退出</button>
-        </div>
-      </div>
-    </div>
-  </nav>
-
   <main class="pt-20 pb-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- 用户信息 -->
     <div class="mb-8 p-6 rounded-2xl bg-mine-surface border border-mine-border">
@@ -360,5 +340,6 @@
     loadUser();
     loadDashboardProjects();
   </script>
+  <script src="/nav-component.js"></script>
 </body>
 </html>

@@ -73,34 +73,6 @@
 <body class="min-h-screen">
 
 <!-- ══ 顶部导航 ══ -->
-<nav class="fixed top-0 left-0 right-0 z-40 nav-blur border-b border-mine-border h-14">
-  <div class="flex items-center justify-between h-full px-4">
-    <div class="flex items-center gap-3">
-      <!-- 手机端：工作组切换按钮 -->
-      <button id="drawer-open-btn" class="md:hidden w-9 h-9 flex items-center justify-center rounded-lg bg-mine-surface2 border border-mine-border text-mine-text2" onclick="openDrawer()">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-      </button>
-      <a href="/" class="flex items-center gap-2">
-        <span class="font-bold gold-gradient text-base">矿资资本</span>
-      </a>
-      <span class="hidden md:inline text-mine-border text-sm">|</span>
-      <span class="hidden md:inline text-sm text-mine-text2">项目管理工作台</span>
-      <!-- 手机端：当前工作组名称 -->
-      <button class="md:hidden flex items-center gap-1 text-sm text-mine-text2" onclick="openDrawer()">
-        <span id="mobile-wg-name" class="max-w-[120px] truncate">选择工作组</span>
-        <svg class="w-3 h-3 text-mine-text3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-      </button>
-    </div>
-    <div class="flex items-center gap-2">
-      <span id="nav-user" class="hidden md:inline text-xs text-mine-text3"></span>
-      <a href="/dashboard.html" class="hidden md:inline text-xs text-mine-text3 hover:text-mine-gold">会员中心</a>
-      <a href="/" class="hidden md:inline text-xs text-mine-text3 hover:text-mine-gold">首页</a>
-      <!-- 手机端用户头像 -->
-      <div id="mobile-user-avatar" class="md:hidden w-8 h-8 rounded-full bg-mine-gold/20 flex items-center justify-center text-xs font-bold text-mine-gold border border-mine-gold/30"></div>
-    </div>
-  </div>
-</nav>
-
 <!-- ══ 主体：桌面版侧边栏 + 内容 ══ -->
 <div class="flex md:h-screen pt-14">
 
@@ -1180,5 +1152,6 @@ function showToast(msg) {
 
 init().then(() => openFromUrl());
 </script>
+  <script src="/nav-component.js"></script>
 </body>
 </html>

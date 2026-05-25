@@ -57,17 +57,6 @@
 <body class="min-h-screen">
 
   <!-- 顶部导航 -->
-  <nav class="fixed top-0 left-0 right-0 z-50 nav-blur border-b border-mine-border">
-    <div class="flex items-center justify-between h-14 px-4">
-      <a href="/workbench.html" class="flex items-center gap-2 text-mine-text2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        <span class="text-sm">工作台</span>
-      </a>
-      <span class="text-sm font-semibold gold-gradient">上传资料</span>
-      <a href="/dashboard.html" class="text-xs text-mine-text3 px-2 py-1">我的</a>
-    </div>
-  </nav>
-
   <!-- 主内容 -->
   <main class="pt-14 pb-6 px-4 max-w-2xl mx-auto">
 
@@ -481,5 +470,6 @@
     loadProjects();
     loadUploadedReports();
   </script>
+  <script src="/nav-component.js"></script>
 </body>
 </html>
