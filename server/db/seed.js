@@ -10,7 +10,7 @@ export function runSeed() {
   db.prepare(`INSERT OR IGNORE INTO users (id, name, email, password_hash, role, org_type, organization, avatar_letter, status, verified, created_at)
     VALUES (1, '管理员', 'admin@mine-cap.com',
       '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
-      'admin', 'admin', '矿资资本', '管', 'active', 1, ?)`,
+      'admin', 'admin', '矿脉科技', '管', 'active', 1, ?)`,
   ).run(now);
 
   // 示例投资人
@@ -204,7 +204,7 @@ export function runSeed() {
       title: '金岭金矿详查项目线上路演',
       project_id: 1,
       presenter_id: 1,
-      presenter_name: '矿资资本管理员',
+      presenter_name: '矿脉科技管理员',
       status: 'live',
       description: '详细介绍金岭金矿的资源储量、开发条件及合作方式，欢迎各投资机构参会交流。',
       room_token: 'room-jk-gold-001'
@@ -213,7 +213,7 @@ export function runSeed() {
       title: '云岭铜多金属矿项目推介',
       project_id: 2,
       presenter_id: 1,
-      presenter_name: '矿资资本管理员',
+      presenter_name: '矿脉科技管理员',
       status: 'scheduled',
       scheduled_at: new Date(Date.now() + 86400000 * 2).toISOString(),
       description: '三江成矿带中段大型铜多金属矿项目推介，欢迎预约观看。',
@@ -223,7 +223,7 @@ export function runSeed() {
       title: '银都银铅锌矿开发项目答疑',
       project_id: 3,
       presenter_id: 1,
-      presenter_name: '矿资资本管理员',
+      presenter_name: '矿脉科技管理员',
       status: 'ended',
       description: '采矿证在手、选矿厂建成的优质银铅锌项目，已结束可回看（模拟）。',
       room_token: 'room-nm-silver-003'

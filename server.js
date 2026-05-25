@@ -112,7 +112,7 @@ app.get('*', (req, res, next) => {
 app.use(errorHandler);
 
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n⛏️  矿资资本 MineCapital 平台已启动`);
+  console.log(`\n⛏️  矿脉科技 MinePulse 平台已启动`);
   console.log(`   地址: http://localhost:${PORT}`);
   console.log(`   监听: 0.0.0.0:${PORT}`);
   console.log(`   环境: ${process.env.NODE_ENV || 'development'}\n`);

@@ -1,7 +1,7 @@
 {
   "name": "mine-capital-platform",
   "version": "1.0.0",
-  "description": "矿资资本 — 贵金属矿权交易与AI分析平台",
+  "description": "矿脉科技 — 贵金属矿权交易与AI分析平台",
   "type": "module",
   "main": "server.js",
   "scripts": {

@@ -15,7 +15,7 @@
           <div class="w-9 h-9 rounded-lg bg-mine-gold/20 flex items-center justify-center border border-mine-gold/30">
             <span class="text-lg">⛏️</span>
           </div>
-          <span class="text-lg font-bold gold-gradient hidden sm:inline">矿资资本</span>
+          <span class="text-lg font-bold gold-gradient hidden sm:inline">矿脉科技</span>
         </a>
 
         <!-- Desktop Nav -->
