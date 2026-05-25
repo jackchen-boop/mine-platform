@@ -25,8 +25,6 @@
           <a href="/upload.html" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors ${currentPath === '/upload.html' ? 'text-mine-gold' : ''}">资料上传</a>
           <a href="/workbench.html" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors ${currentPath === '/workbench.html' ? 'text-mine-gold' : ''}">工作台</a>
           <a href="/live.html" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors ${currentPath === '/live.html' ? 'text-mine-gold' : ''}">直播路演</a>
-          <a href="/#features" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors">平台服务</a>
-          <a href="/#partners" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors">合作机构</a>
         </div>
 
         <!-- Right side -->
@@ -57,8 +55,6 @@
         <a href="/upload.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold ${currentPath === '/upload.html' ? 'text-mine-gold' : ''}">资料上传</a>
         <a href="/workbench.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold ${currentPath === '/workbench.html' ? 'text-mine-gold' : ''}">工作台</a>
         <a href="/live.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold ${currentPath === '/live.html' ? 'text-mine-gold' : ''}">直播路演</a>
-        <a href="/#features" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">平台服务</a>
-        <a href="/#partners" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">合作机构</a>
         ${isLoggedIn ? `
           <a href="/dashboard.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">会员中心</a>
           <button onclick="localStorage.removeItem('mine_token');localStorage.removeItem('mine_user');window.location.reload()" class="block w-full text-left px-3 py-2 text-sm text-mine-danger">退出登录</button>
