@@ -9,7 +9,8 @@ const router = Router();
 // POST /api/auth/register
 router.post('/register', async (req, res, next) => {
   try {
-    const { name, email, password, phone, organization, role, org_type } = req.body;
+    const { name, email: rawEmail, password, phone, organization, role, org_type } = req.body;
+    const email = rawEmail ? rawEmail.toLowerCase().trim() : '';
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: '姓名、邮箱和密码为必填项' });
@@ -49,7 +50,8 @@ router.post('/register', async (req, res, next) => {
 // POST /api/auth/login
 router.post('/login', async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email: rawEmail, password } = req.body;
+    const email = rawEmail ? rawEmail.toLowerCase().trim() : '';
     if (!email || !password) {
       return res.status(400).json({ error: '邮箱和密码不能为空' });
     }
@@ -151,7 +153,8 @@ router.post('/wx-login', async (req, res, next) => {
 // 将 openid 绑定到已有账号（输入邮箱+密码验证身份）
 router.post('/wx-bind', async (req, res, next) => {
   try {
-    const { openid, email, password } = req.body;
+    const { openid, email: rawEmail, password } = req.body;
+    const email = rawEmail ? rawEmail.toLowerCase().trim() : '';
     if (!openid || !email || !password) {
       return res.status(400).json({ error: '参数不完整' });
     }
