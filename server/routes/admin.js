@@ -159,7 +159,16 @@ router.put('/users/:id', async (req, res) => {
         organization = COALESCE(?, organization),
         status = COALESCE(?, status)
       WHERE id = ?
-    `).run(name, email, phone, role, org_type, organization, status, userId);
+    `).run(
+      name ?? null,
+      email ?? null,
+      phone ?? null,
+      role ?? null,
+      org_type ?? null,
+      organization ?? null,
+      status ?? null,
+      userId
+    );
 
     const user = db.prepare('SELECT id, name, email, phone, role, org_type, organization, status, created_at FROM users WHERE id = ?').get(userId);
     res.json({ user, message: '用户已更新' });
