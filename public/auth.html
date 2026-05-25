@@ -62,7 +62,35 @@
         </div>
         <div id="login-error" class="hidden text-sm text-mine-danger"></div>
         <button type="submit" class="w-full py-3 rounded-lg bg-mine-gold text-mine-bg font-semibold hover:bg-mine-goldLight transition-colors">登录</button>
-        <div class="text-center">
+
+        <!-- 微信扫码登录 -->
+        <div class="relative my-4">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-mine-border"></div></div>
+          <div class="relative flex justify-center"><span class="bg-mine-surface px-3 text-xs text-mine-text3">或</span></div>
+        </div>
+        <div id="wx-login-section">
+          <button type="button" id="wx-login-btn" onclick="wxLogin()"
+                  class="w-full py-3 rounded-lg bg-[#07C160] text-white font-semibold flex items-center justify-center gap-2 hover:bg-[#06AD56] transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.531c0 2.227 1.213 4.243 3.203 5.641l-.798 2.399 2.79-1.395c.962.267 1.972.416 3.016.444l-.002-.042c0-3.934 3.717-7.127 8.296-7.127.269 0 .535.012.798.034C16.667 4.934 13.005 2.188 8.691 2.188zm-2.97 4.742a1.01 1.01 0 110 2.02 1.01 1.01 0 010-2.02zm5.94 0a1.01 1.01 0 110 2.02 1.01 1.01 0 010-2.02zM16.505 9.73c-4.146 0-7.51 2.805-7.51 6.267 0 3.462 3.364 6.267 7.51 6.267.837 0 1.643-.12 2.397-.34l2.203 1.1-.63-1.89c1.588-1.117 2.54-2.747 2.54-4.537 0-3.462-3.364-6.267-7.51-6.267zm-2.49 3.78a.808.808 0 110 1.616.808.808 0 010-1.616zm4.98 0a.808.808 0 110 1.616.808.808 0 010-1.616z"/></svg>
+            微信扫码登录
+          </button>
+          <div id="wx-login-tip" class="hidden mt-3 p-3 rounded-lg bg-mine-surface2 border border-mine-border text-xs text-mine-text3 text-center">
+            <div class="mb-2">请使用微信扫描下方二维码登录</div>
+            <div id="wx-qr-placeholder" class="w-32 h-32 mx-auto bg-mine-surface border border-mine-border rounded-lg flex items-center justify-center text-mine-text3">
+              配置后显示
+            </div>
+            <div class="mt-2 text-[10px]">需管理员配置 WX_APPID 环境变量</div>
+          </div>
+          <!-- 微信绑定表单 -->
+          <div id="wx-bind-form" class="hidden mt-3 space-y-2 p-3 rounded-lg bg-mine-surface2 border border-mine-border">
+            <p class="text-xs text-mine-text3">首次微信登录需绑定已有账号</p>
+            <input type="email" id="wx-bind-email" class="w-full px-3 py-2 rounded-lg bg-mine-surface border border-mine-border text-mine-text text-sm" placeholder="绑定的邮箱" />
+            <input type="password" id="wx-bind-password" class="w-full px-3 py-2 rounded-lg bg-mine-surface border border-mine-border text-mine-text text-sm" placeholder="密码" />
+            <button type="button" onclick="wxBind()" class="w-full py-2 rounded-lg bg-[#07C160] text-white text-sm font-medium">绑定并登录</button>
+          </div>
+        </div>
+
+        <div class="text-center mt-2">
           <button type="button" id="admin-login-btn" class="text-xs text-mine-text3 hover:text-mine-gold underline">管理员登录</button>
         </div>
       </form>
@@ -155,6 +183,69 @@
       document.getElementById('login-email').value = 'admin@mine-cap.com';
       document.getElementById('login-password').value = 'password';
     });
+
+    // ── 微信扫码登录 ──
+    let wxOpenid = null;
+    function wxLogin() {
+      // 先检查后端是否配置了微信
+      // 如果有 WX_APPID，跳微信授权页；否则提示
+      const tip = document.getElementById('wx-login-tip');
+      tip.classList.toggle('hidden');
+    }
+    // 微信回调处理（从微信授权页跳回时 URL 会带 code）
+    async function handleWxCallback() {
+      const params = new URLSearchParams(location.search);
+      const code = params.get('code');
+      if (!code) return;
+      try {
+        const res = await fetch('/api/auth/wx-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+        const data = await res.json();
+        if (data.bound) {
+          // 已绑定 → 登录成功
+          localStorage.setItem('mine_token', data.token);
+          localStorage.setItem('mine_user', JSON.stringify(data.user));
+          window.location.href = '/dashboard.html';
+        } else {
+          // 未绑定 → 显示绑定表单
+          wxOpenid = data.openid;
+          document.getElementById('wx-login-tip').classList.remove('hidden');
+          document.getElementById('wx-bind-form').classList.remove('hidden');
+        }
+      } catch (e) {
+        document.getElementById('login-error').textContent = '微信登录失败';
+        document.getElementById('login-error').classList.remove('hidden');
+      }
+    }
+    async function wxBind() {
+      const email = document.getElementById('wx-bind-email').value;
+      const password = document.getElementById('wx-bind-password').value;
+      if (!email || !password || !wxOpenid) return;
+      try {
+        const res = await fetch('/api/auth/wx-bind', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ openid: wxOpenid, email, password })
+        });
+        const data = await res.json();
+        if (data.token) {
+          localStorage.setItem('mine_token', data.token);
+          localStorage.setItem('mine_user', JSON.stringify(data.user));
+          window.location.href = '/dashboard.html';
+        } else {
+          document.getElementById('login-error').textContent = data.error || '绑定失败';
+          document.getElementById('login-error').classList.remove('hidden');
+        }
+      } catch (e) {
+        document.getElementById('login-error').textContent = '绑定失败';
+        document.getElementById('login-error').classList.remove('hidden');
+      }
+    }
+    // 自动检测微信回调
+    handleWxCallback();
 
     document.getElementById('register-form').addEventListener('submit', async (e) => {
       e.preventDefault();

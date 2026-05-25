@@ -87,7 +87,7 @@
     </div>
 
     <!-- 选择分析方式 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <!-- 方式1：选择已有项目 -->
       <div class="p-6 rounded-2xl ai-panel">
         <div class="flex items-center gap-2 mb-4">
@@ -99,7 +99,53 @@
         <button onclick="analyzeProject()" id="analyze-project-btn" disabled class="w-full py-2.5 rounded-lg bg-mine-gold text-mine-bg font-semibold text-sm hover:bg-mine-goldLight transition-colors disabled:opacity-40 disabled:cursor-not-allowed">开始分析</button>
       </div>
 
-      <!-- 方式2：输入文本分析 -->
+      <!-- 方式2：上传资料分析（新增） -->
+      <div class="p-6 rounded-2xl ai-panel" style="border-color:rgba(201,169,110,0.3)">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-xl">📤</span>
+          <h2 class="text-lg font-semibold">上传资料分析</h2>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-mine-gold/15 text-mine-gold border border-mine-gold/25">推荐</span>
+        </div>
+        <p class="text-xs text-mine-text3 mb-4">上传矿权资料文件，AI自动提取关键信息并评价</p>
+        <div class="mb-3">
+          <label class="text-xs text-mine-text2 mb-1 block">资料分类</label>
+          <select id="upload-category" class="w-full px-3 py-2.5 rounded-lg bg-mine-surface2 border border-mine-border text-sm text-mine-text">
+            <option value="geology">📋 地质勘查报告</option>
+            <option value="processing">⚗️ 选矿试验报告</option>
+            <option value="feasibility">📊 技术经济评价</option>
+            <option value="license">📄 矿权证照</option>
+            <option value="operation">🏭 生产运营</option>
+            <option value="other">📎 其他补充资料</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="text-xs text-mine-text2 mb-1 block">矿种（可选）</label>
+          <select id="upload-mineral" class="w-full px-3 py-2.5 rounded-lg bg-mine-surface2 border border-mine-border text-sm text-mine-text">
+            <option value="">自动识别</option>
+            <option value="gold">金矿</option>
+            <option value="copper">铜矿</option>
+            <option value="silver">银矿</option>
+            <option value="copper,gold,silver">多金属</option>
+          </select>
+        </div>
+        <div id="upload-drop-zone" class="border-2 border-dashed border-mine-gold/30 rounded-xl p-4 text-center mb-3 cursor-pointer hover:border-mine-gold/60 hover:bg-mine-gold/5 transition-all" onclick="document.getElementById('ai-file-input').click()">
+          <svg class="w-8 h-8 mx-auto text-mine-text3 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          <p class="text-xs text-mine-text2">点击选择文件或拖拽到此处</p>
+          <p class="text-[10px] text-mine-text3 mt-0.5">PDF/Word/Excel/图片，≤50MB</p>
+          <input type="file" id="ai-file-input" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png,.csv" onchange="onFileSelected(event)" />
+        </div>
+        <div id="upload-file-info" class="hidden mb-3 p-2 rounded-lg bg-mine-surface2 border border-mine-border flex items-center justify-between">
+          <span id="upload-file-name" class="text-xs text-mine-text truncate"></span>
+          <button onclick="clearUploadFile()" class="text-xs text-mine-text3 hover:text-mine-danger ml-2">✕</button>
+        </div>
+        <div id="upload-progress-box" class="hidden mb-3">
+          <div class="flex justify-between text-[10px] text-mine-text3 mb-1"><span id="upload-progress-text">上传中...</span><span id="upload-progress-pct">0%</span></div>
+          <div class="w-full bg-mine-surface2 rounded-full h-1.5"><div id="upload-progress-bar" class="bg-mine-gold h-1.5 rounded-full transition-all" style="width:0%"></div></div>
+        </div>
+        <button onclick="analyzeUploadedFile()" id="analyze-upload-btn" disabled class="w-full py-2.5 rounded-lg bg-mine-gold text-mine-bg font-semibold text-sm hover:bg-mine-goldLight transition-colors disabled:opacity-40 disabled:cursor-not-allowed">上传并分析</button>
+      </div>
+
+      <!-- 方式3：输入文本分析 -->
       <div class="p-6 rounded-2xl ai-panel">
         <div class="flex items-center gap-2 mb-4">
           <span class="text-xl">📝</span>
@@ -163,6 +209,7 @@
   <script>
     const token = localStorage.getItem('mine_token');
     let selectedProjectId = null;
+    let selectedFile = null;
 
     // 加载项目列表
     async function loadProjects() {
@@ -205,6 +252,97 @@
     document.getElementById('report-text').addEventListener('input', function() {
       document.getElementById('analyze-text-btn').disabled = !this.value.trim();
     });
+
+    // 文件选择
+    function onFileSelected(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 50 * 1024 * 1024) { alert('文件超过50MB'); return; }
+      selectedFile = file;
+      document.getElementById('upload-file-name').textContent = file.name;
+      document.getElementById('upload-file-info').classList.remove('hidden');
+      document.getElementById('analyze-upload-btn').disabled = false;
+    }
+    function clearUploadFile() {
+      selectedFile = null;
+      document.getElementById('ai-file-input').value = '';
+      document.getElementById('upload-file-info').classList.add('hidden');
+      document.getElementById('analyze-upload-btn').disabled = true;
+    }
+
+    // 上传文件并分析
+    async function analyzeUploadedFile() {
+      if (!token) { alert('请先登录'); location.href = '/auth.html'; return; }
+      if (!selectedFile) return;
+      const btn = document.getElementById('analyze-upload-btn');
+      btn.disabled = true; btn.textContent = '上传分析中...';
+      const progressBox = document.getElementById('upload-progress-box');
+      progressBox.classList.remove('hidden');
+
+      try {
+        // 步骤1：上传文件
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('report_type', document.getElementById('upload-category').value);
+        formData.append('report_category', document.getElementById('upload-category').value);
+
+        const uploadRes = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', '/api/mine-reports/upload');
+          xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const pct = Math.round((e.loaded / e.total) * 80);
+              document.getElementById('upload-progress-bar').style.width = pct + '%';
+              document.getElementById('upload-progress-pct').textContent = pct + '%';
+              document.getElementById('upload-progress-text').textContent = '上传中...';
+            }
+          };
+          xhr.onload = () => {
+            if (xhr.status >= 400) { try { reject(JSON.parse(xhr.responseText)); } catch(e) { reject({error:'上传失败'}); } }
+            else resolve(JSON.parse(xhr.responseText));
+          };
+          xhr.onerror = () => reject({error:'网络错误'});
+          xhr.send(formData);
+        });
+
+        document.getElementById('upload-progress-bar').style.width = '90%';
+        document.getElementById('upload-progress-text').textContent = 'AI分析中...';
+
+        // 步骤2：调AI分析（基于上传的资料）
+        const mineral = document.getElementById('upload-mineral').value || undefined;
+        const category = document.getElementById('upload-category').value;
+
+        // 先尝试提取文本内容，若服务端支持则用 extracted_text
+        const reportRes = await fetch('/api/mine-reports', { headers: { 'Authorization': 'Bearer ' + token } });
+        const reportData = await reportRes.json();
+        const latestReport = (reportData.reports || []).find(r => r.id === uploadRes.id);
+
+        const analysisRes = await fetch('/api/mine-analysis/analyze-text', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            report_text: `【上传资料分析】文件：${selectedFile.name}\n分类：${category}\n文件大小：${(selectedFile.size/1024).toFixed(0)}KB\n\n请基于"${category}"类型的矿业资料，分析该项目的投资价值。${mineral ? '矿种：' + mineral : ''}`,
+            mineral_type: mineral,
+            report_id: uploadRes.id
+          })
+        });
+
+        const analysisData = await analysisRes.json();
+        if (!analysisRes.ok) throw new Error(analysisData.error || '分析失败');
+
+        document.getElementById('upload-progress-bar').style.width = '100%';
+        document.getElementById('upload-progress-pct').textContent = '100%';
+        document.getElementById('upload-progress-text').textContent = '分析完成';
+        setTimeout(() => progressBox.classList.add('hidden'), 2000);
+
+        renderAnalysis(analysisData.analysis);
+      } catch (err) {
+        alert('分析失败: ' + (err.error || err.message || '未知错误'));
+      } finally {
+        btn.disabled = false; btn.textContent = '上传并分析';
+      }
+    }
 
     // 分析平台项目
     async function analyzeProject() {

@@ -13,11 +13,33 @@ const __dirname = dirname(__filename);
 const uploadDir = process.env.UPLOAD_DIR || join(__dirname, '../../public/uploads');
 if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true });
 
+// 归档存储目录：/data/archive/{年}/{月}/{日}/{category}/
+const archiveBase = process.env.DATA_DIR || join(__dirname, '../../data');
+const archiveDir = join(archiveBase, 'archive');
+if (!existsSync(archiveDir)) mkdirSync(archiveDir, { recursive: true });
+
+function getArchivePath(category) {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const cat = category || 'other';
+  const dir = join(archiveDir, String(y), m, d, cat);
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
+  destination: (req, file, cb) => {
+    const category = req.body.report_type || req.body.report_category || 'other';
+    const dest = getArchivePath(category);
+    cb(null, dest);
+  },
   filename: (req, file, cb) => {
     const ext = file.originalname.split('.').pop();
-    cb(null, `${randomUUID()}.${ext}`);
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const uid = req.user ? req.user.id : 0;
+    cb(null, `${ts}_uid${uid}_${randomUUID().slice(0, 8)}.${ext}`);
   }
 });
 
@@ -41,15 +63,18 @@ router.post('/upload', requireAuth, upload.single('file'), (req, res) => {
 
     const { project_id, report_type, report_category } = req.body;
 
+    const category = req.body.report_type || req.body.report_category || 'other';
+    const archiveSubPath = req.file.path.replace(archiveDir + '/', '');
+
     const result = db.prepare(`
       INSERT INTO mine_reports (user_id, project_id, report_type, original_filename, stored_filename, file_size, file_type, parse_status)
       VALUES (?, ?, ?, ?, ?, ?, ?, 'uploaded')
     `).run(
       req.user.id,
       project_id || null,
-      report_type || report_category || 'other',
+      category,
       req.file.originalname,
-      req.file.filename,
+      archiveSubPath,
       req.file.size,
       req.file.mimetype
     );
@@ -71,18 +96,20 @@ router.post('/upload-batch', requireAuth, upload.array('files', 20), (req, res) 
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: '请选择文件' });
 
     const { project_id, report_type, report_category } = req.body;
+    const category = req.body.report_type || req.body.report_category || 'other';
     const results = [];
 
     for (const file of req.files) {
+      const archiveSubPath = file.path.replace(archiveDir + '/', '');
       const result = db.prepare(`
         INSERT INTO mine_reports (user_id, project_id, report_type, original_filename, stored_filename, file_size, file_type, parse_status)
         VALUES (?, ?, ?, ?, ?, ?, ?, 'uploaded')
       `).run(
         req.user.id,
         project_id || null,
-        report_type || report_category || 'other',
+        category,
         file.originalname,
-        file.filename,
+        archiveSubPath,
         file.size,
         file.mimetype
       );

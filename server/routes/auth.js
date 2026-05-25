@@ -101,4 +101,79 @@ router.put('/profile', requireAuth, async (req, res, next) => {
   }
 });
 
+// ── 微信扫码登录 ─────────────────────────────────────
+// 需要 wx_appid 和 wx_appsecret 环境变量
+// 流程：前端扫码 → 获取 code → 后端换 openid → 绑定/登录
+
+// POST /api/auth/wx-login
+// 接收微信 code，换取 openid，查找绑定用户或返回待绑定状态
+router.post('/wx-login', async (req, res, next) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: '缺少微信授权码' });
+
+    const appid     = process.env.WX_APPID;
+    const appsecret = process.env.WX_APPSECRET;
+    if (!appid || !appsecret) {
+      return res.status(501).json({ error: '微信登录未配置，请联系管理员设置 WX_APPID 和 WX_APPSECRET 环境变量' });
+    }
+
+    // 用 code 向微信服务器换取 openid + session_key
+    const wxUrl = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${appid}&secret=${appsecret}&code=${code}&grant_type=authorization_code`;
+    const wxRes = await fetch(wxUrl);
+    const wxData = await wxRes.json();
+
+    if (wxData.errcode) {
+      return res.status(400).json({ error: '微信授权失败: ' + (wxData.errmsg || wxData.errcode) });
+    }
+
+    const openid = wxData.openid;
+    const unionid = wxData.unionid || null;
+
+    // 查找已绑定此 openid 的用户
+    let user = db.prepare('SELECT * FROM users WHERE wx_openid = ?').get(openid);
+
+    if (user) {
+      // 已绑定 → 直接登录
+      const token = signToken({ id: user.id, email: user.email, role: user.role });
+      const { password_hash: _, ...safeUser } = user;
+      return res.json({ token, user: safeUser, bound: true });
+    }
+
+    // 未绑定 → 返回 openid，前端引导绑定已有账号或注册
+    res.json({ bound: false, openid, unionid });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/auth/wx-bind
+// 将 openid 绑定到已有账号（输入邮箱+密码验证身份）
+router.post('/wx-bind', async (req, res, next) => {
+  try {
+    const { openid, email, password } = req.body;
+    if (!openid || !email || !password) {
+      return res.status(400).json({ error: '参数不完整' });
+    }
+
+    const user = db.prepare('SELECT * FROM users WHERE email = ? AND status = ?').get(email, 'active');
+    if (!user) return res.status(401).json({ error: '邮箱或密码错误' });
+
+    const valid = await comparePassword(password, user.password_hash);
+    if (!valid) return res.status(401).json({ error: '邮箱或密码错误' });
+
+    // 绑定 openid
+    try { db.exec('ALTER TABLE users ADD COLUMN wx_openid TEXT'); } catch(e) {}
+    try { db.exec('ALTER TABLE users ADD COLUMN wx_unionid TEXT'); } catch(e) {}
+    db.prepare('UPDATE users SET wx_openid = ? WHERE id = ?').run(openid, user.id);
+
+    const token = signToken({ id: user.id, email: user.email, role: user.role });
+    const { password_hash: _, ...safeUser } = user;
+    safeUser.wx_openid = openid;
+    res.json({ token, user: safeUser, bound: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;
