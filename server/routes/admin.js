@@ -623,4 +623,51 @@ router.put('/inquiries/:id/status', (req, res) => {
   }
 });
 
+// ── 提取案例库管理 ────────────────────────────────────────
+
+// GET /api/admin/extraction-examples — 获取案例列表，支持 ?mineral=xxx 筛选
+router.get('/extraction-examples', (req, res) => {
+  try {
+    const { mineral } = req.query;
+    let query = `
+      SELECT e.id, e.mineral_types, e.province, e.source_text, e.extracted,
+             e.quality_score, e.created_at,
+             u.name as confirmed_by_name
+      FROM extraction_examples e
+      LEFT JOIN users u ON e.confirmed_by = u.id
+    `;
+    const params = [];
+    if (mineral) {
+      query += ' WHERE e.mineral_types LIKE ?';
+      params.push(`%${mineral}%`);
+    }
+    query += ' ORDER BY e.created_at DESC LIMIT 200';
+
+    const examples = db.prepare(query).all(...params);
+    const total = db.prepare(
+      mineral
+        ? 'SELECT COUNT(*) as cnt FROM extraction_examples WHERE mineral_types LIKE ?'
+        : 'SELECT COUNT(*) as cnt FROM extraction_examples'
+    ).get(...(mineral ? [`%${mineral}%`] : []))?.cnt || 0;
+
+    res.json({ examples, total });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/admin/extraction-examples/:id — 从案例库移除指定记录
+router.delete('/extraction-examples/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (!id) return res.status(400).json({ error: '无效ID' });
+    const row = db.prepare('SELECT id FROM extraction_examples WHERE id = ?').get(id);
+    if (!row) return res.status(404).json({ error: '案例不存在' });
+    db.prepare('DELETE FROM extraction_examples WHERE id = ?').run(id);
+    res.json({ message: '案例已移除' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

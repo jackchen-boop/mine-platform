@@ -324,5 +324,38 @@ export function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_project_photos_project ON project_photos(project_id);
   `);
 
+  // 金属价格历史记录（定时采集，AI分析引擎使用）
+  // 若旧表列名为 metal_type（旧版本），则删除重建（价格缓存数据可丢弃）
+  try {
+    const cols = db.prepare("PRAGMA table_info(metal_prices)").all();
+    const hasOldSchema = cols.some(c => c.name === 'metal_type');
+    if (hasOldSchema) {
+      db.exec("DROP TABLE IF EXISTS metal_prices");
+      console.log('[schema] 检测到旧版 metal_prices 表，已删除，将重建');
+    }
+  } catch(e) { /* 表不存在时忽略 */ }
+  db.exec("CREATE TABLE IF NOT EXISTS metal_prices (id INTEGER PRIMARY KEY AUTOINCREMENT, metal TEXT, symbol TEXT, price REAL, unit TEXT, source TEXT, fetched_at TEXT)");
+  try { db.exec("CREATE INDEX IF NOT EXISTS idx_metal_prices_metal ON metal_prices(metal, fetched_at)"); } catch(e) {}
+
+  // 提取案例库（用户确认的高质量提取结果，用于 few-shot 学习闭环）
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS extraction_examples (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      mineral_types TEXT    NOT NULL,
+      province      TEXT,
+      source_text   TEXT    NOT NULL,
+      extracted     TEXT    NOT NULL,
+      confirmed_by  INTEGER NOT NULL,
+      report_id     INTEGER,
+      project_id    INTEGER,
+      quality_score INTEGER DEFAULT 5,
+      created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_extraction_examples_mineral
+      ON extraction_examples(mineral_types);
+    CREATE INDEX IF NOT EXISTS idx_extraction_examples_province
+      ON extraction_examples(mineral_types, province);
+  `);
+
   console.log('✓ 矿业平台数据库 schema 初始化完成');
 }
