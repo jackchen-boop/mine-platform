@@ -1,17 +1,155 @@
 import { Router } from 'express';
+import { createRequire } from 'module';
 import db from '../db/connection.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
 import { signToken } from '../utils/token.js';
 import { requireAuth } from '../middleware/auth.js';
 
+const require = createRequire(import.meta.url);
+
 const router = Router();
+
+// 短信验证码内存缓存（生产环境应使用 Redis）
+const smsCodeCache = new Map();
+
+// 清理过期验证码
+function cleanExpiredCodes() {
+  const now = Date.now();
+  for (const [phone, data] of smsCodeCache) {
+    if (data.expireAt < now) smsCodeCache.delete(phone);
+  }
+}
+
+// 判断是否为手机号
+function isPhoneNumber(str) {
+  return /^1[3-9]\d{9}$/.test(str);
+}
+
+// 发送阿里云短信
+async function sendAliyunSms(phone, code) {
+  const accessKeyId = process.env.ALIYUN_SMS_KEY_ID;
+  const accessKeySecret = process.env.ALIYUN_SMS_KEY_SECRET;
+  const signName = process.env.ALIYUN_SMS_SIGN_NAME || '卓曼杭州企业管理咨询详情';
+  const templateCode = process.env.ALIYUN_SMS_TEMPLATE_CODE || 'SMS_335155253';
+
+  if (!accessKeyId || !accessKeySecret) {
+    // 未配置凭据时降级为控制台打印
+    console.log(`[SMS-FALLBACK] 验证码 ${phone}: ${code}`);
+    return { fallback: true };
+  }
+
+  const Dysmsapi = require('@alicloud/dysmsapi20170525');
+  const OpenApi = require('@alicloud/openapi-client');
+
+  const config = new OpenApi.Config({ accessKeyId, accessKeySecret });
+  config.endpoint = 'dysmsapi.aliyuncs.com';
+  const client = new Dysmsapi.default(config);
+
+  const sendReq = new Dysmsapi.SendSmsRequest({
+    phoneNumbers: phone,
+    signName,
+    templateCode,
+    templateParam: JSON.stringify({ code }),
+  });
+
+  const result = await client.sendSms(sendReq);
+  const body = result.body;
+  if (body.code !== 'OK') {
+    throw new Error(`短信发送失败: ${body.message || body.code}`);
+  }
+  return { bizId: body.bizId };
+}
+
+// POST /api/auth/send-sms-code — 发送短信验证码
+router.post('/send-sms-code', async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone || !isPhoneNumber(phone)) {
+      return res.status(400).json({ error: '请输入正确的11位手机号码' });
+    }
+
+    // 检查手机号是否已注册
+    const existing = db.prepare('SELECT id FROM users WHERE phone = ? AND status = ?').get(phone, 'active');
+    if (existing) {
+      return res.status(409).json({ error: '该手机号已注册' });
+    }
+
+    // 频率限制：60秒内不重复发送
+    cleanExpiredCodes();
+    const cached = smsCodeCache.get(phone);
+    if (cached && cached.expireAt - Date.now() > 4 * 60 * 1000) {
+      return res.status(429).json({ error: '发送过于频繁，请稍后再试' });
+    }
+
+    // 生成6位验证码
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    smsCodeCache.set(phone, { code, expireAt: Date.now() + 5 * 60 * 1000 });
+
+    // 发送短信
+    const result = await sendAliyunSms(phone, code);
+
+    res.json({
+      message: '验证码已发送，请在5分钟内完成验证',
+      // 非生产环境且降级时返回 code 方便调试
+      debug: result.fallback && process.env.NODE_ENV !== 'production' ? code : undefined,
+    });
+  } catch (err) {
+    // 发送失败时清除缓存中的验证码
+    smsCodeCache.delete(req.body?.phone);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // POST /api/auth/register
 router.post('/register', async (req, res, next) => {
   try {
-    const { name, email: rawEmail, password, phone, organization, role, org_type } = req.body;
+    const { name, email: rawEmail, phone, password, sms_code, organization, role, org_type } = req.body;
     const email = rawEmail ? rawEmail.toLowerCase().trim() : '';
 
+    // 手机号注册模式
+    if (phone && !email) {
+      if (!isPhoneNumber(phone)) {
+        return res.status(400).json({ error: '请输入正确的11位手机号码' });
+      }
+      if (!password || password.length < 8) {
+        return res.status(400).json({ error: '密码至少 8 位' });
+      }
+      if (!name) {
+        return res.status(400).json({ error: '姓名为必填项' });
+      }
+      // 验证短信验证码
+      const cached = smsCodeCache.get(phone);
+      if (!cached || cached.code !== sms_code || cached.expireAt < Date.now()) {
+        return res.status(400).json({ error: '验证码错误或已过期' });
+      }
+
+      const existingPhone = db.prepare('SELECT id FROM users WHERE phone = ?').get(phone);
+      if (existingPhone) {
+        return res.status(409).json({ error: '该手机号已注册' });
+      }
+
+      const passwordHash = await hashPassword(password);
+      const avatarLetter = name.charAt(0).toUpperCase();
+      const allowedRoles = ['investor', 'mine_enterprise'];
+      const userRole = allowedRoles.includes(role) ? role : 'investor';
+      const userOrgType = org_type || userRole;
+
+      const result = db.prepare(`
+        INSERT INTO users (name, email, phone, password_hash, role, org_type, organization, avatar_letter, status, verified)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', 0)
+      `).run(name, `${phone}@phone.user`, phone, passwordHash, userRole, userOrgType, organization || null, avatarLetter);
+
+      const user = db.prepare('SELECT id, name, email, phone, role, org_type, organization, avatar_letter FROM users WHERE id = ?').get(result.lastInsertRowid);
+      const token = signToken({ id: user.id, email: user.email, role: user.role });
+
+      // 清除验证码
+      smsCodeCache.delete(phone);
+
+      res.status(201).json({ token, user });
+      return;
+    }
+
+    // 邮箱注册模式
     if (!name || !email || !password) {
       return res.status(400).json({ error: '姓名、邮箱和密码为必填项' });
     }
@@ -50,20 +188,27 @@ router.post('/register', async (req, res, next) => {
 // POST /api/auth/login
 router.post('/login', async (req, res, next) => {
   try {
-    const { email: rawEmail, password } = req.body;
-    const email = rawEmail ? rawEmail.toLowerCase().trim() : '';
-    if (!email || !password) {
-      return res.status(400).json({ error: '邮箱和密码不能为空' });
+    const { account, email: rawEmail, password } = req.body;
+    const identifier = (account || rawEmail || '').toLowerCase().trim();
+    if (!identifier || !password) {
+      return res.status(400).json({ error: '账号和密码不能为空' });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE email = ? AND status = ?').get(email, 'active');
+    let user;
+    // 判断是手机号还是邮箱
+    if (isPhoneNumber(identifier)) {
+      user = db.prepare('SELECT * FROM users WHERE phone = ? AND status = ?').get(identifier, 'active');
+    } else {
+      user = db.prepare('SELECT * FROM users WHERE email = ? AND status = ?').get(identifier, 'active');
+    }
+
     if (!user) {
-      return res.status(401).json({ error: '邮箱或密码错误' });
+      return res.status(401).json({ error: '账号或密码错误' });
     }
 
     const valid = await comparePassword(password, user.password_hash);
     if (!valid) {
-      return res.status(401).json({ error: '邮箱或密码错误' });
+      return res.status(401).json({ error: '账号或密码错误' });
     }
 
     const token = signToken({ id: user.id, email: user.email, role: user.role });

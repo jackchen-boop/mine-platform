@@ -105,13 +105,17 @@ export function initSchema() {
 
     -- 意向沟通申请
     CREATE TABLE IF NOT EXISTS inquiries (
-      id         INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id    INTEGER NOT NULL REFERENCES users(id),
-      project_id INTEGER NOT NULL REFERENCES mine_projects(id),
-      message    TEXT,
-      budget     TEXT,
-      status     TEXT    DEFAULT 'pending',
-      created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id         INTEGER REFERENCES users(id),
+      project_id      INTEGER NOT NULL REFERENCES mine_projects(id),
+      contact_name    TEXT,
+      contact_phone   TEXT,
+      contact_org     TEXT,
+      message         TEXT,
+      budget          TEXT,
+      remark          TEXT,
+      status          TEXT    DEFAULT 'pending',
+      created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
     );
 
     -- 合作机构
@@ -233,6 +237,15 @@ export function initSchema() {
       updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
     );
 
+    -- 系统设置（AI模型配置等）
+    CREATE TABLE IF NOT EXISTS system_settings (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      setting_key TEXT    NOT NULL UNIQUE,
+      setting_value TEXT  NOT NULL DEFAULT '',
+      description TEXT,
+      updated_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+
     -- 索引
     CREATE INDEX IF NOT EXISTS idx_mine_projects_mineral  ON mine_projects(mineral_types);
     CREATE INDEX IF NOT EXISTS idx_mine_projects_province ON mine_projects(province);
@@ -248,6 +261,28 @@ export function initSchema() {
 
   // workgroup_id 列可能已存在（ALTER TABLE IF NOT EXISTS 在 SQLite < 3.37 不支持）
   try { db.exec('ALTER TABLE mine_projects ADD COLUMN workgroup_id INTEGER REFERENCES workgroups(id)'); } catch(e) {}
+
+  // 项目工作成果（工作组成员在各阶段产出的工作产物）
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS project_deliverables (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id  INTEGER NOT NULL REFERENCES mine_projects(id),
+      user_id     INTEGER NOT NULL REFERENCES users(id),
+      phase       TEXT    NOT NULL DEFAULT 'info_collection',
+      title       TEXT    NOT NULL,
+      description TEXT,
+      file_url    TEXT,
+      deliverable_type TEXT DEFAULT 'document',
+      -- deliverable_type: document(文档)/report(报告)/data(数据)/meeting(会议纪要)/analysis(分析)/other(其他)
+      created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_project_deliverables_project ON project_deliverables(project_id);
+    CREATE INDEX IF NOT EXISTS idx_project_deliverables_phase ON project_deliverables(phase);
+  `);
+
+  // AI分析相关扩展字段
+  try { db.exec('ALTER TABLE mine_projects ADD COLUMN ai_grade TEXT'); } catch(e) {}
+  try { db.exec('ALTER TABLE mine_projects ADD COLUMN ai_missing_data TEXT'); } catch(e) {}
 
   // 项目优先级评分相关字段
   try { db.exec('ALTER TABLE mine_projects ADD COLUMN priority_score REAL DEFAULT 0'); } catch(e) {}
@@ -273,6 +308,20 @@ export function initSchema() {
       UNIQUE(project_id, user_id)
     );
     CREATE INDEX IF NOT EXISTS idx_proj_participants ON project_participants(project_id);
+  `);
+
+  // 项目照片表
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS project_photos (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id   INTEGER NOT NULL REFERENCES mine_projects(id),
+      user_id      INTEGER NOT NULL REFERENCES users(id),
+      filename     TEXT    NOT NULL,
+      stored_name  TEXT    NOT NULL,
+      caption      TEXT,
+      created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_project_photos_project ON project_photos(project_id);
   `);
 
   console.log('✓ 矿业平台数据库 schema 初始化完成');

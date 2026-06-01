@@ -1,0 +1,53 @@
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <input class="search-input" placeholder="搜索项目名称、矿种、省份..." bindinput="onSearchInput" value="{{keyword}}" />
+    <button class="search-btn" bindtap="doSearch">搜索</button>
+  </view>
+
+  <!-- 筛选标签 -->
+  <scroll-view scroll-x class="filter-scroll">
+    <view class="filter-tags">
+      <view class="filter-tag {{currentFilter === 'all' ? 'active' : ''}}" bindtap="setFilter" data-filter="all">全部</view>
+      <view class="filter-tag {{currentFilter === 'gold' ? 'active' : ''}}" bindtap="setFilter" data-filter="gold">金矿</view>
+      <view class="filter-tag {{currentFilter === 'copper' ? 'active' : ''}}" bindtap="setFilter" data-filter="copper">铜矿</view>
+      <view class="filter-tag {{currentFilter === 'iron' ? 'active' : ''}}" bindtap="setFilter" data-filter="iron">铁矿</view>
+      <view class="filter-tag {{currentFilter === 'silver' ? 'active' : ''}}" bindtap="setFilter" data-filter="silver">银矿</view>
+    </view>
+  </scroll-view>
+
+  <!-- 项目列表 -->
+  <view class="project-list" wx:if="{{projects.length > 0}}">
+    <view class="project-card" wx:for="{{projects}}" wx:key="id" bindtap="goProjectDetail" data-id="{{item.id}}">
+      <view class="card-header">
+        <text class="project-name">{{item.name}}</text>
+        <view class="project-tags">
+          <text class="tag tag-gold" wx:if="{{item.is_hot}}">热门</text>
+          <text class="tag tag-gray">{{item.mineral_types}}</text>
+        </view>
+      </view>
+      <view class="card-body">
+        <view class="info-row">
+          <text class="info-label">位置：</text>
+          <text class="info-value">{{item.province}} {{item.city}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">面积：</text>
+          <text class="info-value">{{item.area_km2}} km²</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">储量：</text>
+          <text class="info-value">{{item.estimated_reserve}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">报价：</text>
+          <text class="info-value text-gold">{{item.asking_price}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <text class="empty-text">暂无项目数据</text>
+  </view>
+</view>

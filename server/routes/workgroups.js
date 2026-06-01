@@ -157,8 +157,9 @@ router.get('/:id/projects', requireAuth, (req, res) => {
       SELECT p.*,
         (SELECT COUNT(*) FROM project_tasks WHERE project_id=p.id) as task_count,
         (SELECT COUNT(*) FROM project_tasks WHERE project_id=p.id AND status='done') as task_done,
-        (SELECT COUNT(*) FROM project_activities WHERE project_id=p.id) as activity_count
-      FROM mine_projects p WHERE p.workgroup_id=? ORDER BY p.created_at DESC
+        (SELECT COUNT(*) FROM project_activities WHERE project_id=p.id) as activity_count,
+        (SELECT stored_name FROM project_photos WHERE project_id=p.id ORDER BY created_at ASC LIMIT 1) as first_photo
+      FROM mine_projects p WHERE p.workgroup_id=? AND p.status='active' ORDER BY p.created_at DESC
     `).all(wg.id);
     res.json({ projects });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -174,6 +175,10 @@ router.post('/:id/projects', requireAuth, (req, res) => {
     const { project_id } = req.body;
     const proj = db.prepare('SELECT * FROM mine_projects WHERE id=?').get(project_id);
     if (!proj) return res.status(404).json({ error: '项目不存在' });
+    // 非管理员不能将已属于其他工作组的项目抢走
+    if (proj.workgroup_id && proj.workgroup_id !== wg.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: '该项目已属于其他工作组' });
+    }
     db.prepare('UPDATE mine_projects SET workgroup_id=? WHERE id=?').run(wg.id, project_id);
     res.json({ message: '项目已加入工作组' });
   } catch (e) { res.status(500).json({ error: e.message }); }

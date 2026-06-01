@@ -1,0 +1,9 @@
+{
+  "desc": "矿脉科技 MinePulse 小程序",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

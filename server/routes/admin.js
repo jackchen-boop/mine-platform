@@ -2,6 +2,7 @@ import { Router } from 'express';
 import db from '../db/connection.js';
 import { requireRole } from '../middleware/auth.js';
 import { hashPassword } from '../utils/password.js';
+import { clearAISettingsCache } from '../lib/ai-provider.js';
 
 const router = Router();
 router.use(requireRole('admin'));
@@ -43,13 +44,32 @@ router.get('/dashboard', (req, res) => {
 
 // ===== Users CRUD =====
 
-// GET /api/admin/users — 列表
+// GET /api/admin/users — 列表（含工作组信息）
 router.get('/users', (req, res) => {
   try {
     const users = db.prepare(`
-      SELECT id, name, email, phone, role, org_type, organization, status, verified, created_at, wx_openid
+      SELECT id, name, email, phone, role, org_type, organization, status, verified, created_at
       FROM users ORDER BY created_at DESC
     `).all();
+
+    // 查询所有用户的工作组关系
+    const wgRows = db.prepare(`
+      SELECT wm.user_id, wg.id, wg.name, wg.code, wm.role as member_role
+      FROM workgroup_members wm
+      JOIN workgroups wg ON wg.id = wm.workgroup_id
+      WHERE wg.status = 'active'
+    `).all();
+
+    const wgMap = {};
+    for (const row of wgRows) {
+      if (!wgMap[row.user_id]) wgMap[row.user_id] = [];
+      wgMap[row.user_id].push({ id: row.id, name: row.name, code: row.code, member_role: row.member_role });
+    }
+
+    for (const user of users) {
+      user.workgroups = wgMap[user.id] || [];
+    }
+
     res.json({ users });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -59,7 +79,7 @@ router.get('/users', (req, res) => {
 // GET /api/admin/users/:id — 详情
 router.get('/users/:id', (req, res) => {
   try {
-    const user = db.prepare('SELECT id, name, email, phone, role, org_type, organization, status, verified, created_at, wx_openid FROM users WHERE id = ?').get(req.params.id);
+    const user = db.prepare('SELECT id, name, email, phone, role, org_type, organization, status, verified, created_at FROM users WHERE id = ?').get(req.params.id);
     if (!user) return res.status(404).json({ error: '用户不存在' });
     // 查询用户所在工作组
     const workgroups = db.prepare(`
@@ -77,7 +97,8 @@ router.get('/users/:id', (req, res) => {
 // POST /api/admin/users — 创建用户
 router.post('/users', async (req, res) => {
   try {
-    const { name, email, password, phone, role, org_type, organization, workgroup_id, new_workgroup_name } = req.body;
+    const { name, email: rawEmail, password, phone, role, org_type, organization, workgroup_id, workgroup_ids, new_workgroup_name } = req.body;
+    const email = rawEmail ? rawEmail.toLowerCase().trim() : '';
     if (!name || !email || !password) {
       return res.status(400).json({ error: '姓名、邮箱和密码为必填项' });
     }
@@ -105,10 +126,33 @@ router.post('/users', async (req, res) => {
 
     const userId = result.lastInsertRowid;
 
-    // 处理工作组分配
-    let assignedWorkgroup = null;
+    // 处理工作组分配（支持多个工作组）
+    const assignedWorkgroups = [];
+
+    // 处理 workgroup_ids 数组（多个现有工作组）
+    if (workgroup_ids && Array.isArray(workgroup_ids)) {
+      for (const wgId of workgroup_ids) {
+        const wg = db.prepare('SELECT id FROM workgroups WHERE id = ?').get(wgId);
+        if (wg) {
+          db.prepare('INSERT OR IGNORE INTO workgroup_members (workgroup_id, user_id, role) VALUES (?,?,?)')
+            .run(wgId, userId, 'member');
+          assignedWorkgroups.push({ id: wgId, action: 'joined' });
+        }
+      }
+    }
+
+    // 兼容单个 workgroup_id
+    if (workgroup_id && (!workgroup_ids || !workgroup_ids.includes(workgroup_id))) {
+      const wg = db.prepare('SELECT id FROM workgroups WHERE id = ?').get(workgroup_id);
+      if (wg) {
+        db.prepare('INSERT OR IGNORE INTO workgroup_members (workgroup_id, user_id, role) VALUES (?,?,?)')
+          .run(workgroup_id, userId, 'member');
+        assignedWorkgroups.push({ id: workgroup_id, action: 'joined' });
+      }
+    }
+
+    // 新建工作组
     if (new_workgroup_name && new_workgroup_name.trim()) {
-      // 新建工作组并加入
       const code = 'WG-' + Math.random().toString(36).substring(2, 10).toUpperCase();
       const wgResult = db.prepare(`
         INSERT INTO workgroups (name, code, description, owner_id, status)
@@ -116,19 +160,11 @@ router.post('/users', async (req, res) => {
       `).run(new_workgroup_name.trim(), code, null, userId);
       db.prepare('INSERT INTO workgroup_members (workgroup_id, user_id, role) VALUES (?,?,?)')
         .run(wgResult.lastInsertRowid, userId, 'owner');
-      assignedWorkgroup = { id: wgResult.lastInsertRowid, name: new_workgroup_name.trim(), code, action: 'created' };
-    } else if (workgroup_id) {
-      // 加入现有工作组
-      const wg = db.prepare('SELECT id FROM workgroups WHERE id = ?').get(workgroup_id);
-      if (wg) {
-        db.prepare('INSERT OR IGNORE INTO workgroup_members (workgroup_id, user_id, role) VALUES (?,?,?)')
-          .run(workgroup_id, userId, 'member');
-        assignedWorkgroup = { id: workgroup_id, action: 'joined' };
-      }
+      assignedWorkgroups.push({ id: wgResult.lastInsertRowid, name: new_workgroup_name.trim(), code, action: 'created' });
     }
 
     const user = db.prepare('SELECT id, name, email, phone, role, org_type, organization, status, created_at FROM users WHERE id = ?').get(userId);
-    res.status(201).json({ user, workgroup: assignedWorkgroup, message: '用户已创建' });
+    res.status(201).json({ user, workgroups: assignedWorkgroups, message: '用户已创建' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -137,8 +173,9 @@ router.post('/users', async (req, res) => {
 // PUT /api/admin/users/:id — 更新用户
 router.put('/users/:id', async (req, res) => {
   try {
-    const { name, email, phone, role, org_type, organization, status } = req.body;
+    const { name, email: rawEmail, phone, role, org_type, organization, status, workgroup_ids } = req.body;
     const userId = parseInt(req.params.id);
+    const email = rawEmail ? rawEmail.toLowerCase().trim() : null;
 
     const existing = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
     if (!existing) return res.status(404).json({ error: '用户不存在' });
@@ -169,6 +206,23 @@ router.put('/users/:id', async (req, res) => {
       status ?? null,
       userId
     );
+
+    // 如果提供了 workgroup_ids，更新用户的工作组关系
+    if (workgroup_ids && Array.isArray(workgroup_ids)) {
+      // 先移除用户不在新列表中的旧关系
+      if (workgroup_ids.length > 0) {
+        const placeholders = workgroup_ids.map(() => '?').join(',');
+        db.prepare(`DELETE FROM workgroup_members WHERE user_id = ? AND workgroup_id NOT IN (${placeholders})`)
+          .run(userId, ...workgroup_ids);
+      } else {
+        db.prepare('DELETE FROM workgroup_members WHERE user_id = ?').run(userId);
+      }
+      // 添加新关系（已存在的会被 OR IGNORE 跳过）
+      for (const wgId of workgroup_ids) {
+        db.prepare('INSERT OR IGNORE INTO workgroup_members (workgroup_id, user_id, role) VALUES (?, ?, ?)')
+          .run(wgId, userId, 'member');
+      }
+    }
 
     const user = db.prepare('SELECT id, name, email, phone, role, org_type, organization, status, created_at FROM users WHERE id = ?').get(userId);
     res.json({ user, message: '用户已更新' });
@@ -439,10 +493,131 @@ router.delete('/projects/:id', (req, res) => {
     const existing = db.prepare('SELECT id FROM mine_projects WHERE id = ?').get(projectId);
     if (!existing) return res.status(404).json({ error: '项目不存在' });
 
+    // 先删除所有关联表数据（避免外键约束失败）
+    // 注意顺序：先删除引用其他关联表的子表，再删除父表
+    db.prepare('DELETE FROM ai_analyses WHERE project_id = ?').run(projectId);
+    db.prepare('DELETE FROM ai_conversations WHERE project_id = ?').run(projectId);
+    db.prepare('DELETE FROM favorites WHERE project_id = ?').run(projectId);
+    db.prepare('DELETE FROM inquiries WHERE project_id = ?').run(projectId);
+    db.prepare('DELETE FROM live_streams WHERE project_id = ?').run(projectId);
+    db.prepare('DELETE FROM project_tasks WHERE project_id = ?').run(projectId);
+    db.prepare('DELETE FROM project_activities WHERE project_id = ?').run(projectId);
     db.prepare('DELETE FROM project_participants WHERE project_id = ?').run(projectId);
+    // mine_reports 的 report_id 可能被 ai_analyses 引用，但上面已清除 ai_analyses
+    db.prepare('DELETE FROM mine_reports WHERE project_id = ?').run(projectId);
     db.prepare('DELETE FROM mine_projects WHERE id = ?').run(projectId);
 
     res.json({ message: '项目已删除' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ===== System Settings =====
+
+// GET /api/admin/settings — 获取系统设置
+router.get('/settings', (req, res) => {
+  try {
+    const rows = db.prepare("SELECT setting_key, setting_value, description FROM system_settings WHERE setting_key LIKE 'ai_%'").all();
+    const settings = {};
+    for (const row of rows) {
+      settings[row.setting_key] = row.setting_value;
+    }
+    // 补全默认值
+    const defaults = {
+      ai_provider: 'minimax',
+      ai_api_key: '',
+      ai_api_base: 'https://api.minimaxi.com/v1',
+      ai_model: 'MiniMax-M2.7',
+      ai_max_tokens: '4096',
+      ai_temperature: '0.3',
+      ai_enabled: 'true',
+    };
+    for (const [key, val] of Object.entries(defaults)) {
+      if (settings[key] === undefined) settings[key] = val;
+    }
+    res.json({ settings });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/settings — 更新系统设置
+router.post('/settings', (req, res) => {
+  try {
+    const { settings } = req.body;
+    if (!settings || typeof settings !== 'object') {
+      return res.status(400).json({ error: 'settings 对象必填' });
+    }
+
+    const allowedKeys = ['ai_provider', 'ai_api_key', 'ai_api_base', 'ai_model', 'ai_max_tokens', 'ai_temperature', 'ai_enabled'];
+    const stmt = db.prepare(`
+      INSERT INTO system_settings (setting_key, setting_value, description)
+      VALUES (?, ?, ?)
+      ON CONFLICT(setting_key) DO UPDATE SET
+        setting_value = excluded.setting_value,
+        updated_at = datetime('now')
+    `);
+
+    for (const [key, val] of Object.entries(settings)) {
+      if (!allowedKeys.includes(key)) continue;
+      let desc = '';
+      if (key === 'ai_provider') desc = 'AI服务提供商';
+      if (key === 'ai_api_key') desc = 'API密钥';
+      if (key === 'ai_api_base') desc = 'API基础地址';
+      if (key === 'ai_model') desc = '模型名称';
+      if (key === 'ai_max_tokens') desc = '最大生成token数';
+      if (key === 'ai_temperature') desc = '采样温度';
+      if (key === 'ai_enabled') desc = '是否启用外部AI';
+      stmt.run(key, String(val), desc);
+    }
+
+    // 清除AI设置缓存，使新配置立即生效
+    clearAISettingsCache();
+
+    res.json({ message: '设置已更新' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── 意向管理 ─────────────────────────────────────────────
+
+// GET /api/admin/inquiries — 意向列表
+router.get('/inquiries', (req, res) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const params = [];
+    let where = '';
+    if (status && status !== 'all') { where = 'WHERE i.status = ?'; params.push(status); }
+
+    const total = db.prepare(`SELECT COUNT(*) as cnt FROM inquiries i ${where}`).get(...params)?.cnt || 0;
+    const inquiries = db.prepare(`
+      SELECT i.*, p.name as project_name, p.code as project_code,
+             u.name as user_name, u.phone as user_phone
+      FROM inquiries i
+      LEFT JOIN mine_projects p ON i.project_id = p.id
+      LEFT JOIN users u ON i.user_id = u.id
+      ${where}
+      ORDER BY i.created_at DESC
+      LIMIT ? OFFSET ?
+    `).all(...params, parseInt(limit), offset);
+
+    res.json({ inquiries, total, page: parseInt(page), limit: parseInt(limit) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/admin/inquiries/:id/status — 更新意向状态
+router.put('/inquiries/:id/status', (req, res) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['pending', 'contacted', 'closed'];
+    if (!allowed.includes(status)) return res.status(400).json({ error: '无效状态' });
+    db.prepare('UPDATE inquiries SET status = ? WHERE id = ?').run(status, req.params.id);
+    res.json({ message: '已更新' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

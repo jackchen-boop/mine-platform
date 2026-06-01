@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>管理后台 — 矿脉科技 MinePulse</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>" />
+  <link rel="icon" href="logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
@@ -39,6 +39,15 @@
     ::-webkit-scrollbar-track { background:transparent; }
     ::-webkit-scrollbar-thumb { background:#2a2a3a; border-radius:2px; }
   </style>
+  <script>
+    (function() {
+      const token = localStorage.getItem('mine_token');
+      const user = JSON.parse(localStorage.getItem('mine_user') || '{}');
+      if (!token || user.role !== 'admin') {
+        window.location.replace('/dashboard.html');
+      }
+    })();
+  </script>
 </head>
 <body class="min-h-screen">
   <nav class="fixed top-0 left-0 right-0 z-50 nav-blur border-b border-mine-border">
@@ -59,10 +68,12 @@
     <!-- Sidebar -->
     <aside class="w-52 border-r border-mine-border bg-mine-surface/50 hidden lg:block flex-shrink-0">
       <div class="p-3 space-y-1 sticky top-14">
-        <div class="sidebar-item active" data-page="dashboard" onclick="switchPage('dashboard')"><span class="text-lg">📊</span> 数据看板</div>
+        <div class="sidebar-item" data-page="dashboard" onclick="switchPage('dashboard')"><span class="text-lg">📊</span> 数据看板</div>
         <div class="sidebar-item" data-page="users" onclick="switchPage('users')"><span class="text-lg">👥</span> 用户管理</div>
         <div class="sidebar-item" data-page="workgroups" onclick="switchPage('workgroups')"><span class="text-lg">🛡️</span> 工作组管理</div>
         <div class="sidebar-item" data-page="projects" onclick="switchPage('projects')"><span class="text-lg">📁</span> 项目管理</div>
+        <div class="sidebar-item" data-page="inquiries" onclick="switchPage('inquiries')"><span class="text-lg">📬</span> 意向管理</div>
+        <div class="sidebar-item" data-page="settings" onclick="switchPage('settings')"><span class="text-lg">⚙️</span> 系统设置</div>
       </div>
     </aside>
 
@@ -72,6 +83,8 @@
       <button onclick="switchPage('users')" class="text-xs text-mine-text2 flex flex-col items-center gap-1"><span class="text-lg">👥</span>用户</button>
       <button onclick="switchPage('workgroups')" class="text-xs text-mine-text2 flex flex-col items-center gap-1"><span class="text-lg">🛡️</span>工作组</button>
       <button onclick="switchPage('projects')" class="text-xs text-mine-text2 flex flex-col items-center gap-1"><span class="text-lg">📁</span>项目</button>
+      <button onclick="switchPage('inquiries')" class="text-xs text-mine-text2 flex flex-col items-center gap-1"><span class="text-lg">📬</span>意向</button>
+      <button onclick="switchPage('settings')" class="text-xs text-mine-text2 flex flex-col items-center gap-1"><span class="text-lg">⚙️</span>设置</button>
     </div>
 
     <!-- Main content -->
@@ -101,7 +114,7 @@
         </div>
         <div class="overflow-x-auto rounded-2xl border border-mine-border">
           <table class="w-full text-sm">
-            <thead><tr class="bg-mine-surface2 text-mine-text3 text-xs uppercase"><th class="text-left py-3 px-4">ID</th><th class="text-left py-3 px-4">姓名</th><th class="text-left py-3 px-4">邮箱</th><th class="text-left py-3 px-4">角色</th><th class="text-left py-3 px-4">机构</th><th class="text-left py-3 px-4">状态</th><th class="text-right py-3 px-4">操作</th></tr></thead>
+            <thead><tr class="bg-mine-surface2 text-mine-text3 text-xs uppercase"><th class="text-left py-3 px-4">ID</th><th class="text-left py-3 px-4">姓名</th><th class="text-left py-3 px-4">邮箱</th><th class="text-left py-3 px-4">角色</th><th class="text-left py-3 px-4">工作组</th><th class="text-left py-3 px-4">状态</th><th class="text-right py-3 px-4">操作</th></tr></thead>
             <tbody id="users-table"></tbody>
           </table>
         </div>
@@ -135,6 +148,90 @@
         </div>
       </div>
 
+      <!-- ===== INQUIRIES ===== -->
+      <div id="page-inquiries" class="page-section hidden">
+        <div class="flex items-center justify-between mb-5">
+          <h1 class="text-xl font-bold">意向管理</h1>
+          <div class="flex gap-2">
+            <select id="inquiry-status-filter" onchange="loadInquiries()" class="text-xs px-3 py-1.5 rounded-lg bg-mine-surface border border-mine-border text-mine-text">
+              <option value="all">全部状态</option>
+              <option value="pending">待跟进</option>
+              <option value="contacted">已联系</option>
+              <option value="closed">已关闭</option>
+            </select>
+          </div>
+        </div>
+        <div id="inquiries-table" class="space-y-3"></div>
+      </div>
+
+      <!-- ===== SETTINGS ===== -->
+      <div id="page-settings" class="page-section hidden">
+        <h1 class="text-xl font-bold mb-5">系统设置</h1>
+        <div class="max-w-2xl">
+          <div class="p-5 rounded-2xl bg-mine-surface border border-mine-border mb-5">
+            <h3 class="text-sm font-semibold mb-4 flex items-center gap-2"><span class="text-lg">🤖</span> AI 大模型配置</h3>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm text-mine-text block">启用外部AI大模型</label>
+                  <p class="text-xs text-mine-text3">关闭后将使用本地紫金矿业评价体系</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="s-ai-enabled" class="sr-only peer">
+                  <div class="w-11 h-6 bg-mine-surface2 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-mine-gold"></div>
+                </label>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="text-xs text-mine-text3 block mb-1">AI提供商</label>
+                  <select id="s-ai-provider" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm">
+                    <option value="minimax">MiniMax</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="local">本地模型</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs text-mine-text3 block mb-1">模型名称</label>
+                  <input id="s-ai-model" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" placeholder="如 MiniMax-Text-01" />
+                </div>
+              </div>
+              <div>
+                <label class="text-xs text-mine-text3 block mb-1">API Key</label>
+                <input id="s-ai-api-key" type="password" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" placeholder="sk-..." />
+                <p class="text-xs text-mine-text3 mt-1">密钥将以安全方式存储，仅服务端调用</p>
+              </div>
+              <div>
+                <label class="text-xs text-mine-text3 block mb-1">API 基础地址</label>
+                <input id="s-ai-api-base" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" placeholder="https://api.minimaxi.chat/v1" />
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="text-xs text-mine-text3 block mb-1">Max Tokens</label>
+                  <input id="s-ai-max-tokens" type="number" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" placeholder="4096" />
+                </div>
+                <div>
+                  <label class="text-xs text-mine-text3 block mb-1">Temperature</label>
+                  <input id="s-ai-temperature" type="number" step="0.1" min="0" max="2" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" placeholder="0.3" />
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 p-3 rounded-lg bg-mine-surface2 border border-mine-border">
+              <div class="text-xs text-mine-text3 mb-1">当前套餐 · MiniMax M2.7 包年</div>
+              <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-mine-text2">
+                <span>额度：1500次 / 5小时（≈50 TPS）</span>
+                <span>周上限：15000次</span>
+                <span>能力：图像理解 · 联网搜索 · 语音/图像生成</span>
+              </div>
+            </div>
+            <div class="flex gap-3 mt-4">
+              <button onclick="saveSettings()" class="px-6 py-2 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium hover:bg-mine-goldLight">保存配置</button>
+              <button onclick="testAIConnection()" class="px-6 py-2 rounded-lg border border-mine-border text-mine-text2 text-sm hover:border-mine-gold/40">测试连接</button>
+            </div>
+            <div id="ai-test-result" class="mt-3 hidden"></div>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -147,9 +244,7 @@
 
   <script>
     const token = localStorage.getItem('mine_token');
-    if (!token) { window.location.href = '/auth.html'; }
     const user = JSON.parse(localStorage.getItem('mine_user') || '{}');
-    if (user.role !== 'admin') { window.location.href = '/dashboard.html'; }
     document.getElementById('admin-name').textContent = user.name || '管理员';
 
     function authHeaders() { return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }; }
@@ -165,6 +260,8 @@
       if (page === 'users') loadUsers();
       if (page === 'workgroups') loadWorkgroups();
       if (page === 'projects') loadProjects();
+      if (page === 'inquiries') loadInquiries();
+      if (page === 'settings') loadSettings();
     }
 
     // ===== Modal =====
@@ -205,21 +302,23 @@
         const res = await fetch('/api/admin/users', { headers: authHeaders() });
         const data = await res.json();
         const tb = document.getElementById('users-table');
-        tb.innerHTML = (data.users || []).map(u => `
+        tb.innerHTML = (data.users || []).map(u => {
+          const wgTags = (u.workgroups || []).map(wg => `<span class="text-[10px] px-1.5 py-0.5 rounded bg-mine-gold/10 text-mine-gold border border-mine-gold/20 mr-1">${wg.name}</span>`).join('') || '<span class="text-xs text-mine-text3">-</span>';
+          return `
           <tr class="table-row border-b border-mine-border">
             <td class="py-3 px-4 text-mine-text3">${u.id}</td>
             <td class="py-3 px-4 font-medium">${u.name}</td>
             <td class="py-3 px-4 text-mine-text2">${u.email}</td>
             <td class="py-3 px-4"><span class="text-xs px-2 py-0.5 rounded bg-mine-surface2 text-mine-text2">${u.role}</span></td>
-            <td class="py-3 px-4 text-mine-text2">${u.organization || '-'}</td>
+            <td class="py-3 px-4">${wgTags}</td>
             <td class="py-3 px-4"><span class="text-xs px-2 py-0.5 rounded ${u.status === 'active' ? 'bg-mine-success/20 text-mine-success' : 'bg-mine-danger/20 text-mine-danger'}">${u.status}</span></td>
             <td class="py-3 px-4 text-right">
-              <button onclick="openUserModal(${u.id}, '${u.name}', '${u.email}', '${u.phone || ''}', '${u.role}', '${u.org_type}', '${u.organization || ''}', '${u.status}')" class="text-xs text-mine-gold hover:underline mr-3">编辑</button>
+              <button onclick='openUserModal(${JSON.stringify(u).replace(/'/g, "&#39;")})' class="text-xs text-mine-gold hover:underline mr-3">编辑</button>
               <button onclick="openResetPwdModal(${u.id}, '${u.name}')" class="text-xs text-mine-warning hover:underline mr-3">重置密码</button>
               ${u.id !== 1 ? `<button onclick="deleteUser(${u.id}, '${u.name}')" class="text-xs text-mine-danger hover:underline">删除</button>` : '<span class="text-xs text-mine-text3">-</span>'}
             </td>
           </tr>
-        `).join('');
+        `}).join('');
       } catch (e) { console.error(e); }
     }
 
@@ -233,33 +332,45 @@
       } catch (e) { cachedWorkgroups = []; }
     }
 
-    function openUserModal(id, name, email, phone, role, org_type, organization, status) {
-      const isEdit = !!id;
+    function openUserModal(userObj) {
+      const u = userObj || {};
+      const isEdit = !!u.id;
       const wgOptions = cachedWorkgroups.map(wg => `<option value="${wg.id}">${wg.name} (${wg.code})</option>`).join('');
+
+      // 编辑模式下，生成工作组多选框
+      const userWgIds = (u.workgroups || []).map(w => w.id);
+      const wgCheckboxes = cachedWorkgroups.map(wg => {
+        const checked = userWgIds.includes(wg.id) ? 'checked' : '';
+        return `<label class="flex items-center gap-2 text-sm text-mine-text2 cursor-pointer py-1">
+          <input type="checkbox" name="u-wg-check" value="${wg.id}" ${checked} class="w-4 h-4 accent-mine-gold rounded">
+          <span>${wg.name}</span>
+        </label>`;
+      }).join('');
+
       openModal(`
         <h2 class="text-lg font-bold mb-4">${isEdit ? '编辑用户' : '新增用户'}</h2>
         <div class="space-y-3">
-          <div><label class="text-xs text-mine-text3 block mb-1">姓名 *</label><input id="u-name" value="${isEdit ? name : ''}" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" /></div>
-          <div><label class="text-xs text-mine-text3 block mb-1">邮箱 *</label><input id="u-email" value="${isEdit ? email : ''}" ${isEdit ? 'disabled' : ''} class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm ${isEdit ? 'opacity-50' : ''}" /></div>
+          <div><label class="text-xs text-mine-text3 block mb-1">姓名 *</label><input id="u-name" value="${isEdit ? u.name : ''}" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" /></div>
+          <div><label class="text-xs text-mine-text3 block mb-1">邮箱 *</label><input id="u-email" value="${isEdit ? u.email : ''}" ${isEdit ? 'disabled' : ''} class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm ${isEdit ? 'opacity-50' : ''}" /></div>
           ${!isEdit ? '<div><label class="text-xs text-mine-text3 block mb-1">密码 *（至少8位）</label><input id="u-password" type="password" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" /></div>' : ''}
           <div class="grid grid-cols-2 gap-3">
             <div><label class="text-xs text-mine-text3 block mb-1">角色</label>
               <select id="u-role" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm">
-                <option value="investor" ${role === 'investor' ? 'selected' : ''}>投资人</option>
-                <option value="mine_enterprise" ${role === 'mine_enterprise' ? 'selected' : ''}>矿企</option>
-                <option value="admin" ${role === 'admin' ? 'selected' : ''}>管理员</option>
+                <option value="investor" ${u.role === 'investor' ? 'selected' : ''}>投资人</option>
+                <option value="mine_enterprise" ${u.role === 'mine_enterprise' ? 'selected' : ''}>矿企</option>
+                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>管理员</option>
               </select>
             </div>
             <div><label class="text-xs text-mine-text3 block mb-1">状态</label>
               <select id="u-status" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm">
-                <option value="active" ${status === 'active' ? 'selected' : ''}>正常</option>
-                <option value="inactive" ${status === 'inactive' ? 'selected' : ''}>禁用</option>
+                <option value="active" ${u.status === 'active' ? 'selected' : ''}>正常</option>
+                <option value="inactive" ${u.status === 'inactive' ? 'selected' : ''}>禁用</option>
               </select>
             </div>
           </div>
           <div class="grid grid-cols-2 gap-3">
-            <div><label class="text-xs text-mine-text3 block mb-1">手机号</label><input id="u-phone" value="${isEdit ? phone : ''}" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" /></div>
-            <div><label class="text-xs text-mine-text3 block mb-1">机构名称</label><input id="u-organization" value="${isEdit ? organization : ''}" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" /></div>
+            <div><label class="text-xs text-mine-text3 block mb-1">手机号</label><input id="u-phone" value="${isEdit ? (u.phone || '') : ''}" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" /></div>
+            <div><label class="text-xs text-mine-text3 block mb-1">机构名称</label><input id="u-organization" value="${isEdit ? (u.organization || '') : ''}" class="w-full px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-sm" /></div>
           </div>
           ${!isEdit ? `
           <div class="border-t border-mine-border pt-3 mt-2">
@@ -277,9 +388,16 @@
               </div>
             </div>
           </div>` : ''}
+          ${isEdit && wgCheckboxes ? `
+          <div class="border-t border-mine-border pt-3 mt-2">
+            <label class="text-xs text-mine-text3 block mb-2">所属工作组（可多选）</label>
+            <div class="max-h-32 overflow-y-auto space-y-1 p-2 rounded-lg bg-mine-surface2 border border-mine-border">
+              ${wgCheckboxes}
+            </div>
+          </div>` : ''}
         </div>
         <div class="flex gap-3 mt-6">
-          <button onclick="${isEdit ? `saveUser(${id})` : 'createUser()'}" class="flex-1 py-2 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium hover:bg-mine-goldLight">保存</button>
+          <button onclick="${isEdit ? `saveUser(${u.id})` : 'createUser()'}" class="flex-1 py-2 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium hover:bg-mine-goldLight">保存</button>
           <button onclick="closeModal()" class="flex-1 py-2 rounded-lg border border-mine-border text-mine-text2 text-sm hover:border-mine-gold/40">取消</button>
         </div>
       `);
@@ -319,7 +437,7 @@
           loadUsers();
           loadWorkgroups();
           loadDashboard();
-          const wgMsg = data.workgroup ? (data.workgroup.action === 'created' ? `，已创建工作组「${data.workgroup.name}」` : '，已加入工作组') : '';
+          const wgMsg = data.workgroups && data.workgroups.length ? `，已分配 ${data.workgroups.length} 个工作组` : '';
           showToast('用户已创建' + wgMsg);
         }
         else { alert(data.error || '创建失败'); }
@@ -334,6 +452,11 @@
         phone: document.getElementById('u-phone').value,
         organization: document.getElementById('u-organization').value,
       };
+      // 收集选中的工作组
+      const wgChecks = document.querySelectorAll('input[name="u-wg-check"]:checked');
+      if (wgChecks.length > 0) {
+        body.workgroup_ids = Array.from(wgChecks).map(cb => parseInt(cb.value));
+      }
       try {
         const res = await fetch('/api/admin/users/' + id, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(body) });
         if (res.ok) { closeModal(); loadUsers(); loadDashboard(); showToast('用户已更新'); }
@@ -635,8 +758,120 @@
       } catch (e) { alert('删除失败'); }
     }
 
+    // ===== INQUIRIES =====
+    async function loadInquiries() {
+      const statusFilter = document.getElementById('inquiry-status-filter')?.value || 'all';
+      const tb = document.getElementById('inquiries-table');
+      if (!tb) return;
+      tb.innerHTML = '<div class="text-xs text-mine-text3 text-center py-8">加载中...</div>';
+      try {
+        const url = statusFilter === 'all' ? '/api/admin/inquiries' : `/api/admin/inquiries?status=${statusFilter}`;
+        const res = await fetch(url, { headers: authHeaders() });
+        const data = await res.json();
+        const inquiries = data.inquiries || [];
+        if (inquiries.length === 0) { tb.innerHTML = '<div class="text-xs text-mine-text3 text-center py-8">暂无意向记录</div>'; return; }
+        const statusLabels = { pending: '待跟进', contacted: '已联系', closed: '已关闭' };
+        const statusColors = { pending: 'bg-mine-warning/15 text-mine-warning', contacted: 'bg-mine-success/15 text-mine-success', closed: 'bg-mine-surface2 text-mine-text3' };
+        tb.innerHTML = inquiries.map(i => `
+          <div class="p-4 rounded-2xl bg-mine-surface border border-mine-border">
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <div class="text-sm font-semibold text-mine-text">${i.project_name || '未知项目'} <span class="text-xs text-mine-text3 font-normal">${i.project_code || ''}</span></div>
+                <div class="text-xs text-mine-text3 mt-0.5">${new Date(i.created_at).toLocaleString('zh-CN')}</div>
+              </div>
+              <span class="text-[11px] px-2 py-0.5 rounded-full flex-shrink-0 ${statusColors[i.status] || statusColors.pending}">${statusLabels[i.status] || i.status}</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs mb-3">
+              <div><span class="text-mine-text3">姓名：</span><span class="text-mine-text">${i.contact_name || i.user_name || '-'}</span></div>
+              <div><span class="text-mine-text3">电话：</span><span class="text-mine-text font-medium">${i.contact_phone || i.user_phone || '-'}</span></div>
+              <div><span class="text-mine-text3">机构：</span><span class="text-mine-text">${i.contact_org || '-'}</span></div>
+              ${i.budget ? `<div><span class="text-mine-text3">预算：</span><span class="text-mine-gold">${i.budget}</span></div>` : ''}
+            </div>
+            ${i.message ? `<div class="text-xs text-mine-text2 bg-mine-surface2 rounded-lg p-2 mb-3">${i.message}</div>` : ''}
+            <div class="flex gap-2">
+              <button onclick="updateInquiryStatus(${i.id},'contacted')" class="px-3 py-1 text-xs rounded-lg bg-mine-success/10 text-mine-success border border-mine-success/20">已联系</button>
+              <button onclick="updateInquiryStatus(${i.id},'closed')" class="px-3 py-1 text-xs rounded-lg bg-mine-surface2 text-mine-text3 border border-mine-border">关闭</button>
+              <button onclick="updateInquiryStatus(${i.id},'pending')" class="px-3 py-1 text-xs rounded-lg bg-mine-warning/10 text-mine-warning border border-mine-warning/20">重置</button>
+            </div>
+          </div>
+        `).join('');
+      } catch(e) { tb.innerHTML = `<div class="text-xs text-mine-danger text-center py-8">加载失败: ${e.message}</div>`; }
+    }
+
+    async function updateInquiryStatus(id, status) {
+      try {
+        const res = await fetch(`/api/admin/inquiries/${id}/status`, {
+          method: 'PUT',
+          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        loadInquiries();
+      } catch(e) { alert('更新失败：' + e.message); }
+    }
+
+    // ===== SETTINGS =====
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/admin/settings', { headers: authHeaders() });
+        const data = await res.json();
+        const s = data.settings || {};
+        document.getElementById('s-ai-enabled').checked = s.ai_enabled === 'true';
+        document.getElementById('s-ai-provider').value = s.ai_provider || 'minimax';
+        document.getElementById('s-ai-model').value = s.ai_model || '';
+        document.getElementById('s-ai-api-key').value = s.ai_api_key || '';
+        document.getElementById('s-ai-api-base').value = s.ai_api_base || '';
+        document.getElementById('s-ai-max-tokens').value = s.ai_max_tokens || '';
+        document.getElementById('s-ai-temperature').value = s.ai_temperature || '';
+      } catch (e) { console.error(e); }
+    }
+
+    async function saveSettings() {
+      const body = {
+        settings: {
+          ai_enabled: document.getElementById('s-ai-enabled').checked ? 'true' : 'false',
+          ai_provider: document.getElementById('s-ai-provider').value,
+          ai_model: document.getElementById('s-ai-model').value,
+          ai_api_key: document.getElementById('s-ai-api-key').value,
+          ai_api_base: document.getElementById('s-ai-api-base').value,
+          ai_max_tokens: document.getElementById('s-ai-max-tokens').value,
+          ai_temperature: document.getElementById('s-ai-temperature').value,
+        }
+      };
+      try {
+        const res = await fetch('/api/admin/settings', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+        if (res.ok) { showToast('配置已保存'); }
+        else { const d = await res.json(); alert(d.error || '保存失败'); }
+      } catch (e) { alert('保存失败'); }
+    }
+
+    async function testAIConnection() {
+      const resultDiv = document.getElementById('ai-test-result');
+      resultDiv.classList.remove('hidden');
+      resultDiv.innerHTML = '<span class="text-sm text-mine-text2">测试中...</span>';
+      try {
+        const res = await fetch('/api/admin/settings', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ settings: { ai_enabled: 'true' } }) });
+        // 简单的连通性测试：尝试让服务端做一次AI调用
+        const testRes = await fetch('/api/mine-analysis/analyze-text', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ report_text: '这是一个连通性测试，请返回简短的项目分析摘要。', mineral_type: 'gold' })
+        });
+        const data = await testRes.json();
+        if (testRes.ok && data.model && data.model !== 'zijin-evaluation-v1' && data.model !== 'local-generic') {
+          resultDiv.innerHTML = '<span class="text-sm text-mine-success">连接成功！模型: ' + data.model + '</span>';
+        } else if (testRes.ok) {
+          resultDiv.innerHTML = '<span class="text-sm text-mine-warning">API调用成功，但使用了本地回退模型。请检查API密钥是否配置正确。</span>';
+        } else {
+          resultDiv.innerHTML = '<span class="text-sm text-mine-danger">连接失败: ' + (data.error || '未知错误') + '</span>';
+        }
+      } catch (e) {
+        resultDiv.innerHTML = '<span class="text-sm text-mine-danger">连接失败: ' + e.message + '</span>';
+      }
+    }
+
     // Init
-    loadDashboard();
+    switchPage('dashboard');
     fetchWorkgroupsForSelect();
   </script>
 </body>

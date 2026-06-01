@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import db from '../db/connection.js';
 import { requireAuth } from '../middleware/auth.js';
-import { evaluateMineProject, STAGE_MAP } from '../lib/mine-evaluation.js';
+import { evaluateMineProject, STAGE_MAP, detectMissingData } from '../lib/mine-evaluation.js';
+import { callExternalLLM, getAISettings } from '../lib/ai-provider.js';
 
 const router = Router();
 
@@ -16,10 +17,20 @@ router.post('/analyze', requireAuth, async (req, res) => {
       if (!project) return res.status(404).json({ error: '项目不存在' });
     }
 
-    // 使用紫金矿业五阶段评价体系进行AI分析
-    const analysis = project
-      ? evaluateMineProject(project)
-      : generateGenericAnalysis(report_text || '', analysis_type);
+    // 使用外部大模型或本地评价体系进行AI分析
+    let llmResult;
+    if (project) {
+      llmResult = await callExternalLLM(project, report_text || '');
+    } else {
+      llmResult = {
+        result: generateGenericAnalysis(report_text || '', analysis_type),
+        model: 'local-generic',
+        tokenUsage: null,
+        error: null,
+      };
+    }
+    const analysis = llmResult.result;
+    const modelUsed = llmResult.model;
 
     const result = db.prepare(`
       INSERT INTO ai_analyses (user_id, project_id, analysis_type, content, ai_score, model_used, token_usage)
@@ -30,11 +41,19 @@ router.post('/analyze', requireAuth, async (req, res) => {
       analysis_type,
       JSON.stringify(analysis),
       analysis.overallScore,
-      'zijin-evaluation-v1',
-      JSON.stringify({ input: report_text ? report_text.length : 500, output: JSON.stringify(analysis).length })
+      modelUsed,
+      JSON.stringify(llmResult.tokenUsage || { input: report_text ? report_text.length : 500, output: JSON.stringify(analysis).length })
     );
 
-    res.json({ id: result.lastInsertRowid, analysis });
+    // 同步更新项目表的AI评分和分级
+    if (project_id) {
+      try {
+        db.prepare(`UPDATE mine_projects SET ai_score = ?, ai_grade = ?, ai_summary = ?, updated_at = datetime('now') WHERE id = ?`)
+          .run(analysis.overallScore, analysis.grade || null, analysis.summary || null, project_id);
+      } catch (e) { console.error('[mine-analysis] 更新项目AI评分失败:', e.message); }
+    }
+
+    res.json({ id: result.lastInsertRowid, analysis, model: modelUsed });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -43,37 +62,76 @@ router.post('/analyze', requireAuth, async (req, res) => {
 // POST /api/mine-analysis/analyze-text — 基于文本的AI分析（不上传项目）
 router.post('/analyze-text', requireAuth, async (req, res) => {
   try {
-    const { report_text, mineral_type, development_stage } = req.body;
-    if (!report_text) return res.status(400).json({ error: '报告文本不能为空' });
+    const { report_text, mineral_type, development_stage, extract_mode, report_ids, project_id } = req.body;
+
+    // 如果是提取模式且有报告ID，从数据库获取已提取的PDF文本
+    let combinedText = report_text || '';
+
+    if (report_ids && Array.isArray(report_ids) && report_ids.length > 0) {
+      const placeholders = report_ids.map(() => '?').join(',');
+      const reports = db.prepare(
+        `SELECT id, original_filename, extracted_text FROM mine_reports WHERE id IN (${placeholders})`
+      ).all(...report_ids);
+
+      const textParts = [];
+      for (const report of reports) {
+        if (report.extracted_text) {
+          textParts.push(`=== ${report.original_filename} ===\n${report.extracted_text.substring(0, 10000)}`);
+        } else {
+          textParts.push(`=== ${report.original_filename} ===\n（该文件未能提取文本内容）`);
+        }
+      }
+      if (textParts.length > 0) {
+        combinedText = textParts.join('\n\n');
+      }
+    }
+
+    if (!combinedText) return res.status(400).json({ error: '报告文本不能为空' });
+
+    // 提取模式：专门用于从资料中提取结构化核心信息
+    if (extract_mode) {
+      const extractResult = await performExtraction(combinedText, mineral_type);
+      return res.json({ id: 0, analysis: extractResult, model: 'minimax-extract' });
+    }
 
     // 构造虚拟项目对象进行评价
     const mockProject = {
       development_stage: development_stage || 'detailed-exploration',
       mineral_types: mineral_type || 'gold',
-      estimated_reserve: report_text,
-      reserve_grade: report_text,
-      description: report_text,
+      estimated_reserve: combinedText,
+      reserve_grade: combinedText,
+      description: combinedText,
       mine_type: 'underground',
       area_km2: 0,
       province: '',
       license_expires: null,
     };
 
-    const analysis = evaluateMineProject(mockProject);
+    const llmResult = await callExternalLLM(mockProject, combinedText);
+    const analysis = llmResult.result;
 
     const result = db.prepare(`
-      INSERT INTO ai_analyses (user_id, analysis_type, content, ai_score, model_used, token_usage)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO ai_analyses (user_id, project_id, analysis_type, content, ai_score, model_used, token_usage)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(
       req.user.id,
+      project_id || null,
       'text_analysis',
       JSON.stringify(analysis),
       analysis.overallScore,
-      'zijin-evaluation-v1',
-      JSON.stringify({ input: report_text.length, output: JSON.stringify(analysis).length })
+      llmResult.model,
+      JSON.stringify(llmResult.tokenUsage || { input: combinedText.length, output: JSON.stringify(analysis).length })
     );
 
-    res.json({ id: result.lastInsertRowid, analysis });
+    // 同步更新项目表的AI评分
+    if (project_id) {
+      try {
+        db.prepare(`UPDATE mine_projects SET ai_score = ?, ai_grade = ?, ai_summary = ?, updated_at = datetime('now') WHERE id = ? AND status = 'active'`)
+          .run(analysis.overallScore, analysis.grade || null, analysis.summary || null, project_id);
+      } catch (e) { console.error('[mine-analysis] 更新项目AI评分失败:', e.message); }
+    }
+
+    res.json({ id: result.lastInsertRowid, analysis, model: llmResult.model });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -98,11 +156,53 @@ router.post('/chat', requireAuth, (req, res) => {
   }
 });
 
+// GET /api/mine-analysis/project/:id — 查询某个项目的最新AI分析结果
+router.get('/project/:id', requireAuth, (req, res) => {
+  try {
+    const projectId = req.params.id;
+    const project = db.prepare('SELECT * FROM mine_projects WHERE id = ? AND status = ?').get(projectId, 'active');
+    if (!project) return res.status(404).json({ error: '项目不存在' });
+    // 权限：非管理员需为项目创建者或工作组成员
+    if (req.user.role !== 'admin' && project.owner_id !== req.user.id) {
+      const inWg = db.prepare('SELECT 1 FROM workgroup_members WHERE workgroup_id = ? AND user_id = ?').get(project.workgroup_id, req.user.id);
+      if (!inWg) return res.status(403).json({ error: '无权访问' });
+    }
+    // 取最新一条分析记录
+    const analysis = db.prepare(
+      'SELECT * FROM ai_analyses WHERE project_id = ? ORDER BY created_at DESC LIMIT 1'
+    ).get(projectId);
+    res.json({ analysis: analysis || null, project });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/mine-analysis/history — 分析历史
 router.get('/history', requireAuth, (req, res) => {
   try {
     const analyses = db.prepare('SELECT * FROM ai_analyses WHERE user_id = ? ORDER BY created_at DESC LIMIT 20').all(req.user.id);
     res.json({ analyses });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/mine-analysis/missing-data?project_id=xxx — 返回项目缺失数据清单
+router.get('/missing-data', requireAuth, (req, res) => {
+  try {
+    const { project_id } = req.query;
+    if (!project_id) return res.status(400).json({ error: 'project_id 必填' });
+    const project = db.prepare('SELECT * FROM mine_projects WHERE id = ? AND status = ?').get(project_id, 'active');
+    if (!project) return res.status(404).json({ error: '项目不存在' });
+    // 权限检查：非管理员只能访问自己所在工作组或自己创建的项目
+    if (req.user.role !== 'admin') {
+      if (project.owner_id !== req.user.id) {
+        const inWg = db.prepare('SELECT 1 FROM workgroup_members WHERE workgroup_id = ? AND user_id = ?').get(project.workgroup_id, req.user.id);
+        if (!inWg) return res.status(403).json({ error: '无权访问' });
+      }
+    }
+    const missing = detectMissingData(project);
+    res.json({ missingData: missing, count: missing.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -246,6 +346,104 @@ function generateChatReply(message, projectId) {
     '建议结合财务模型进行敏感性分析，重点关注金属价格波动对NPV和IRR的影响，以及成本超支情景下的项目韧性。',
   ];
   return responses[Math.floor(Math.random() * responses.length)];
+}
+
+// ---------------------------------------------------------------------------
+// 核心信息提取函数
+// ---------------------------------------------------------------------------
+
+async function performExtraction(textContent, mineralType) {
+  const settings = getAISettings();
+
+  // 如果AI未启用，直接返回错误
+  if (settings.ai_enabled !== 'true' || !settings.ai_api_key) {
+    throw new Error('AI服务未启用或未配置API密钥，无法进行智能提取。请在管理后台配置AI服务。');
+  }
+
+  const apiBase = settings.ai_api_base || 'https://api.minimaxi.com/v1';
+  const model = settings.ai_model || 'MiniMax-M2.7';
+
+  const extractSystemPrompt = `你是一位矿业数据提取专家。请从提供的矿业资料文本中精确提取核心结构化信息。
+只输出JSON格式，不要包含任何其他文字或markdown代码块标记。
+返回格式如下：
+{
+  "extractedFields": {
+    "project_name": "项目名称（从标题或正文中提取）",
+    "mineral_types": "矿种（如金矿、铜矿、铅锌矿等）",
+    "province": "省份",
+    "city": "城市/州/县",
+    "area_km2": "矿权面积（数字，单位km²）",
+    "estimated_reserve": "估算储量（含单位，如'金金属量12.5吨'）",
+    "reserve_grade": "品位（含单位，如'3.52 g/t'）",
+    "depth_range": "矿体深度范围",
+    "mine_type": "矿山类型（露天open-pit/地下underground/联合combined）",
+    "development_stage": "开发阶段",
+    "license_status": "证照状态",
+    "asking_price": "报价或交易对价",
+    "description": "项目简要描述（100字以内）"
+  },
+  "summary": "50字以内的资料核心内容摘要"
+}
+注意：
+- 如果某个字段无法从资料中提取到，该字段值设为null，不要编造
+- 矿种、储量、品位是关键信息，务必仔细查找
+- 企业名称、地区信息通常出现在报告开头
+- 储量和品位可能以表格或正文形式出现
+- 必须严格返回合法JSON`;
+
+  const userPrompt = mineralType
+    ? `已知矿种提示：${mineralType}\n\n请从以下矿业资料中提取核心信息：\n\n${textContent.substring(0, 8000)}`
+    : `请从以下矿业资料中提取核心信息：\n\n${textContent.substring(0, 8000)}`;
+
+  try {
+    const response = await fetch(`${apiBase}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${settings.ai_api_key}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: extractSystemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        max_tokens: 4096,
+        temperature: 0.1,
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '');
+      throw new Error(`API ${response.status}: ${errText}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+
+    if (!content) throw new Error('AI返回内容为空');
+
+    // 提取JSON
+    let jsonStr = content.trim();
+    const codeBlockMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlockMatch) jsonStr = codeBlockMatch[1].trim();
+
+    const firstBrace = jsonStr.indexOf('{');
+    const lastBrace = jsonStr.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+    }
+
+    const parsed = JSON.parse(jsonStr);
+
+    return {
+      extractedFields: parsed.extractedFields || parsed.fields || {},
+      summary: parsed.summary || '',
+    };
+  } catch (err) {
+    console.error('[mine-analysis] AI提取失败:', err.message);
+    throw new Error('AI服务连接失败：' + err.message + '。请检查AI服务配置或稍后重试。');
+  }
 }
 
 export default router;

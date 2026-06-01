@@ -1,0 +1,142 @@
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #c9a96e;
+  margin-bottom: 24rpx;
+}
+
+.form-group {
+  margin-bottom: 32rpx;
+}
+
+.label {
+  display: block;
+  font-size: 26rpx;
+  color: #94a3b8;
+  margin-bottom: 12rpx;
+}
+
+.picker-field {
+  background: #1a1a26;
+  border: 1rpx solid #2a2a3a;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.picker-text {
+  color: #e2e8f0;
+  font-size: 28rpx;
+}
+
+.picker-placeholder {
+  color: #64748b;
+  font-size: 28rpx;
+}
+
+.picker-arrow {
+  color: #64748b;
+  font-size: 24rpx;
+}
+
+.input-field {
+  background: #1a1a26;
+  border: 1rpx solid #2a2a3a;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  color: #e2e8f0;
+  font-size: 28rpx;
+}
+
+.textarea-field {
+  background: #1a1a26;
+  border: 1rpx solid #2a2a3a;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  color: #e2e8f0;
+  font-size: 28rpx;
+  height: 160rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.file-uploader {
+  background: #1a1a26;
+  border: 2rpx dashed #2a2a3a;
+  border-radius: 16rpx;
+  padding: 48rpx;
+  text-align: center;
+}
+
+.upload-placeholder {
+  color: #64748b;
+  font-size: 28rpx;
+}
+
+.upload-file-name {
+  color: #c9a96e;
+  font-size: 28rpx;
+}
+
+.upload-btn {
+  margin-top: 20rpx;
+}
+
+.report-list {
+  padding-bottom: 40rpx;
+}
+
+.report-card {
+  background: #12121a;
+  border: 1rpx solid #2a2a3a;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.report-name {
+  font-size: 28rpx;
+  color: #e2e8f0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-type {
+  font-size: 22rpx;
+  color: #64748b;
+  background: #1a1a26;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  margin-left: 12rpx;
+}
+
+.report-meta {
+  display: flex;
+  justify-content: space-between;
+}
+
+.meta-text {
+  font-size: 24rpx;
+  color: #64748b;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60rpx 0;
+}
+
+.empty-text {
+  color: #64748b;
+  font-size: 28rpx;
+}

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>登录 / 注册 — 矿脉科技 MinePulse</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>" />
+  <link rel="icon" href="logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
@@ -41,8 +41,8 @@
 
       <form id="login-form" class="space-y-5">
         <div>
-          <label class="block text-sm text-mine-text2 mb-1.5">邮箱</label>
-          <input type="email" id="login-email" class="w-full px-4 py-3 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text placeholder-mine-text3 text-sm" placeholder="your@email.com" />
+          <label class="block text-sm text-mine-text2 mb-1.5">邮箱 / 手机号</label>
+          <input type="text" id="login-account" class="w-full px-4 py-3 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text placeholder-mine-text3 text-sm" placeholder="your@email.com 或 13800138000" />
         </div>
         <div>
           <label class="block text-sm text-mine-text2 mb-1.5">密码</label>
@@ -84,6 +84,12 @@
       </form>
 
       <form id="register-form" class="space-y-5 hidden">
+        <!-- 注册方式切换 -->
+        <div class="flex rounded-lg bg-mine-surface2 border border-mine-border p-1">
+          <button type="button" id="reg-tab-email" class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors bg-mine-gold/15 text-mine-gold">邮箱注册</button>
+          <button type="button" id="reg-tab-phone" class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-mine-text2 hover:text-mine-gold">手机号注册</button>
+        </div>
+
         <div>
           <label class="block text-sm text-mine-text2 mb-1.5">机构类型</label>
           <div class="grid grid-cols-2 gap-3">
@@ -105,14 +111,25 @@
           <label class="block text-sm text-mine-text2 mb-1.5">机构名称</label>
           <input type="text" id="reg-org" class="w-full px-4 py-3 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text placeholder-mine-text3 text-sm" placeholder="公司名称" />
         </div>
-        <div>
+
+        <!-- 邮箱注册字段 -->
+        <div id="reg-email-field">
           <label class="block text-sm text-mine-text2 mb-1.5">邮箱</label>
           <input type="email" id="reg-email" class="w-full px-4 py-3 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text placeholder-mine-text3 text-sm" placeholder="your@email.com" />
         </div>
-        <div>
+
+        <!-- 手机号注册字段 -->
+        <div id="reg-phone-field" class="hidden">
           <label class="block text-sm text-mine-text2 mb-1.5">手机号</label>
-          <input type="tel" id="reg-phone" class="w-full px-4 py-3 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text placeholder-mine-text3 text-sm" placeholder="手机号" />
+          <div class="flex gap-2">
+            <input type="tel" id="reg-phone" class="flex-1 px-4 py-3 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text placeholder-mine-text3 text-sm" placeholder="13800138000" maxlength="11" />
+            <button type="button" id="btn-send-code" class="px-3 py-2 rounded-lg bg-mine-gold/20 border border-mine-gold/40 text-mine-gold text-xs font-medium whitespace-nowrap hover:bg-mine-gold/30 transition-colors">获取验证码</button>
+          </div>
+          <div class="mt-2">
+            <input type="text" id="reg-sms-code" class="w-full px-4 py-3 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text placeholder-mine-text3 text-sm" placeholder="短信验证码" maxlength="6" />
+          </div>
         </div>
+
         <div>
           <label class="block text-sm text-mine-text2 mb-1.5">密码</label>
           <input type="password" id="reg-password" class="w-full px-4 py-3 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text placeholder-mine-text3 text-sm" placeholder="至少8位" />
@@ -152,12 +169,12 @@
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = document.getElementById('login-email').value;
+      const account = document.getElementById('login-account').value.trim();
       const password = document.getElementById('login-password').value;
       const err = document.getElementById('login-error');
       err.classList.add('hidden');
       try {
-        const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+        const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account, email: account, password }) });
         const data = await res.json();
         if (res.ok) {
           localStorage.setItem('mine_token', data.token);
@@ -168,8 +185,68 @@
     });
 
     document.getElementById('admin-login-btn').addEventListener('click', () => {
-      document.getElementById('login-email').value = 'admin@mine-cap.com';
+      document.getElementById('login-account').value = 'admin@mine-cap.com';
       document.getElementById('login-password').value = 'password';
+    });
+
+    // ── 注册方式切换 ──
+    let regMode = 'email';
+    const regTabEmail = document.getElementById('reg-tab-email');
+    const regTabPhone = document.getElementById('reg-tab-phone');
+    const regEmailField = document.getElementById('reg-email-field');
+    const regPhoneField = document.getElementById('reg-phone-field');
+
+    regTabEmail.addEventListener('click', () => {
+      regMode = 'email';
+      regTabEmail.classList.add('bg-mine-gold/15', 'text-mine-gold');
+      regTabEmail.classList.remove('text-mine-text2');
+      regTabPhone.classList.remove('bg-mine-gold/15', 'text-mine-gold');
+      regTabPhone.classList.add('text-mine-text2');
+      regEmailField.classList.remove('hidden');
+      regPhoneField.classList.add('hidden');
+    });
+
+    regTabPhone.addEventListener('click', () => {
+      regMode = 'phone';
+      regTabPhone.classList.add('bg-mine-gold/15', 'text-mine-gold');
+      regTabPhone.classList.remove('text-mine-text2');
+      regTabEmail.classList.remove('bg-mine-gold/15', 'text-mine-gold');
+      regTabEmail.classList.add('text-mine-text2');
+      regPhoneField.classList.remove('hidden');
+      regEmailField.classList.add('hidden');
+    });
+
+    // ── 发送短信验证码 ──
+    document.getElementById('btn-send-code').addEventListener('click', async () => {
+      const phone = document.getElementById('reg-phone').value.trim();
+      const btn = document.getElementById('btn-send-code');
+      if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+        alert('请输入正确的11位手机号码');
+        return;
+      }
+      try {
+        btn.disabled = true;
+        btn.textContent = '发送中...';
+        const res = await fetch('/api/auth/send-sms-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone }) });
+        const data = await res.json();
+        if (res.ok) {
+          let countdown = 60;
+          btn.textContent = `${countdown}s`;
+          const timer = setInterval(() => {
+            countdown--;
+            if (countdown <= 0) { clearInterval(timer); btn.disabled = false; btn.textContent = '获取验证码'; }
+            else { btn.textContent = `${countdown}s`; }
+          }, 1000);
+        } else {
+          alert(data.error || '发送失败');
+          btn.disabled = false;
+          btn.textContent = '获取验证码';
+        }
+      } catch (e) {
+        alert('发送失败');
+        btn.disabled = false;
+        btn.textContent = '获取验证码';
+      }
     });
 
     // ── 微信扫码登录 ──
@@ -238,17 +315,28 @@
     document.getElementById('register-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const role = document.querySelector('input[name="reg-role"]:checked').value;
-      const name = document.getElementById('reg-name').value;
-      const org = document.getElementById('reg-org').value;
-      const email = document.getElementById('reg-email').value;
-      const phone = document.getElementById('reg-phone').value;
+      const name = document.getElementById('reg-name').value.trim();
+      const org = document.getElementById('reg-org').value.trim();
       const password = document.getElementById('reg-password').value;
       const err = document.getElementById('reg-error');
       err.classList.add('hidden');
-      if (!name || !email || !password) { err.textContent = '请填写必填项'; err.classList.remove('hidden'); return; }
-      if (password.length < 8) { err.textContent = '密码至少8位'; err.classList.remove('hidden'); return; }
+
+      let body;
+      if (regMode === 'phone') {
+        const phone = document.getElementById('reg-phone').value.trim();
+        const smsCode = document.getElementById('reg-sms-code').value.trim();
+        if (!name || !phone || !password || !smsCode) { err.textContent = '请填写所有必填项'; err.classList.remove('hidden'); return; }
+        if (password.length < 8) { err.textContent = '密码至少8位'; err.classList.remove('hidden'); return; }
+        body = { name, phone, password, sms_code: smsCode, organization: org, role, org_type: role };
+      } else {
+        const email = document.getElementById('reg-email').value.trim();
+        if (!name || !email || !password) { err.textContent = '请填写必填项'; err.classList.remove('hidden'); return; }
+        if (password.length < 8) { err.textContent = '密码至少8位'; err.classList.remove('hidden'); return; }
+        body = { name, email, password, organization: org, role, org_type: role };
+      }
+
       try {
-        const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, phone, organization: org, role, org_type: role }) });
+        const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         const data = await res.json();
         if (res.ok) {
           localStorage.setItem('mine_token', data.token);

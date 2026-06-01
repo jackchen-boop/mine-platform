@@ -17,6 +17,7 @@ import authRoutes from './server/routes/auth.js';
 import mineProjectRoutes from './server/routes/mine-projects.js';
 import mineReportRoutes from './server/routes/mine-reports.js';
 import mineAnalysisRoutes from './server/routes/mine-analysis.js';
+import mineAiProxyRoutes from './server/routes/mine-ai-proxy.js';
 import mineStatsRoutes from './server/routes/mine-stats.js';
 import minePartnersRoutes from './server/routes/mine-partners.js';
 import mineInquiryRoutes from './server/routes/mine-inquiries.js';
@@ -93,6 +94,8 @@ app.use('/api/auth',           authRoutes);
 app.use('/api/mine-projects',  mineProjectRoutes);
 app.use('/api/mine-reports',   mineReportRoutes);
 app.use('/api/mine-analysis',  mineAnalysisRoutes);
+// 矿产AI分析代理：当 AI_SERVICE_URL 存在时，/api/mine-ai/* 转发到独立微服务
+app.use('/api/mine-ai',        mineAiProxyRoutes);
 app.use('/api/mine-stats',     mineStatsRoutes);
 app.use('/api/mine-partners',  minePartnersRoutes);
 app.use('/api/mine-inquiries', mineInquiryRoutes);

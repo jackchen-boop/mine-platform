@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>会员中心 — 矿脉科技 MinePulse</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>" />
+  <link rel="icon" href="logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
@@ -64,20 +64,22 @@
 
     <!-- 项目浏览 -->
     <div id="tab-projects" class="tab-content">
-      <div class="flex flex-wrap gap-3 mb-6">
-        <input type="text" id="search-input" class="flex-1 min-w-[200px] px-4 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm" placeholder="搜索项目名称、编号、地区..." />
-        <select id="filter-mineral" class="px-4 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm">
+      <div class="flex flex-col sm:flex-row gap-3 mb-6">
+        <input type="text" id="search-input" class="flex-1 px-4 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm" placeholder="搜索项目名称、编号、地区..." />
+        <div class="flex gap-2">
+        <select id="filter-mineral" class="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm">
           <option value="">全部矿种</option>
           <option value="gold">金矿</option>
           <option value="silver">银矿</option>
           <option value="copper">铜矿</option>
         </select>
-        <select id="filter-stage" class="px-4 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm">
+        <select id="filter-stage" class="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text text-sm">
           <option value="">全部阶段</option>
           <option value="general-exploration">普查</option>
           <option value="detailed-exploration">详查</option>
           <option value="production-ready">待产</option>
         </select>
+        </div>
       </div>
       <div id="dashboard-projects" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
@@ -146,7 +148,8 @@
         const data = await res.json();
         if (!res.ok) { logout(); return; }
         const u = data.user;
-        document.getElementById('user-name').textContent = u.name;
+        const userNameEl = document.getElementById('user-name');
+        if (userNameEl) userNameEl.textContent = u.name;
         document.getElementById('dashboard-name').textContent = u.name;
         document.getElementById('dashboard-org').textContent = (u.organization || '未填写机构') + ' · ' + (u.email || '');
         document.getElementById('user-avatar').textContent = u.avatar_letter || u.name.charAt(0);
@@ -177,7 +180,7 @@
       const keyword = document.getElementById('search-input').value;
       const mineral = document.getElementById('filter-mineral').value;
       const stage = document.getElementById('filter-stage').value;
-      let url = '/api/mine-projects?limit=50';
+      let url = '/api/mine-projects?limit=50&mine_only=1';
       if (keyword) url += '&keyword=' + encodeURIComponent(keyword);
       if (mineral) url += '&mineral=' + mineral;
       if (stage) url += '&stage=' + stage;

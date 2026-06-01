@@ -7,8 +7,10 @@
 
   // 构建导航栏 HTML
   const navHtml = `
-  <nav class="fixed top-0 left-0 right-0 z-50 nav-blur border-b border-mine-border" id="main-nav">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-yellow-900/30" id="main-nav" style="background-image: url('/assets/images/minelab-header-bar.png'); background-size: cover; background-position: center; box-shadow: 0 1px 0 rgba(212,175,55,0.25), 0 4px 28px rgba(0,0,0,0.6);">
+  <!-- 遮罩层保证文字可读 -->
+  <div style="position:absolute;inset:0;background:rgba(5,8,20,0.55);backdrop-filter:blur(2px);pointer-events:none;"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style="position:relative;z-index:1;">
       <div class="flex items-center justify-between h-16">
         <!-- Logo -->
         <a href="/" class="flex items-center gap-3 flex-shrink-0">
@@ -21,8 +23,7 @@
         <!-- Desktop Nav -->
         <div class="hidden md:flex items-center gap-1 flex-1 justify-center">
           <a href="/" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors ${currentPath === '/' ? 'text-mine-gold' : ''}">首页</a>
-          <a href="/ai-analysis.html" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors ${currentPath === '/ai-analysis.html' ? 'text-mine-gold' : ''}">AI分析</a>
-          <a href="/upload.html" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors ${currentPath === '/upload.html' ? 'text-mine-gold' : ''}">资料上传</a>
+          <a href="/ai-analysis.html" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors ${currentPath === '/ai-analysis.html' || currentPath === '/upload.html' ? 'text-mine-gold' : ''}">AI分析</a>
           <a href="/workbench.html" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors ${currentPath === '/workbench.html' ? 'text-mine-gold' : ''}">工作台</a>
           <a href="/live.html" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors ${currentPath === '/live.html' ? 'text-mine-gold' : ''}">直播路演</a>
         </div>
@@ -30,6 +31,7 @@
         <!-- Right side -->
         <div class="hidden md:flex items-center gap-2 flex-shrink-0">
           ${isLoggedIn ? `
+            ${user.role === 'admin' ? `<a href="/admin.html" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors ${currentPath === '/admin.html' ? 'text-mine-gold' : ''}">管理后台</a>` : ''}
             <a href="/dashboard.html" class="nav-link px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors ${currentPath === '/dashboard.html' ? 'text-mine-gold' : ''}">会员中心</a>
             <span class="text-xs text-mine-text3">${user.name || ''}</span>
             <button onclick="localStorage.removeItem('mine_token');localStorage.removeItem('mine_user');window.location.reload()" class="text-xs text-mine-text3 hover:text-mine-danger transition-colors">退出</button>
@@ -48,14 +50,14 @@
     </div>
 
     <!-- Mobile menu -->
-    <div id="mobile-menu" class="hidden md:hidden border-t border-mine-border bg-mine-bg/95 backdrop-blur-xl">
+    <div id="mobile-menu" class="hidden md:hidden border-t border-mine-border bg-mine-bg/95 backdrop-blur-xl" style="position:relative;z-index:1;">
       <div class="px-4 py-3 space-y-1">
         <a href="/" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold ${currentPath === '/' ? 'text-mine-gold' : ''}">首页</a>
-        <a href="/ai-analysis.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold ${currentPath === '/ai-analysis.html' ? 'text-mine-gold' : ''}">AI分析</a>
-        <a href="/upload.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold ${currentPath === '/upload.html' ? 'text-mine-gold' : ''}">资料上传</a>
+        <a href="/ai-analysis.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold ${currentPath === '/ai-analysis.html' || currentPath === '/upload.html' ? 'text-mine-gold' : ''}">AI分析</a>
         <a href="/workbench.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold ${currentPath === '/workbench.html' ? 'text-mine-gold' : ''}">工作台</a>
         <a href="/live.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold ${currentPath === '/live.html' ? 'text-mine-gold' : ''}">直播路演</a>
         ${isLoggedIn ? `
+          ${user.role === 'admin' ? `<a href="/admin.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">管理后台</a>` : ''}
           <a href="/dashboard.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">会员中心</a>
           <button onclick="localStorage.removeItem('mine_token');localStorage.removeItem('mine_user');window.location.reload()" class="block w-full text-left px-3 py-2 text-sm text-mine-danger">退出登录</button>
         ` : `
@@ -68,6 +70,11 @@
   // 插入导航栏并设置 body padding
   document.body.insertAdjacentHTML('afterbegin', navHtml);
   document.body.style.paddingTop = '64px';
+
+  // 防止 iOS 输入框获焦自动放大（不用 user-scalable=no，避免影响点击）
+  const iosStyle = document.createElement('style');
+  iosStyle.textContent = 'input, select, textarea { font-size: max(16px, 1em); }';
+  document.head.appendChild(iosStyle);
 
   // 添加 toggle 函数到全局
   window.toggleMobileMenu = function() {

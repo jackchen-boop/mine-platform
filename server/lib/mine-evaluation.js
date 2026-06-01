@@ -604,6 +604,73 @@ function generateDisposalAdvice(project, scoreResult, fin) {
 }
 
 // ============================================================================
+// 项目分级 & 缺失数据检测
+// ============================================================================
+
+export function gradeProject(score) {
+  if (score >= 90) return { grade: 'S', label: '卓越', color: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/30' };
+  if (score >= 75) return { grade: 'A', label: '优秀', color: 'text-mine-success', bg: 'bg-mine-success/10', border: 'border-mine-success/30' };
+  if (score >= 60) return { grade: 'B', label: '良好', color: 'text-mine-warning', bg: 'bg-mine-warning/10', border: 'border-mine-warning/30' };
+  return { grade: 'C', label: '一般', color: 'text-mine-danger', bg: 'bg-mine-danger/10', border: 'border-mine-danger/30' };
+}
+
+export function detectMissingData(project) {
+  const missing = [];
+  const stage = STAGE_MAP[project.development_stage]?.code || 'advanced-exploration';
+
+  // 通用基础信息（所有阶段）
+  if (!project.name || project.name.length < 3) missing.push({ field: 'name', label: '项目名称', phase: 'all', severity: 'high' });
+  if (!project.mineral_types) missing.push({ field: 'mineral_types', label: '矿种类型', phase: 'all', severity: 'high' });
+  if (!project.province) missing.push({ field: 'province', label: '所在省份/地区', phase: 'all', severity: 'medium' });
+  if (!project.description || project.description.length < 50) missing.push({ field: 'description', label: '项目描述（至少50字）', phase: 'all', severity: 'high' });
+  if (!project.development_stage) missing.push({ field: 'development_stage', label: '开发阶段', phase: 'all', severity: 'high' });
+
+  // Phase 1 草根勘查 — 重点关注：矿权面积、靶区、见矿线索
+  if (stage === 'grassroots') {
+    if (!project.area_km2 || project.area_km2 <= 0) missing.push({ field: 'area_km2', label: '矿权面积 (km²)', phase: 'grassroots', severity: 'high' });
+    if (!project.estimated_reserve) missing.push({ field: 'estimated_reserve', label: '资源量/储量估算', phase: 'grassroots', severity: 'medium' });
+  }
+
+  // Phase 2 初级勘查 — 重点关注：预期资源量、勘查目标
+  if (stage === 'early-exploration') {
+    if (!project.estimated_reserve) missing.push({ field: 'estimated_reserve', label: '预期资源量估算', phase: 'early-exploration', severity: 'high' });
+    if (!project.reserve_grade) missing.push({ field: 'reserve_grade', label: '预期品位信息', phase: 'early-exploration', severity: 'medium' });
+  }
+
+  // Phase 3 高级勘查 — 重点关注：资源量规模、开采方式、选矿数据
+  if (stage === 'advanced-exploration') {
+    if (!project.estimated_reserve) missing.push({ field: 'estimated_reserve', label: '资源量规模', phase: 'advanced-exploration', severity: 'high' });
+    if (!project.reserve_grade) missing.push({ field: 'reserve_grade', label: '平均品位', phase: 'advanced-exploration', severity: 'high' });
+    if (!project.mine_type) missing.push({ field: 'mine_type', label: '开采方式（露采/地采）', phase: 'advanced-exploration', severity: 'high' });
+    if (!project.depth_range) missing.push({ field: 'depth_range', label: '开采深度范围', phase: 'advanced-exploration', severity: 'medium' });
+  }
+
+  // Phase 4 技术研究 — 重点关注：完整储量、NPV/IRR、成本数据
+  if (stage === 'feasibility-study') {
+    if (!project.estimated_reserve) missing.push({ field: 'estimated_reserve', label: '资源储量报告', phase: 'feasibility-study', severity: 'high' });
+    if (!project.reserve_grade) missing.push({ field: 'reserve_grade', label: '平均品位', phase: 'feasibility-study', severity: 'high' });
+    if (!project.mine_type) missing.push({ field: 'mine_type', label: '开采方式', phase: 'feasibility-study', severity: 'medium' });
+    if (!project.depth_range) missing.push({ field: 'depth_range', label: '开采深度', phase: 'feasibility-study', severity: 'medium' });
+  }
+
+  // Phase 5 生产运营 — 重点关注：许可证、生产数据、成本数据
+  if (stage === 'production') {
+    if (!project.estimated_reserve) missing.push({ field: 'estimated_reserve', label: '剩余资源储量', phase: 'production', severity: 'high' });
+    if (!project.reserve_grade) missing.push({ field: 'reserve_grade', label: '入选品位', phase: 'production', severity: 'medium' });
+    if (!project.license_expires) missing.push({ field: 'license_expires', label: '采矿许可证到期日', phase: 'production', severity: 'high' });
+    if (!project.license_status) missing.push({ field: 'license_status', label: '许可证状态', phase: 'production', severity: 'high' });
+    if (!project.mine_type) missing.push({ field: 'mine_type', label: '开采方式', phase: 'production', severity: 'medium' });
+  }
+
+  // 财务相关（Phase 3+ 建议有）
+  if (['advanced-exploration', 'feasibility-study', 'production'].includes(stage)) {
+    if (!project.asking_price) missing.push({ field: 'asking_price', label: '挂牌价格/估值预期', phase: 'financial', severity: 'low' });
+  }
+
+  return missing;
+}
+
+// ============================================================================
 // 主评估入口
 // ============================================================================
 
@@ -624,12 +691,16 @@ export function evaluateMineProject(project) {
 
   const risks = evaluateRisks(project, fin);
   const disposal = generateDisposalAdvice(project, scoreResult, fin);
+  const missingData = detectMissingData(project);
+  const grade = gradeProject(scoreResult.pct);
 
   // 生成AI摘要
   const summary = generateSummary(project, stageInfo, scoreResult, fin, risks);
 
   return {
     overallScore: scoreResult.pct,
+    grade: grade.grade,
+    gradeLabel: grade.label,
     stage: {
       code: stageInfo.code,
       name: stageInfo.name,
@@ -641,6 +712,7 @@ export function evaluateMineProject(project) {
     recommendations: generateRecommendations(project, scoreResult, fin, risks),
     disposalAdvice: disposal,
     summary,
+    missingData,
     evaluationModel: '紫金矿业五阶段评价体系',
   };
 }

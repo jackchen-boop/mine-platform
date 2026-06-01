@@ -3,10 +3,10 @@ import db from '../db/connection.js';
 
 const JWT_SECRET = () => process.env.JWT_SECRET || 'dev-secret-change-in-prod';
 
-// 验证 JWT，将 user 注入 req.user
+// 验证 JWT，将 user 注入 req.user（支持 Authorization header 或 ?token= query 参数）
 export function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  const token = header.startsWith('Bearer ') ? header.slice(7) : (req.query.token || null);
 
   if (!token) {
     return res.status(401).json({ error: '请先登录' });

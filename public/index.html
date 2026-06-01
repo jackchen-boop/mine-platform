@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>矿脉科技 MinePulse — 贵金属矿权交易与AI分析平台</title>
   <meta name="description" content="矿脉科技是专注金银铜等贵金属矿的B2B矿权交易平台，提供AI矿权分析、报告识别、处置咨询等专业服务。" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>" />
+  <link rel="icon" href="logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
@@ -36,6 +36,7 @@
   </script>
   <style>
     body { font-family: 'Noto Sans SC', sans-serif; background: #0a0a0f; color: #e2e8f0; }
+    input, select, textarea { font-size: max(16px, 1em); }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #0a0a0f; }
     ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
@@ -46,10 +47,10 @@
     .card-hover { transition: all 0.3s ease; }
     .card-hover:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(201,169,110,0.1); border-color: rgba(201,169,110,0.5); }
     .hero-overlay { background: linear-gradient(180deg, rgba(10,10,15,0.3) 0%, rgba(10,10,15,0.85) 70%, #0a0a0f 100%); }
-    .animate-fade-up { animation: fadeUp 0.6s ease-out forwards; opacity: 0; }
+    .animate-fade-up { animation: fadeUp 0.6s ease-out forwards; opacity: 1; }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
     .mineral-tag { background: rgba(201,169,110,0.12); border: 1px solid rgba(201,169,110,0.25); }
-    .nav-blur { backdrop-filter: blur(20px); background: rgba(10,10,15,0.85); }
+    .nav-blur { position:relative; background-image: url("/assets/images/minelab-header-bar.png"); background-size: cover; background-position: center; box-shadow: 0 1px 0 rgba(212,175,55,0.25), 0 4px 28px rgba(0,0,0,0.6); } .nav-blur::before { content:""; position:absolute; inset:0; background:rgba(4,7,18,0.58); backdrop-filter:blur(2px); pointer-events:none; z-index:0; } .nav-blur > * { position:relative; z-index:1; }
   </style>
 </head>
 <body class="min-h-screen">
@@ -63,38 +64,39 @@
           </div>
           <span class="text-lg font-bold gold-gradient">矿脉科技</span>
         </a>
-        <div class="hidden md:flex items-center gap-1">
+        <div class="hidden md:flex items-center gap-1" id="nav-links">
           <a href="#projects" class="px-4 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors">矿产项目</a>
           <a href="/ai-analysis.html" class="px-4 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors">AI分析</a>
-          <a href="/upload.html" class="px-4 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors">资料上传</a>
           <a href="/workbench.html" class="px-4 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors">工作台</a>
           <a href="/live.html" class="px-4 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors">直播路演</a>
-          <a href="/auth.html" class="ml-4 px-5 py-2 text-sm font-medium rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/30 hover:bg-mine-gold/20 transition-colors">登录 / 注册</a>
+          <a href="/auth.html" id="nav-auth-btn" class="ml-4 px-5 py-2 text-sm font-medium rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/30 hover:bg-mine-gold/20 transition-colors">登录 / 注册</a>
         </div>
-        <button id="mobile-menu-btn" class="md:hidden p-2 text-mine-text2">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
+        <div class="flex items-center gap-2 md:hidden">
+          <a href="/auth.html" id="mobile-nav-login-btn" class="px-3 py-1.5 text-sm font-medium rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/30">登录</a>
+          <button id="mobile-menu-btn" class="p-2 text-mine-text2 hover:text-mine-gold transition-colors" aria-label="菜单">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+        </div>
       </div>
     </div>
     <div id="mobile-menu" class="hidden md:hidden border-t border-mine-border bg-mine-bg/95 backdrop-blur-xl">
-      <div class="px-4 py-3 space-y-1">
+      <div class="px-4 py-3 space-y-1" id="mobile-nav-links">
         <a href="#projects" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">矿产项目</a>
         <a href="/ai-analysis.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">AI分析</a>
-        <a href="/upload.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">资料上传</a>
         <a href="/workbench.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">工作台</a>
         <a href="/live.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">直播路演</a>
-        <a href="/auth.html" class="block px-3 py-2 text-sm text-mine-gold">登录 / 注册</a>
+        <a href="/auth.html" id="mobile-auth-btn" class="block px-3 py-2 text-sm text-mine-gold">登录 / 注册</a>
       </div>
     </div>
   </nav>
 
   <!-- Hero 区域 -->
-  <section class="relative min-h-screen flex items-center justify-center overflow-hidden">
-    <div class="absolute inset-0">
+  <section class="relative min-h-screen flex items-center justify-center overflow-hidden" style="overflow:hidden">
+    <div class="absolute inset-0 pointer-events-none" style="position:absolute;inset:0;pointer-events:none">
       <img src="/assets/images/hero-banner.png" alt="矿业航拍" class="w-full h-full object-cover opacity-60" />
       <div class="absolute inset-0 hero-overlay"></div>
     </div>
-    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20" style="position:relative;z-index:10">
       <div class="animate-fade-up" style="animation-delay: 0.1s">
         <span class="inline-block px-4 py-1.5 text-xs font-medium rounded-full mineral-tag text-mine-gold mb-6">专注金银铜贵金属矿权交易</span>
       </div>
@@ -105,11 +107,11 @@
         汇聚全国优质金银铜矿项目，AI智能分析报告识别与价值评估，<br class="hidden sm:block" />
         为矿业企业与投资机构搭建高效、透明的矿权交易桥梁
       </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up" style="animation-delay: 0.4s">
-        <a href="#projects" class="px-8 py-3.5 rounded-lg bg-mine-gold text-mine-bg font-semibold text-base hover:bg-mine-goldLight transition-colors">
+      <div class="flex flex-col sm:flex-row gap-4 justify-center" style="position:relative;z-index:20;display:flex;flex-direction:column;gap:1rem;align-items:center">
+        <a href="#projects" class="px-8 py-3.5 rounded-lg bg-mine-gold text-mine-bg font-semibold text-base hover:bg-mine-goldLight transition-colors" style="background:#c9a96e;color:#0a0a0f;padding:0.875rem 2rem;border-radius:0.5rem;font-weight:600;text-decoration:none;display:inline-block">
           浏览矿产项目
         </a>
-        <a href="/auth.html?mode=register" class="px-8 py-3.5 rounded-lg border border-mine-gold/40 text-mine-gold font-semibold text-base hover:bg-mine-gold/10 transition-colors">
+        <a href="/auth.html?mode=register" id="hero-register-btn" class="px-8 py-3.5 rounded-lg border border-mine-gold/40 text-mine-gold font-semibold text-base hover:bg-mine-gold/10 transition-colors" style="border:1px solid rgba(201,169,110,0.4);color:#c9a96e;padding:0.875rem 2rem;border-radius:0.5rem;font-weight:600;text-decoration:none;display:inline-block">
           注册会员
         </a>
       </div>
@@ -153,7 +155,7 @@
 
       <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
-      <div class="text-center mt-10">
+      <div id="auth-prompt" class="text-center mt-10">
         <p id="login-hint" class="text-sm text-mine-text3 mb-4">登录会员可查看完整项目信息与联系方式</p>
         <a href="/auth.html" class="inline-flex items-center gap-2 text-mine-gold hover:text-mine-goldLight transition-colors">
           <span>注册/登录查看详情</span>
@@ -225,9 +227,9 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
       <h2 class="text-3xl sm:text-4xl font-bold mb-6">开启您的<span class="gold-gradient">矿权交易</span>之旅</h2>
       <p class="text-mine-text2 mb-10 max-w-xl mx-auto">无论您是矿业企业寻求项目转让，还是投资机构寻找优质矿权，矿脉科技为您提供专业、高效、安全的交易服务</p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="/auth.html?mode=register&role=mine_enterprise" class="px-8 py-3.5 rounded-lg bg-mine-gold text-mine-bg font-semibold hover:bg-mine-goldLight transition-colors">矿业企业入驻</a>
-        <a href="/auth.html?mode=register&role=investor" class="px-8 py-3.5 rounded-lg border border-mine-gold/40 text-mine-gold font-semibold hover:bg-mine-gold/10 transition-colors">投资机构注册</a>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center" style="display:flex;flex-direction:column;gap:1rem;align-items:center">
+        <a href="/auth.html?mode=register&role=mine_enterprise" id="cta-register-mine" class="px-8 py-3.5 rounded-lg bg-mine-gold text-mine-bg font-semibold hover:bg-mine-goldLight transition-colors" style="background:#c9a96e;color:#0a0a0f;padding:0.875rem 2rem;border-radius:0.5rem;font-weight:600;text-decoration:none;display:inline-block">矿业企业入驻</a>
+        <a href="/auth.html?mode=register&role=investor" id="cta-register-investor" class="px-8 py-3.5 rounded-lg border border-mine-gold/40 text-mine-gold font-semibold hover:bg-mine-gold/10 transition-colors" style="border:1px solid rgba(201,169,110,0.4);color:#c9a96e;padding:0.875rem 2rem;border-radius:0.5rem;font-weight:600;text-decoration:none;display:inline-block">投资机构注册</a>
       </div>
     </div>
   </section>
@@ -259,10 +261,7 @@
 
     async function loadProjects(filter = 'all') {
       try {
-        let url = '/api/mine-projects?limit=6';
-        if (filter === 'hot') url += '&hot_only=1';
-        else if (filter !== 'all') url += '&mineral=' + filter;
-
+        let url = '/api/mine-projects/published';
         const res = await fetch(url);
         const data = await res.json();
         const grid = document.getElementById('projects-grid');
@@ -272,17 +271,38 @@
         const stageLabels = { 'general-exploration': '普查', 'detailed-exploration': '详查', 'prospecting': '勘探', 'feasibility': '可研', 'production-ready': '待产', 'production': '生产中' };
         const oreImgs = { gold: '/assets/images/gold-ore.png', silver: '/assets/images/silver-ore.png', copper: '/assets/images/copper-ore.png' };
 
-        data.projects.forEach(p => {
-          const minerals = p.mineral_types.split(',');
+        let projects = data.projects || [];
+        if (filter === 'hot') projects = projects.filter(p => p.is_hot);
+        else if (filter !== 'all') projects = projects.filter(p => (p.mineral_types || '').includes(filter));
+
+        if (projects.length === 0) {
+          grid.innerHTML = '<p class="text-mine-text3 text-sm col-span-full text-center py-8">暂无已发布的矿权项目</p>';
+          return;
+        }
+
+        projects.forEach(p => {
+          const minerals = (p.mineral_types || '').split(',');
           const mainMineral = minerals[0];
-          const img = oreImgs[mainMineral] || oreImgs.gold;
+          // 优先使用项目上传照片
+          let publishedPhotos = [];
+          if (Array.isArray(p.published_photos)) {
+            publishedPhotos = p.published_photos;
+          } else {
+            try { publishedPhotos = JSON.parse(p.published_photos || '[]'); } catch(e) {}
+          }
+          const img = publishedPhotos.length > 0 ? publishedPhotos[0].url : (oreImgs[mainMineral] || oreImgs.gold);
           const mineralTags = minerals.map(m => `<span class="text-xs px-2 py-0.5 rounded mineral-tag text-mine-gold">${mineralLabels[m] || m}</span>`).join('');
+
+          // 报告摘要
+          const report = p.report_content || {};
+          const conclusionColors = { 'STRONGLY ADVANCE': 'bg-green-900/50 text-green-400', 'CONDITIONAL ADVANCE': 'bg-yellow-900/50 text-yellow-400', 'HOLD': 'bg-orange-900/50 text-orange-400', 'RESTRUCTURE': 'bg-blue-900/50 text-blue-400', 'REJECT': 'bg-red-900/50 text-red-400' };
+          const conclusionBadge = report.investmentConclusion ? `<span class="text-[10px] px-1.5 py-0.5 rounded ${conclusionColors[report.investmentConclusion] || 'bg-mine-gold/15 text-mine-gold'}">${report.investmentConclusion.replace('STRONGLY ','').replace('CONDITIONAL ','')}</span>` : '';
 
           const card = document.createElement('div');
           card.className = 'rounded-2xl bg-mine-surface border border-mine-border overflow-hidden card-hover cursor-pointer';
           card.innerHTML = `
             <div class="relative h-40 overflow-hidden">
-              <img src="${img}" alt="${p.name}" class="w-full h-full object-cover" />
+              <img src="${img}" alt="${p.name}" class="w-full h-full object-cover" onerror="this.src='${oreImgs.gold}'" />
               <div class="absolute inset-0 bg-gradient-to-t from-mine-bg/80 to-transparent"></div>
               <div class="absolute top-3 left-3 flex gap-1">${mineralTags}</div>
               ${p.is_hot ? '<div class="absolute top-3 right-3 px-2 py-0.5 text-xs rounded bg-mine-danger/20 text-mine-danger border border-mine-danger/30">热门</div>' : ''}
@@ -293,16 +313,21 @@
                 <span class="text-xs px-2 py-0.5 rounded bg-mine-surface3 text-mine-text2">${stageLabels[p.development_stage] || p.development_stage}</span>
               </div>
               <h3 class="text-base font-semibold mb-2 truncate">${p.name}</h3>
-              <p class="text-xs text-mine-text3 mb-1">${p.province} · ${p.city}</p>
-              <p class="text-sm text-mine-text2 mb-4 line-clamp-2">${p.description}</p>
+              <p class="text-xs text-mine-text3 mb-1">${p.province || ''} ${p.city ? '· '+p.city : ''}</p>
+              <div class="flex flex-wrap gap-1.5 mb-3">
+                ${p.estimated_reserve ? '<span class="text-[11px] px-2 py-0.5 rounded-full bg-mine-gold/10 text-mine-gold border border-mine-gold/20">储量: '+p.estimated_reserve+'</span>' : ''}
+                ${p.reserve_grade ? '<span class="text-[11px] px-2 py-0.5 rounded-full bg-blue-900/30 text-blue-400 border border-blue-500/20">品位: '+p.reserve_grade+'</span>' : ''}
+                ${p.area_km2 ? '<span class="text-[11px] px-2 py-0.5 rounded-full bg-mine-surface2 text-mine-text2 border border-mine-border">'+p.area_km2+'km²</span>' : ''}
+              </div>
+              ${report.whyValuable ? '<p class="text-xs text-mine-text2 mb-2 line-clamp-2">'+report.whyValuable+'</p>' : ''}
               <div class="flex items-center justify-between pt-3 border-t border-mine-border">
                 <div>
-                  <div class="text-xs text-mine-text3">挂牌价</div>
-                  <div class="text-lg font-bold gold-gradient">${p.asking_price}</div>
-                </div>
-                <div class="text-right">
                   <div class="text-xs text-mine-text3">AI评分</div>
-                  <div class="text-lg font-bold text-mine-success">${p.ai_score}</div>
+                  <div class="text-lg font-bold text-mine-success">${p.ai_score || '--'}</div>
+                </div>
+                <div class="text-right flex items-center gap-2">
+                  ${conclusionBadge}
+                  ${report.npv ? '<div><div class="text-[10px] text-mine-text3">NPV</div><div class="text-xs font-bold text-mine-gold">'+report.npv+'</div></div>' : ''}
                 </div>
               </div>
             </div>
@@ -343,18 +368,46 @@
     loadPartners();
 
     const token = localStorage.getItem('mine_token');
-    if (token) {
-      document.getElementById('login-hint').style.display = 'none';
-      fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + token }})
-        .then(r => r.json()).then(d => {
-          if (d.user) {
-            const nav = document.querySelector('nav .hidden.md\\:flex');
-            if (nav) {
-              const loginBtn = nav.querySelector('a[href="/auth.html"]');
-              if (loginBtn) loginBtn.outerHTML = `<a href="/dashboard.html" class="ml-4 px-5 py-2 text-sm font-medium rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/30 hover:bg-mine-gold/20 transition-colors">${d.user.name}</a>`;
-            }
-          }
-        }).catch(() => {});
+    const user = JSON.parse(localStorage.getItem('mine_user') || '{}');
+    if (token && user.name) {
+      // 隐藏整个"注册/登录查看详情"区域
+      const authPrompt = document.getElementById('auth-prompt');
+      if (authPrompt) authPrompt.style.display = 'none';
+
+      // 导航栏：登录/注册按钮改为用户名 + 退出
+      const navAuthBtn = document.getElementById('nav-auth-btn');
+      if (navAuthBtn) navAuthBtn.outerHTML = `<span class="ml-4 flex items-center gap-3"><a href="/dashboard.html" class="px-4 py-2 text-sm font-medium rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/30 hover:bg-mine-gold/20 transition-colors">${user.name}</a><button onclick="localStorage.removeItem('mine_token');localStorage.removeItem('mine_user');location.reload()" class="text-xs text-mine-text3 hover:text-mine-danger transition-colors">退出</button></span>`;
+
+      // 手机端顶部登录快捷按钮改为用户名
+      const mobileNavLogin = document.getElementById('mobile-nav-login-btn');
+      if (mobileNavLogin) {
+        mobileNavLogin.href = '/dashboard.html';
+        mobileNavLogin.textContent = user.name;
+      }
+
+      const mobileAuthBtn = document.getElementById('mobile-auth-btn');
+      if (mobileAuthBtn) mobileAuthBtn.outerHTML = `<a href="/dashboard.html" id="mobile-auth-btn" class="block px-3 py-2 text-sm text-mine-gold">${user.name}</a><button onclick="localStorage.removeItem('mine_token');localStorage.removeItem('mine_user');location.reload()" class="block w-full text-left px-3 py-2 text-sm text-mine-danger">退出登录</button>`;
+
+      // Hero 注册会员按钮改为进入会员中心
+      const heroReg = document.getElementById('hero-register-btn');
+      if (heroReg) {
+        heroReg.href = '/dashboard.html';
+        heroReg.className = 'px-8 py-3.5 rounded-lg border border-mine-gold/40 text-mine-gold font-semibold text-base hover:bg-mine-gold/10 transition-colors';
+        heroReg.textContent = '会员中心';
+      }
+      // CTA 注册按钮改为功能入口
+      const ctaMine = document.getElementById('cta-register-mine');
+      const ctaInv = document.getElementById('cta-register-investor');
+      if (ctaMine) {
+        ctaMine.href = user.role === 'admin' ? '/admin.html' : '/workbench.html';
+        ctaMine.textContent = user.role === 'admin' ? '管理后台' : '进入工作台';
+        ctaMine.className = 'px-8 py-3.5 rounded-lg bg-mine-gold text-mine-bg font-semibold hover:bg-mine-goldLight transition-colors';
+      }
+      if (ctaInv) {
+        ctaInv.href = '/ai-analysis.html';
+        ctaInv.textContent = 'AI 智能分析';
+        ctaInv.className = 'px-8 py-3.5 rounded-lg border border-mine-gold/40 text-mine-gold font-semibold hover:bg-mine-gold/10 transition-colors';
+      }
     }
   </script>
 </body>

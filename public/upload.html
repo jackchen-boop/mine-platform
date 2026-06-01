@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>项目资料上传 — 矿脉科技 MinePulse</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>" />
+  <link rel="icon" href="logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
@@ -92,10 +92,14 @@
 
     <!-- ② 关联项目 -->
     <div class="mb-4">
-      <label class="text-xs text-mine-text3 mb-1.5 block">关联项目（可选）</label>
-      <select id="project-select" class="w-full px-3 py-3 rounded-xl bg-mine-surface border border-mine-border text-sm text-mine-text focus:outline-none focus:border-mine-gold/50 appearance-none">
-        <option value="">不关联项目（先上传资料）</option>
+      <label class="text-xs text-mine-text3 mb-1.5 block">关联项目</label>
+      <select id="project-select" onchange="onProjectChange(this)"
+              class="w-full px-3 py-3 rounded-xl bg-mine-surface border border-mine-border text-sm text-mine-text focus:outline-none focus:border-mine-gold/50 appearance-none mb-2">
+        <option value="">-- 选择已有项目 --</option>
+        <option value="__new__">+ 创建新项目</option>
       </select>
+      <input id="new-project-name" type="text" placeholder="输入新项目名称"
+             class="hidden w-full px-3 py-3 rounded-xl bg-mine-surface border border-mine-border text-sm text-mine-text focus:outline-none focus:border-mine-gold/50 placeholder-mine-text3" />
     </div>
 
     <!-- ③ 上传区：手机大按钮 / PC 拖拽区 -->
@@ -149,7 +153,18 @@
       </div>
     </div>
 
-    <!-- ⑥ 已上传资料 -->
+    <!-- ⑥ AI分析结果 -->
+    <section id="ai-analysis-panel" class="hidden mt-6">
+      <div class="p-4 rounded-xl bg-mine-surface border border-mine-gold/20">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-mine-gold">AI 智能分析结果</h2>
+          <span id="ai-score-badge" class="text-xs px-2 py-1 rounded bg-mine-gold/10 text-mine-gold font-medium"></span>
+        </div>
+        <div id="ai-analysis-content"></div>
+      </div>
+    </section>
+
+    <!-- ⑦ 已上传资料 -->
     <section class="mt-6">
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-sm font-semibold text-mine-text">已上传资料</h2>
@@ -362,26 +377,67 @@
       const progress = document.getElementById('upload-progress');
       progress.classList.remove('hidden');
 
-      const projectId = document.getElementById('project-select').value;
+      const projectSelect = document.getElementById('project-select');
+      const projectId = projectSelect.value;
+      const isNewProject = projectId === '__new__';
+      const newProjectName = isNewProject ? document.getElementById('new-project-name').value.trim() : '';
+
+      if (isNewProject && !newProjectName) {
+        showToast('请输入新项目名称');
+        btn.disabled = false; btn.textContent = '开始上传';
+        progress.classList.add('hidden');
+        return;
+      }
+
       let uploaded = 0;
+      let createdProjectId = null;
+      let lastAiResult = null;
 
       for (const file of selectedFiles) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('report_type', currentCat);
         formData.append('report_category', currentCat);
-        if (projectId) formData.append('project_id', projectId);
+        // 如果已有自动创建的项目ID，后续文件都关联到该项目
+        if (createdProjectId) {
+          formData.append('project_id', createdProjectId);
+        } else if (projectId && !isNewProject) {
+          formData.append('project_id', projectId);
+        }
+        if (isNewProject) formData.append('new_project_name', newProjectName);
+        const fileIndex = selectedFiles.indexOf(file);
+        const totalFiles = selectedFiles.length;
         try {
-          const res  = await fetch('/api/mine-reports/upload', {
-            method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData
+          const data = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/mine-reports/upload');
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) {
+                const filePct = Math.round(((fileIndex + e.loaded / e.total) / totalFiles) * 100);
+                document.getElementById('progress-bar').style.width = filePct + '%';
+                document.getElementById('progress-pct').textContent = filePct + '%';
+                document.getElementById('progress-text').textContent = `正在上传 ${file.name}（${Math.round(e.loaded/1024)}KB / ${Math.round(e.total/1024)}KB）`;
+              }
+            };
+            xhr.onload = () => {
+              try {
+                const d = JSON.parse(xhr.responseText);
+                if (xhr.status >= 200 && xhr.status < 300) resolve(d);
+                else reject(new Error(d.error || '上传失败'));
+              } catch { reject(new Error('响应解析失败')); }
+            };
+            xhr.onerror = () => reject(new Error('网络错误'));
+            xhr.send(formData);
           });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || '上传失败');
           uploaded++;
+          if (data.project_id) createdProjectId = data.project_id;
+          // 收集有AI分析结果的最后一个响应
+          if (data.ai_analysis) lastAiResult = data;
         } catch (err) {
           showToast(`${file.name} 上传失败: ${err.message}`);
         }
-        const pct = Math.round((uploaded / selectedFiles.length) * 100);
+        const pct = Math.round(((fileIndex + 1) / selectedFiles.length) * 100);
         document.getElementById('progress-bar').style.width = pct + '%';
         document.getElementById('progress-pct').textContent  = pct + '%';
         document.getElementById('progress-text').textContent = `已上传 ${uploaded}/${selectedFiles.length}`;
@@ -391,8 +447,153 @@
       renderFileList();
       btn.disabled = false; btn.textContent = '开始上传';
       setTimeout(() => progress.classList.add('hidden'), 2000);
+
+      // 如果创建了新项目（包括AI自动生成的），刷新项目列表并选中
+      if (createdProjectId) {
+        await loadProjects();
+        projectSelect.value = createdProjectId;
+        onProjectChange(projectSelect);
+      }
+
+      // 显示AI分析结果
+      if (lastAiResult) {
+        renderAiAnalysis(lastAiResult);
+      }
+
       loadUploadedReports();
-      if (uploaded > 0) showToast(`${uploaded} 个文件上传成功`);
+      if (uploaded > 0) {
+        let msg = `${uploaded} 个文件上传成功`;
+        showToast(msg);
+      }
+    }
+
+    // 渲染AI分析结果
+    function renderAiAnalysis(data) {
+      const panel = document.getElementById('ai-analysis-panel');
+      const content = document.getElementById('ai-analysis-content');
+      const badge = document.getElementById('ai-score-badge');
+
+      if (!data.ai_analysis) {
+        content.innerHTML = '<p class="text-xs text-mine-text3">本次上传未能进行AI分析，可能是非PDF文件或扫描版PDF</p>';
+        badge.textContent = '未分析';
+        panel.classList.remove('hidden');
+        return;
+      }
+
+      const ai = data.ai_analysis;
+
+      // 综合评分徽章
+      badge.textContent = `综合评分 ${ai.overallScore}分`;
+
+      let html = '';
+
+      // 自动生成项目提示
+      if (data.auto_generated_project && data.generated_project_name) {
+        html += `<div class="flex items-center gap-1.5 text-xs text-mine-success mb-3">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span class="font-medium">已自动创建项目：</span>${data.generated_project_name}
+        </div>`;
+      }
+
+      // 项目阶段
+      html += `<div class="flex items-center gap-2 mb-3">
+        <span class="text-[10px] px-1.5 py-0.5 rounded bg-mine-gold/10 text-mine-gold border border-mine-gold/20">${ai.stage.name}</span>
+        <span class="text-xs text-mine-text3">${ai.evaluationModel}</span>
+      </div>`;
+
+      // AI摘要
+      if (ai.summary) {
+        html += `<div class="text-xs text-mine-text2 mb-4 leading-relaxed p-3 rounded-lg bg-mine-surface2/50 border border-mine-border/50">${ai.summary}</div>`;
+      }
+
+      // 各维度评分
+      if (ai.dimensions && ai.dimensions.length > 0) {
+        html += `<div class="space-y-2 mb-4">`;
+        html += `<div class="text-xs text-mine-text3 font-medium">维度评分</div>`;
+        for (const d of ai.dimensions) {
+          const pct = Math.min(100, Math.round(d.score / d.max * 100));
+          let barColor = 'bg-mine-gold';
+          if (pct < 40) barColor = 'bg-mine-danger';
+          else if (pct < 70) barColor = 'bg-mine-warning';
+          html += `<div>
+            <div class="flex items-center justify-between text-xs mb-0.5">
+              <span class="text-mine-text2">${d.name}</span>
+              <span class="text-mine-text3">${d.score}/${d.max}</span>
+            </div>
+            <div class="w-full bg-mine-surface2 rounded-full h-1.5">
+              <div class="${barColor} rounded-full h-1.5 transition-all" style="width:${pct}%"></div>
+            </div>
+            <div class="text-[10px] text-mine-text3 mt-0.5">${d.note || ''}</div>
+          </div>`;
+        }
+        html += `</div>`;
+      }
+
+      // 财务指标
+      if (ai.financials) {
+        const fin = ai.financials;
+        const hasFinData = fin.npv > 0 || fin.irr > 0 || fin.mineLife > 0 || fin.annualCapacity > 0;
+        if (hasFinData) {
+          html += `<div class="grid grid-cols-2 gap-2 mb-4">`;
+          if (fin.npv > 0) {
+            html += `<div class="p-2 rounded-lg bg-mine-surface2 border border-mine-border/50">
+              <div class="text-[10px] text-mine-text3">估算NPV</div>
+              <div class="text-xs text-mine-text font-medium">${fin.npv}M$</div>
+            </div>`;
+          }
+          if (fin.irr > 0) {
+            html += `<div class="p-2 rounded-lg bg-mine-surface2 border border-mine-border/50">
+              <div class="text-[10px] text-mine-text3">估算IRR</div>
+              <div class="text-xs text-mine-text font-medium">${fin.irr}%</div>
+            </div>`;
+          }
+          if (fin.mineLife > 0) {
+            html += `<div class="p-2 rounded-lg bg-mine-surface2 border border-mine-border/50">
+              <div class="text-[10px] text-mine-text3">服务年限</div>
+              <div class="text-xs text-mine-text font-medium">${fin.mineLife}年</div>
+            </div>`;
+          }
+          if (fin.annualCapacity > 0) {
+            html += `<div class="p-2 rounded-lg bg-mine-surface2 border border-mine-border/50">
+              <div class="text-[10px] text-mine-text3">年产能</div>
+              <div class="text-xs text-mine-text font-medium">${fin.annualCapacity}万吨/年</div>
+            </div>`;
+          }
+          html += `</div>`;
+        }
+      }
+
+      // 风险
+      if (ai.risks && ai.risks.length > 0) {
+        html += `<div class="mb-3">`;
+        html += `<div class="text-xs text-mine-text3 font-medium mb-1.5">风险提示</div>`;
+        for (const r of ai.risks) {
+          const color = r.level === '高' ? 'text-mine-danger' : (r.level === '中' ? 'text-mine-warning' : 'text-mine-success');
+          html += `<div class="text-xs ${color} mb-0.5 flex items-start gap-1">
+            <span class="mt-0.5 flex-none">${r.level === '高' ? '🔴' : (r.level === '中' ? '🟡' : '🟢')}</span>
+            <span>${r.category}：${r.detail}</span>
+          </div>`;
+        }
+        html += `</div>`;
+      }
+
+      // 缺少的资料 / 提示
+      if (data.missing_items && data.missing_items.length > 0) {
+        html += `<div class="mt-3 pt-3 border-t border-mine-border/50">`;
+        html += `<div class="text-xs text-mine-text3 font-medium mb-1.5">分析提示</div>`;
+        for (const item of data.missing_items) {
+          html += `<div class="text-xs text-mine-warning mb-0.5 flex items-start gap-1">
+            <span class="mt-0.5 flex-none">⚠</span>
+            <span>${item}</span>
+          </div>`;
+        }
+        html += `</div>`;
+      }
+
+      content.innerHTML = html;
+      panel.classList.remove('hidden');
+      // 滚动到分析结果
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     // Toast 轻提示
@@ -410,21 +611,39 @@
       t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2500);
     }
 
+    // 项目选择变化
+    function onProjectChange(sel) {
+      const newNameInput = document.getElementById('new-project-name');
+      if (sel.value === '__new__') {
+        newNameInput.classList.remove('hidden');
+        newNameInput.focus();
+      } else {
+        newNameInput.classList.add('hidden');
+      }
+    }
+
     // 加载项目列表
     async function loadProjects() {
       try {
-        const res  = await fetch('/api/mine-projects?limit=50', { headers: { 'Authorization': 'Bearer ' + token } });
+        const res  = await fetch('/api/mine-projects?limit=50&mine_only=1', { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
         const sel  = document.getElementById('project-select');
+        const currentVal = sel.value;
+        // 保留前两个选项（空和创建新项目）
+        while (sel.options.length > 2) sel.remove(2);
         (data.projects || []).forEach(p => {
           const opt = document.createElement('option');
           opt.value = p.id; opt.textContent = p.name;
           sel.appendChild(opt);
         });
+        // 恢复之前选中的值（如果还在列表中）
+        if (currentVal && currentVal !== '__new__') {
+          sel.value = currentVal;
+        }
       } catch (e) {}
     }
 
-    // 加载已上传资料
+    // 加载已上传资料（按项目分组）
     async function loadUploadedReports() {
       try {
         const res  = await fetch('/api/mine-reports', { headers: { 'Authorization': 'Bearer ' + token } });
@@ -434,25 +653,65 @@
           list.innerHTML = '<p class="text-xs text-mine-text3 text-center py-6">暂无已上传资料</p>';
           return;
         }
-        list.innerHTML = data.reports.map(r => {
-          const cat  = categoryLabels[r.report_type] || r.report_type;
-          const size = r.file_size ? (r.file_size < 1024*1024 ? (r.file_size/1024).toFixed(1)+'KB' : (r.file_size/1024/1024).toFixed(1)+'MB') : '';
-          const date = new Date(r.created_at).toLocaleDateString('zh-CN');
-          return `<div class="flex items-center justify-between p-3 rounded-xl bg-mine-surface border border-mine-border">
-            <div class="min-w-0 flex-1">
-              <div class="text-sm text-mine-text truncate">${r.original_filename}</div>
-              <div class="flex items-center gap-2 mt-0.5 flex-wrap">
-                <span class="text-[11px] px-1.5 py-0.5 rounded bg-mine-gold/10 text-mine-gold">${cat}</span>
-                <span class="text-[11px] text-mine-text3">${size}</span>
-                <span class="text-[11px] text-mine-text3">${date}</span>
-              </div>
-            </div>
-            <button onclick="deleteReport(${r.id})"
-                    class="w-9 h-9 flex items-center justify-center text-mine-text3 active:text-mine-danger ml-2 flex-none rounded-lg">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </button>
+
+        // 按项目分组
+        const groups = {};
+        data.reports.forEach(r => {
+          const key = r.project_id || 0;
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(r);
+        });
+
+        const projectInfo = data.projectInfo || {};
+        let html = '';
+
+        for (const [pid, reports] of Object.entries(groups)) {
+          const projectId = parseInt(pid);
+          const projectName = projectId > 0 ? (reports[0].project_name || `项目#${projectId}`) : '未分类资料';
+
+          // 项目头部信息
+          let headerHtml = `<div class="flex items-center gap-2 mb-2">
+            <span class="text-sm font-semibold text-mine-text">${projectName}</span>
+            <span class="text-[11px] px-1.5 py-0.5 rounded bg-mine-surface2 text-mine-text3 border border-mine-border">${reports.length} 份资料</span>
           </div>`;
-        }).join('');
+
+          // 初始上传人信息（仅对已分类项目显示）
+          if (projectId > 0 && projectInfo[projectId]) {
+            const info = projectInfo[projectId];
+            const wgName = info.workgroup_name ? ` · ${info.workgroup_name}` : '';
+            headerHtml += `<div class="text-[11px] text-mine-text3 mb-2 ml-0.5">
+              <span class="text-mine-gold">初始上传</span>：${info.uploader_name || '未知'}${wgName}
+            </div>`;
+          }
+
+          // 文件列表
+          const filesHtml = reports.map(r => {
+            const cat  = categoryLabels[r.report_type] || r.report_type;
+            const size = r.file_size ? (r.file_size < 1024*1024 ? (r.file_size/1024).toFixed(1)+'KB' : (r.file_size/1024/1024).toFixed(1)+'MB') : '';
+            const date = new Date(r.created_at).toLocaleDateString('zh-CN');
+            return `<div class="flex items-center justify-between p-2.5 rounded-lg bg-mine-surface2/50 border border-mine-border/50">
+              <div class="min-w-0 flex-1">
+                <div class="text-sm text-mine-text truncate">${r.original_filename}</div>
+                <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                  <span class="text-[11px] px-1.5 py-0.5 rounded bg-mine-gold/10 text-mine-gold">${cat}</span>
+                  <span class="text-[11px] text-mine-text3">${size}</span>
+                  <span class="text-[11px] text-mine-text3">${date}</span>
+                </div>
+              </div>
+              <button onclick="deleteReport(${r.id})"
+                      class="w-8 h-8 flex items-center justify-center text-mine-text3 active:text-mine-danger ml-2 flex-none rounded-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>`;
+          }).join('');
+
+          html += `<div class="p-3 rounded-xl bg-mine-surface border border-mine-border mb-3">
+            ${headerHtml}
+            <div class="space-y-1.5">${filesHtml}</div>
+          </div>`;
+        }
+
+        list.innerHTML = html;
       } catch (e) {
         document.getElementById('uploaded-list').innerHTML = '<p class="text-xs text-mine-text3 text-center py-4">加载失败</p>';
       }

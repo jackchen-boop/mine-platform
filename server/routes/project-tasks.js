@@ -4,12 +4,12 @@ import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
 
-// 矿业项目工作流阶段定义（信息获取 → 找到买家的完整流程）
+// 矿业项目工作流阶段定义（项目简介 → 交易完成）
 export const WORKFLOW_PHASES = [
-  { phase: 'info_collection',   label: '信息获取',   icon: '🔍', desc: '收集项目基础信息、联系矿权方、初步了解出让意向' },
+  { phase: 'info_collection',   label: '项目简介',   icon: '📌', desc: '项目基本信息、AI智能评价、资源概况' },
+  { phase: 'project_files',     label: '项目文件',   icon: '📁', desc: '上传地质报告、勘查报告、证照资料等项目文件' },
+  { phase: 'project_photos',    label: '项目照片',   icon: '🖼️', desc: '上传矿区现场照片、地形图、实景图等影像资料' },
   { phase: 'due_diligence',     label: '尽职调查',   icon: '📋', desc: '地质报告审查、现场踏勘、环保/证照核查、法律尽调' },
-  { phase: 'ai_evaluation',     label: 'AI评价',     icon: '🤖', desc: 'AI估值分析、资源量测算、AISC/NPV/IRR财务评估' },
-  { phase: 'report_preparation',label: '材料准备',   icon: '📄', desc: '整理勘查报告、选矿报告、证照资料、上传完整项目材料' },
   { phase: 'listing',           label: '挂牌发布',   icon: '📢', desc: '完成项目挂牌，设定价格，发布至平台' },
   { phase: 'investor_matching', label: '投资方匹配', icon: '🤝', desc: '定向推送匹配投资机构，安排投资人接触' },
   { phase: 'roadshow',          label: '路演推介',   icon: '🎤', desc: '直播路演/线下路演，展示项目亮点' },
@@ -161,6 +161,60 @@ router.post('/activities', requireAuth, (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── 工作成果（deliverables）────────────────────────────
+
+// GET /api/project-tasks/deliverables?project_id=xxx
+router.get('/deliverables', requireAuth, (req, res) => {
+  try {
+    const { project_id } = req.query;
+    if (!project_id) return res.status(400).json({ error: 'project_id 必填' });
+    if (!canAccessProject(Number(project_id), req.user))
+      return res.status(403).json({ error: '无权访问' });
+
+    const items = db.prepare(`
+      SELECT pd.*, u.name as user_name, u.avatar_letter
+      FROM project_deliverables pd
+      JOIN users u ON u.id = pd.user_id
+      WHERE pd.project_id = ?
+      ORDER BY pd.created_at DESC
+    `).all(project_id);
+    res.json({ deliverables: items });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/project-tasks/deliverables — 添加工作成果
+router.post('/deliverables', requireAuth, (req, res) => {
+  try {
+    const { project_id, phase, title, description, file_url, deliverable_type } = req.body;
+    if (!project_id || !title) return res.status(400).json({ error: 'project_id、title 必填' });
+    if (!canAccessProject(Number(project_id), req.user))
+      return res.status(403).json({ error: '无权操作' });
+
+    const r = db.prepare(`
+      INSERT INTO project_deliverables (project_id, user_id, phase, title, description, file_url, deliverable_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(project_id, req.user.id, phase || 'info_collection', title, description || '', file_url || '', deliverable_type || 'document');
+
+    // 自动记录动态
+    db.prepare(`INSERT INTO project_activities (project_id, user_id, activity_type, content)
+      VALUES (?,?,?,?)`).run(project_id, req.user.id, 'deliverable_created', `提交工作成果「${title}」（${phase || 'info_collection'}）`);
+
+    res.status(201).json({ id: r.lastInsertRowid, message: '工作成果已添加' });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// DELETE /api/project-tasks/deliverables/:id
+router.delete('/deliverables/:id', requireAuth, (req, res) => {
+  try {
+    const item = db.prepare('SELECT * FROM project_deliverables WHERE id=?').get(req.params.id);
+    if (!item) return res.status(404).json({ error: '不存在' });
+    if (!canAccessProject(item.project_id, req.user))
+      return res.status(403).json({ error: '无权操作' });
+    db.prepare('DELETE FROM project_deliverables WHERE id=?').run(req.params.id);
+    res.json({ message: '已删除' });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── 项目进度汇总 ──────────────────────────────────────
 
 // GET /api/project-tasks/progress?project_id=xxx — 返回各阶段任务进度
@@ -172,22 +226,43 @@ router.get('/progress', requireAuth, (req, res) => {
       return res.status(403).json({ error: '无权访问' });
 
     const tasks = db.prepare('SELECT phase, status FROM project_tasks WHERE project_id=?').all(project_id);
+    const deliverables = db.prepare('SELECT phase FROM project_deliverables WHERE project_id=?').all(project_id);
+    // 项目文件数（mine_reports 关联）
+    const fileCount = db.prepare('SELECT COUNT(*) as cnt FROM mine_reports WHERE project_id=?').get(project_id)?.cnt || 0;
+    // 项目照片数
+    const photoCount = db.prepare("SELECT COUNT(*) as cnt FROM project_photos WHERE project_id=?").get(project_id)?.cnt || 0;
+
     const phaseMap = {};
-    for (const p of WORKFLOW_PHASES) phaseMap[p.phase] = { ...p, total: 0, done: 0 };
+    for (const p of WORKFLOW_PHASES) phaseMap[p.phase] = { ...p, total: 0, done: 0, deliverables: 0 };
     for (const t of tasks) {
       if (phaseMap[t.phase]) {
         phaseMap[t.phase].total++;
         if (t.status === 'done') phaseMap[t.phase].done++;
       }
     }
-    // 推断当前阶段（第一个有任务但未全完成的阶段）
+    for (const d of deliverables) {
+      if (phaseMap[d.phase]) phaseMap[d.phase].deliverables++;
+    }
+    // 文件/照片阶段使用专属计数
+    if (phaseMap['project_files']) {
+      phaseMap['project_files'].fileCount = fileCount;
+    }
+    if (phaseMap['project_photos']) {
+      phaseMap['project_photos'].photoCount = photoCount;
+    }
+    // 推断当前阶段（第一个有任务或未全完成的阶段，或有工作成果的阶段）
     let currentPhase = WORKFLOW_PHASES[0].phase;
     for (const p of WORKFLOW_PHASES) {
-      if (phaseMap[p.phase].total > 0 && phaseMap[p.phase].done < phaseMap[p.phase].total) {
+      const pm = phaseMap[p.phase];
+      if (pm.total > 0 && pm.done < pm.total) {
         currentPhase = p.phase; break;
-      } else if (phaseMap[p.phase].done > 0) {
+      } else if (pm.deliverables > 0 || pm.done > 0) {
         currentPhase = p.phase;
       }
+    }
+    // 有文件则文件阶段算已进入
+    if (fileCount > 0 && currentPhase === WORKFLOW_PHASES[0].phase) {
+      currentPhase = 'project_files';
     }
     res.json({ phases: Object.values(phaseMap), currentPhase });
   } catch (e) { res.status(500).json({ error: e.message }); }

@@ -1,0 +1,58 @@
+<view class="container">
+  <view class="section-title">上传矿权资料</view>
+
+  <!-- 项目选择 -->
+  <view class="form-group">
+    <text class="label">选择项目</text>
+    <picker mode="selector" range="{{projectOptions}}" range-key="name" value="{{projectIndex}}" bindchange="onProjectChange">
+      <view class="picker-field">
+        <text wx:if="{{projectIndex >= 0}}" class="picker-text">{{projectOptions[projectIndex].name}}</text>
+        <text wx:else class="picker-placeholder">请选择或创建项目</text>
+        <text class="picker-arrow">▶</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 新建项目 -->
+  <view class="form-group" wx:if="{{isNewProject}}">
+    <text class="label">新建项目名称</text>
+    <input class="input-field" placeholder="输入新项目名称" value="{{newProjectName}}" bindinput="onNewProjectNameInput" />
+  </view>
+
+  <!-- 文件选择 -->
+  <view class="form-group">
+    <text class="label">选择文件</text>
+    <view class="file-uploader" bindtap="chooseFile">
+      <text wx:if="{{!filePath}}" class="upload-placeholder">点击选择文件</text>
+      <text wx:else class="upload-file-name">{{fileName}}</text>
+    </view>
+  </view>
+
+  <!-- 描述 -->
+  <view class="form-group">
+    <text class="label">文件描述</text>
+    <textarea class="textarea-field" placeholder="请输入文件描述（可选）" value="{{description}}" bindinput="onDescInput" />
+  </view>
+
+  <button class="btn-primary upload-btn" bindtap="doUpload" disabled="{{uploading}}">
+    {{uploading ? '上传中...' : '上传文件'}}
+  </button>
+
+  <!-- 上传记录 -->
+  <view class="section-title" style="margin-top: 40rpx;">最近上传</view>
+  <view class="report-list" wx:if="{{reports.length > 0}}">
+    <view class="report-card" wx:for="{{reports}}" wx:key="id">
+      <view class="report-header">
+        <text class="report-name">{{item.file_name}}</text>
+        <text class="report-type">{{item.file_type}}</text>
+      </view>
+      <view class="report-meta">
+        <text class="meta-text">{{item.project_name || '未分类'}}</text>
+        <text class="meta-text">{{item.uploaded_at}}</text>
+      </view>
+    </view>
+  </view>
+  <view wx:else class="empty-state">
+    <text class="empty-text">暂无上传记录</text>
+  </view>
+</view>

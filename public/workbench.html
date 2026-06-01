@@ -2,9 +2,9 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>项目管理工作台 — 矿脉科技</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>" />
+  <link rel="icon" href="logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
@@ -26,7 +26,16 @@
   </script>
   <style>
     * { -webkit-tap-highlight-color: transparent; }
-    body { font-family:'Noto Sans SC',sans-serif; background:#0a0a0f; color:#e2e8f0; }
+    body {
+      font-family:'Noto Sans SC',sans-serif; color:#e2e8f0;
+      background-color: #0a0a0f;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(201,169,110,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(59,90,130,0.08) 0%, transparent 55%),
+        radial-gradient(ellipse 40% 30% at 60% 30%, rgba(201,169,110,0.04) 0%, transparent 50%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      background-attachment: fixed;
+    }
     .gold-gradient { background:linear-gradient(135deg,#c9a96e,#e0c88a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .nav-blur { backdrop-filter:blur(20px); background:rgba(10,10,15,0.92); }
     ::-webkit-scrollbar { width:4px; height:4px; }
@@ -55,8 +64,11 @@
     .status-in_progress { background:rgba(59,130,246,0.15); color:#60a5fa; }
     .status-done { background:rgba(34,197,94,0.15); color:#4ade80; }
     .status-blocked { background:rgba(239,68,68,0.15); color:#f87171; }
-    .phase-card { transition:border-color 0.2s; }
-    .phase-card:hover { border-color:rgba(201,169,110,0.4); }
+
+    /* 项目卡片 */
+    .phase-card { transition:border-color 0.2s, box-shadow 0.2s; }
+    .phase-card:hover { border-color:rgba(201,169,110,0.4); box-shadow:0 4px 24px rgba(201,169,110,0.06); }
+
     /* 优先级徽章 */
     .level-S { background:rgba(239,68,68,0.15); color:#f87171; border-color:rgba(239,68,68,0.3); }
     .level-A { background:rgba(249,115,22,0.15); color:#fb923c; border-color:rgba(249,115,22,0.3); }
@@ -64,6 +76,10 @@
     .level-C { background:rgba(100,116,139,0.15);color:#94a3b8; border-color:rgba(100,116,139,0.3); }
     /* 评分条 */
     .score-bar-inner { transition:width 0.5s ease; }
+
+    /* 项目名称行内编辑 */
+    .editable-title:hover { background:rgba(201,169,110,0.08); border-radius:4px; cursor:text; }
+    .editable-title:focus { outline:none; background:rgba(201,169,110,0.12); border-radius:4px; }
 
     /* 手机端安全区 */
     .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
@@ -101,6 +117,7 @@
       <button class="sidebar-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 text-mine-text2" onclick="showView('tasks')" data-view="tasks"><span>✅</span>任务中心</button>
       <button class="sidebar-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 text-mine-text2" onclick="showView('activities')" data-view="activities"><span>💬</span>动态记录</button>
       <button id="admin-nav-btn" class="hidden sidebar-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 text-mine-text2" onclick="showView('admin')"><span>⚙️</span>全局管理</button>
+      <button id="inquiries-nav-btn" class="hidden sidebar-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 text-mine-text2" onclick="showView('inquiries')" data-view="inquiries"><span>📬</span>意向管理</button>
     </nav>
   </aside>
 
@@ -108,17 +125,35 @@
   <main class="flex-1 overflow-y-auto mb-bottom-nav md:mb-0">
 
     <!-- ── 视图：项目看板 ── -->
-    <div id="view-projects" class="p-4 md:p-6">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h1 class="text-lg md:text-xl font-bold">项目看板</h1>
-          <p id="view-projects-desc" class="text-xs md:text-sm text-mine-text3 mt-0.5">选择工作组查看项目</p>
+    <div id="view-projects" class="">
+      <!-- Hero 标题区背景 -->
+      <div class="relative overflow-hidden" style="background: linear-gradient(135deg, #0e1420 0%, #1a1200 35%, #221800 60%, #0e1420 100%); min-height: 88px; border-bottom: 1px solid rgba(212,175,55,0.2);">
+        <!-- 金色光晕 -->
+        <div class="absolute inset-0" style="background-image: radial-gradient(ellipse at 15% 60%, rgba(212,175,55,0.18) 0%, transparent 55%), radial-gradient(ellipse at 75% 30%, rgba(180,130,20,0.12) 0%, transparent 50%);"></div>
+        <!-- 细网格纹 -->
+        <div class="absolute inset-0 opacity-15" style="background-image: linear-gradient(rgba(212,175,55,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.4) 1px, transparent 1px); background-size: 32px 32px;"></div>
+        <!-- 底部过渡 -->
+        <div class="absolute bottom-0 left-0 right-0 h-8" style="background: linear-gradient(to bottom, transparent, rgba(10,11,18,0.9));"></div>
+        <div class="relative px-4 md:px-6 py-4 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-0.5">
+              <span class="text-mine-gold/60 text-xs font-medium tracking-widest uppercase">Mine Platform</span>
+            </div>
+            <h1 class="text-lg md:text-xl font-bold" style="background: linear-gradient(90deg, #f5e070, #d4af37, #b8942a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">项目看板</h1>
+            <p id="view-projects-desc" class="text-xs md:text-sm text-mine-text3 mt-0.5">选择工作组查看项目</p>
+          </div>
+          <button onclick="openNewProjectModal()" class="flex items-center gap-1 px-3 py-2 md:px-4 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium active:bg-mine-goldLight shadow-lg" style="box-shadow: 0 0 15px rgba(212,175,55,0.3);">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span class="hidden sm:inline">新建项目</span>
+            <span class="sm:hidden">上传</span>
+          </button>
         </div>
-        <button onclick="openNewProjectModal()" class="flex items-center gap-1 px-3 py-2 md:px-4 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium active:bg-mine-goldLight">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          <span class="hidden sm:inline">新建项目</span>
-          <span class="sm:hidden">上传</span>
-        </button>
+      </div>
+      <div class="p-4 md:p-6 pt-3">
+      <!-- 操作指引 -->
+      <div id="guide-tip" class="flex items-start gap-3 p-3 mb-4 rounded-xl bg-mine-gold/5 border border-mine-gold/20 text-xs text-mine-text3">
+        <span class="text-mine-gold text-base flex-shrink-0">💡</span>
+        <span>左侧选择工作组可切换项目列表；点击项目卡片进入工作台；上传资料并AI识别后可自动创建项目。<a href="/ai-analysis.html" class="text-mine-gold underline ml-1">去上传识别报告 →</a></span>
       </div>
       <div id="phase-filter-bar" class="flex gap-2 mb-4 overflow-x-auto pb-1 hidden scrollbar-none">
         <button class="phase-filter-btn text-xs px-3 py-1.5 rounded-full border border-mine-gold/40 bg-mine-gold/10 text-mine-gold whitespace-nowrap" data-phase="all">全部</button>
@@ -130,32 +165,164 @@
           <button onclick="openDrawer()" class="mt-3 md:hidden px-4 py-2 rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/20 text-sm">选择工作组</button>
         </div>
       </div>
+      </div><!-- /p-4 md:p-6 pt-3 -->
     </div>
 
     <!-- ── 视图：任务工作台 ── -->
-    <div id="view-tasks" class="hidden">
-      <!-- 顶部项目标题栏 -->
-      <div class="sticky top-14 z-20 bg-mine-bg border-b border-mine-border px-4 py-3 flex items-center gap-3">
-        <button onclick="showView('projects')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-mine-surface2 text-mine-text2 active:bg-mine-surface3">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        </button>
-        <div class="flex-1 min-w-0">
-          <div class="font-semibold text-sm truncate" id="task-view-title">任务中心</div>
-          <div class="text-xs text-mine-text3" id="task-view-desc">选择项目</div>
+    <div id="view-tasks" class="hidden flex flex-col md:h-[calc(100vh-56px)]" style="height: calc(100vh - 56px - 64px - env(safe-area-inset-bottom, 0px))">
+      <!-- 固定头部：项目标题 + 工作流进度（不参与滚动）-->
+      <div class="flex-shrink-0">
+        <!-- 顶部项目标题栏 -->
+        <div class="border-b border-mine-border px-4 py-3 flex items-center gap-3" style="background: linear-gradient(135deg, #0e1420 0%, #1a1200 40%, #0e1420 100%); box-shadow: 0 1px 0 rgba(212,175,55,0.15)">
+          <button onclick="showView('projects')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-mine-surface2 text-mine-text2 active:bg-mine-surface3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1 group" id="task-title-wrap">
+              <div class="font-semibold text-sm truncate cursor-pointer hover:text-mine-gold transition-colors" id="task-view-title" onclick="startEditProjectName()" title="点击修改项目名称">任务中心</div>
+              <button onclick="startEditProjectName()" class="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity flex-shrink-0 text-mine-text3 hover:text-mine-gold" title="修改项目名称">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+              </button>
+              <input id="task-title-input" class="hidden font-semibold text-sm bg-transparent border-b border-mine-gold outline-none text-mine-text1 w-full min-w-0" />
+            </div>
+            <div class="text-xs text-mine-text3" id="task-view-desc">选择项目</div>
+          </div>
+          <button id="add-task-btn" class="hidden flex items-center gap-1 px-3 py-1.5 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium active:bg-mine-goldLight" onclick="openAddTaskModal()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>任务</span>
+          </button>
         </div>
-        <button id="add-task-btn" class="hidden flex items-center gap-1 px-3 py-1.5 rounded-lg bg-mine-gold text-mine-bg text-sm font-medium active:bg-mine-goldLight" onclick="openAddTaskModal()">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          <span>任务</span>
-        </button>
+
+        <!-- 工作流进度（横向滚动，不参与竖向滚动）-->
+        <div id="workflow-progress" class="hidden bg-mine-surface border-b border-mine-border overflow-x-auto">
+          <div id="phase-steps" class="flex gap-0 px-4 py-3 min-w-max"></div>
+        </div>
       </div>
 
-      <!-- 工作流进度（横向滚动，手机友好）-->
-      <div id="workflow-progress" class="hidden bg-mine-surface border-b border-mine-border overflow-x-auto">
-        <div id="phase-steps" class="flex gap-0 px-4 py-3 min-w-max"></div>
-      </div>
+      <!-- 滚动内容区：AI评分、缺失数据、工作成果、任务列表 -->
+      <div class="flex-1 overflow-y-auto">
+        <!-- AI评分卡 & 缺失数据 -->
+        <div id="project-analysis-card" class="hidden px-4 pt-4">
+          <div class="rounded-2xl bg-mine-surface border border-mine-border mb-3 overflow-hidden">
+            <!-- 卡片头（点击折叠/展开） -->
+            <div class="flex items-center justify-between px-4 py-3 cursor-pointer select-none active:bg-mine-surface2" onclick="toggleAnalysisCard()">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🤖</span>
+                <span class="text-sm font-semibold">AI 项目评价</span>
+                <span id="analysis-score-badge" class="hidden px-2 py-0.5 rounded-full text-[11px] font-bold bg-mine-gold/15 text-mine-gold border border-mine-gold/30"></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="event.stopPropagation();loadProjectAnalysis()" class="text-xs text-mine-gold active:underline px-2 py-1 rounded-lg hover:bg-mine-gold/10">刷新</button>
+                <span id="analysis-card-chevron" class="text-mine-text3 text-xs transition-transform duration-200">▲</span>
+              </div>
+            </div>
+            <!-- 展开内容 -->
+            <div id="analysis-card-body">
+              <div id="analysis-card-content" class="px-4 pb-3 text-xs text-mine-text3">加载中...</div>
+              <!-- 补充信息重新分析 -->
+              <div class="border-t border-mine-gold/30 bg-mine-gold/5">
+                <div class="px-4 py-3 flex items-center justify-between cursor-pointer active:bg-mine-gold/10" onclick="toggleReanalysisPanel()">
+                  <div class="flex items-center gap-2">
+                    <span class="text-base">✏️</span>
+                    <div>
+                      <div class="text-sm font-semibold text-mine-gold">补充信息，重新分析</div>
+                      <div class="text-[11px] text-mine-text3">更新项目数据后可获得更准确的AI评价</div>
+                    </div>
+                  </div>
+                  <span id="reanalysis-chevron" class="text-mine-gold text-sm transition-transform duration-200">▼</span>
+                </div>
+                <div id="reanalysis-panel" class="hidden px-4 pb-4 space-y-3">
 
-      <!-- 任务列表 -->
-      <div id="task-phases-container" class="p-4 space-y-3"></div>
+                  <!-- ① 缺失关键数据提示（动态注入） -->
+                  <div id="missing-data-panel-wb"></div>
+
+                  <!-- ② 上传文件让AI识别 -->
+                  <div class="rounded-xl border border-dashed border-mine-gold/40 bg-mine-surface p-3">
+                    <div class="text-[11px] text-mine-text2 font-medium mb-2">📂 上传资料让AI自动识别缺失字段</div>
+                    <label id="ra-file-label" class="flex items-center gap-2 cursor-pointer">
+                      <div class="flex-1 px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-xs text-mine-text3 truncate" id="ra-file-name">点击选择 PDF / Word 文件</div>
+                      <span class="px-3 py-2 rounded-lg bg-mine-surface2 border border-mine-border text-xs text-mine-text2 flex-shrink-0 active:bg-mine-surface3">选择</span>
+                      <input id="ra-file-input" type="file" accept=".pdf,.doc,.docx" class="hidden" onchange="onRaFileChange(this)" />
+                    </label>
+                    <button id="ra-extract-btn" onclick="extractFromFile()" class="hidden mt-2 w-full py-2 rounded-lg bg-mine-gold/15 text-mine-gold text-xs font-semibold border border-mine-gold/30 active:bg-mine-gold/25">
+                      AI 读取文件，自动填入字段
+                    </button>
+                    <div id="ra-extract-status" class="hidden mt-1.5 text-[11px] text-center text-mine-text3"></div>
+                  </div>
+
+                  <!-- ③ 手动字段表单 -->
+                  <p class="text-[11px] text-mine-text3">也可直接修改以下字段，保存后重新触发 AI 分析。</p>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="text-[11px] text-mine-text3 block mb-1">矿种</label>
+                      <input id="ra-mineral" type="text" placeholder="如：金矿" class="w-full px-2.5 py-1.5 rounded-lg bg-mine-surface2 border border-mine-border text-xs text-mine-text focus:outline-none focus:border-mine-gold/50" />
+                    </div>
+                    <div>
+                      <label class="text-[11px] text-mine-text3 block mb-1">开发阶段</label>
+                      <select id="ra-stage" class="w-full px-2.5 py-1.5 rounded-lg bg-mine-surface2 border border-mine-border text-xs text-mine-text focus:outline-none focus:border-mine-gold/50">
+                        <option value="">请选择</option>
+                        <option value="grassroots">草根勘查</option>
+                        <option value="early-exploration">初级勘查</option>
+                        <option value="advanced-exploration">高级勘查</option>
+                        <option value="feasibility-study">技术研究</option>
+                        <option value="production">矿山运营</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[11px] text-mine-text3 block mb-1">估算储量</label>
+                      <input id="ra-reserve" type="text" placeholder="如：金金属量12.5吨" class="w-full px-2.5 py-1.5 rounded-lg bg-mine-surface2 border border-mine-border text-xs text-mine-text focus:outline-none focus:border-mine-gold/50" />
+                    </div>
+                    <div>
+                      <label class="text-[11px] text-mine-text3 block mb-1">品位</label>
+                      <input id="ra-grade" type="text" placeholder="如：3.52 g/t" class="w-full px-2.5 py-1.5 rounded-lg bg-mine-surface2 border border-mine-border text-xs text-mine-text focus:outline-none focus:border-mine-gold/50" />
+                    </div>
+                    <div>
+                      <label class="text-[11px] text-mine-text3 block mb-1">矿权面积(km²)</label>
+                      <input id="ra-area" type="number" step="0.01" placeholder="如：2.5" class="w-full px-2.5 py-1.5 rounded-lg bg-mine-surface2 border border-mine-border text-xs text-mine-text focus:outline-none focus:border-mine-gold/50" />
+                    </div>
+                    <div>
+                      <label class="text-[11px] text-mine-text3 block mb-1">开采方式</label>
+                      <select id="ra-minetype" class="w-full px-2.5 py-1.5 rounded-lg bg-mine-surface2 border border-mine-border text-xs text-mine-text focus:outline-none focus:border-mine-gold/50">
+                        <option value="">请选择</option>
+                        <option value="open-pit">露天开采</option>
+                        <option value="underground">地下开采</option>
+                        <option value="combined">联合开采</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-[11px] text-mine-text3 block mb-1">补充说明（可输入报告摘要、地质背景等）</label>
+                    <textarea id="ra-desc" rows="3" placeholder="粘贴报告关键段落，或补充地质、选矿、财务等信息..." class="w-full px-2.5 py-1.5 rounded-lg bg-mine-surface2 border border-mine-border text-xs text-mine-text focus:outline-none focus:border-mine-gold/50 resize-none"></textarea>
+                  </div>
+                  <button onclick="runReanalysis()" class="w-full py-2.5 rounded-xl bg-mine-gold text-mine-bg text-sm font-semibold active:bg-mine-goldLight">
+                    保存并重新 AI 分析
+                  </button>
+                  <div id="reanalysis-status" class="hidden text-xs text-center text-mine-text3 py-1"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 工作成果（可折叠） -->
+        <div id="deliverables-section" class="hidden px-4 pt-1 pb-2">
+          <div class="rounded-2xl bg-mine-surface border border-mine-border overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 cursor-pointer active:bg-mine-surface2" onclick="toggleDeliverables()">
+              <span class="text-sm font-semibold">📎 项目报告文件</span>
+              <div class="flex items-center gap-2">
+                <button onclick="event.stopPropagation();openAddDeliverableModal()" class="text-xs px-2 py-1 rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/20 active:bg-mine-gold/20">+ 上传</button>
+                <span id="deliverables-chevron" class="text-mine-text3 text-xs">▼</span>
+              </div>
+            </div>
+            <div id="deliverables-body" class="hidden px-4 pb-3">
+              <div id="deliverables-list" class="space-y-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 任务列表 -->
+        <div id="task-phases-container" class="p-4 space-y-3"></div>
+      </div>
     </div>
 
     <!-- ── 视图：动态记录 ── -->
@@ -216,6 +383,19 @@
     <div id="view-admin" class="hidden p-4 md:p-6">
       <h1 class="text-lg md:text-xl font-bold mb-4">全局工作组管理</h1>
       <div id="admin-wg-list" class="space-y-3"></div>
+    </div>
+
+    <div id="view-inquiries" class="hidden p-4 md:p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h1 class="text-lg md:text-xl font-bold">意向管理</h1>
+        <select id="wb-inquiry-status-filter" onchange="loadWorkbenchInquiries()" class="text-xs px-3 py-1.5 rounded-lg bg-mine-surface border border-mine-border text-mine-text">
+          <option value="all">全部状态</option>
+          <option value="pending">待跟进</option>
+          <option value="contacted">已联系</option>
+          <option value="closed">已关闭</option>
+        </select>
+      </div>
+      <div id="wb-inquiries-list" class="space-y-3"></div>
     </div>
 
   </main>
@@ -364,6 +544,47 @@
   </div>
 </div>
 
+<!-- ══ 提交工作成果 Modal ══ -->
+<div id="modal-add-deliverable" class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center modal-overlay" onclick="closeModal('modal-add-deliverable')">
+  <div class="bg-mine-surface border border-mine-border rounded-t-2xl sm:rounded-2xl p-5 w-full sm:max-w-lg max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="w-10 h-1 bg-mine-border rounded-full mx-auto mb-4 sm:hidden"></div>
+    <h2 class="text-base font-semibold mb-4">提交工作成果</h2>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-mine-text2 mb-1 block">所属阶段 *</label>
+        <select id="deliv-phase" class="w-full px-3 py-3 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50"></select>
+      </div>
+      <div>
+        <label class="text-xs text-mine-text2 mb-1 block">成果标题 *</label>
+        <input id="deliv-title" type="text" class="w-full px-3 py-3 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：地质勘查报告初稿" />
+      </div>
+      <div>
+        <label class="text-xs text-mine-text2 mb-1 block">成果类型</label>
+        <select id="deliv-type" class="w-full px-3 py-3 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50">
+          <option value="document">文档材料</option>
+          <option value="report">分析报告</option>
+          <option value="data">数据表格</option>
+          <option value="meeting">会议纪要</option>
+          <option value="analysis">研究分析</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-mine-text2 mb-1 block">描述 / 摘要</label>
+        <textarea id="deliv-desc" rows="2" class="w-full px-3 py-2 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50 resize-none" placeholder="成果内容摘要..."></textarea>
+      </div>
+      <div>
+        <label class="text-xs text-mine-text2 mb-1 block">文件链接（可选）</label>
+        <input id="deliv-file" type="text" class="w-full px-3 py-3 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：/uploads/report.pdf 或外部链接" />
+      </div>
+    </div>
+    <div class="flex gap-3 mt-4">
+      <button onclick="addDeliverable()" class="flex-1 py-3 rounded-xl bg-mine-gold text-mine-bg font-semibold text-sm active:bg-mine-goldLight">提交成果</button>
+      <button onclick="closeModal('modal-add-deliverable')" class="px-4 py-3 rounded-xl border border-mine-border text-mine-text2 text-sm">取消</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ 优先级评分 & 参与人 Modal ══ -->
 <div id="modal-priority" class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center modal-overlay" onclick="closeModal('modal-priority')">
   <div class="bg-mine-surface border border-mine-border rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[92vh] flex flex-col" onclick="event.stopPropagation()">
@@ -485,6 +706,102 @@
   </div>
 </div>
 
+<!-- ══ 挂牌发布确认弹框 ══ -->
+<div id="modal-publish-listing" class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center modal-overlay" onclick="closeModal('modal-publish-listing')">
+  <div class="bg-mine-surface border border-mine-border rounded-t-2xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[92vh] flex flex-col" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-mine-border flex-shrink-0">
+      <div class="w-10 h-1 bg-mine-border rounded-full mx-auto mb-3 sm:hidden absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div>
+        <h2 class="text-base font-semibold">发布挂牌公告</h2>
+        <div class="text-xs text-mine-text3 mt-0.5">请核查并可手动编辑以下内容后发布</div>
+      </div>
+      <button onclick="closeModal('modal-publish-listing')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-mine-surface2 text-mine-text3">✕</button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+
+      <!-- 封面图上传 -->
+      <div>
+        <label class="text-xs text-mine-text2 font-medium block mb-2">封面图片</label>
+        <div class="flex items-center gap-3">
+          <img id="publish-cover-preview" src="" alt="封面" class="hidden w-24 h-16 rounded-xl object-cover border border-mine-border flex-shrink-0" />
+          <label class="flex-1 cursor-pointer">
+            <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-mine-surface2 border border-dashed border-mine-border text-xs text-mine-text3 hover:border-mine-gold/40 active:bg-mine-surface3">
+              <span>📷</span><span>点击上传封面图片（JPG/PNG/WEBP，最大10MB）</span>
+            </div>
+            <input id="publish-cover-input" type="file" accept="image/*" class="hidden" onchange="uploadPublishCover()" />
+          </label>
+        </div>
+        <div id="publish-cover-status" class="hidden text-xs text-mine-text3 mt-1"></div>
+      </div>
+
+      <!-- 基本信息（可编辑） -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="col-span-2">
+          <label class="text-xs text-mine-text2 mb-1 block">项目名称 *</label>
+          <input id="pub-name" type="text" class="w-full px-3 py-2.5 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="项目名称" />
+        </div>
+        <div>
+          <label class="text-xs text-mine-text2 mb-1 block">所在地区</label>
+          <input id="pub-location" type="text" class="w-full px-3 py-2.5 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="省 市 县" />
+        </div>
+        <div>
+          <label class="text-xs text-mine-text2 mb-1 block">主要矿种</label>
+          <input id="pub-mineral" type="text" class="w-full px-3 py-2.5 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：金矿" />
+        </div>
+        <div>
+          <label class="text-xs text-mine-text2 mb-1 block">开发阶段</label>
+          <input id="pub-stage" type="text" class="w-full px-3 py-2.5 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：勘探阶段" />
+        </div>
+        <div>
+          <label class="text-xs text-mine-text2 mb-1 block">矿权面积</label>
+          <input id="pub-area" type="text" class="w-full px-3 py-2.5 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：2.5 km²" />
+        </div>
+        <div>
+          <label class="text-xs text-mine-text2 mb-1 block">估算储量</label>
+          <input id="pub-reserve" type="text" class="w-full px-3 py-2.5 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：金金属量10吨" />
+        </div>
+        <div>
+          <label class="text-xs text-mine-text2 mb-1 block">品位</label>
+          <input id="pub-grade" type="text" class="w-full px-3 py-2.5 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：3.52 g/t" />
+        </div>
+        <div>
+          <label class="text-xs text-mine-text2 mb-1 block">转让价格（万元）</label>
+          <input id="pub-price" type="text" class="w-full px-3 py-2.5 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：3000 或 面议" />
+        </div>
+        <div>
+          <label class="text-xs text-mine-text2 mb-1 block">联系方式（脱敏）</label>
+          <input id="pub-contact" type="text" class="w-full px-3 py-2.5 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-sm focus:outline-none focus:border-mine-gold/50" placeholder="如：138****5678" />
+        </div>
+      </div>
+
+      <!-- 挂牌公告正文（可完整编辑） -->
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <label class="text-xs text-mine-text2 font-medium">挂牌公告正文（可手动修改）</label>
+          <span class="text-[10px] text-mine-text3">投资人可见</span>
+        </div>
+        <textarea id="pub-announce" rows="12" class="w-full px-3 py-2.5 rounded-xl bg-mine-surface2 border border-mine-border text-mine-text text-xs focus:outline-none focus:border-mine-gold/50 resize-none font-mono leading-relaxed" placeholder="挂牌公告内容..."></textarea>
+      </div>
+
+      <div class="p-3 rounded-xl bg-mine-gold/5 border border-mine-gold/20 text-xs text-mine-text2">
+        <span class="text-mine-gold font-medium">⚠ 发布须知：</span>发布后项目将对外展示，投资人可查看公告内容并提交投资意向。请确认信息准确无误。
+      </div>
+    </div>
+
+    <div class="px-5 py-4 border-t border-mine-border flex-shrink-0">
+      <p id="publish-status" class="hidden text-xs text-center mb-2"></p>
+      <div class="flex gap-3">
+        <button id="publish-submit-btn" onclick="doPublishListing()"
+          class="flex-1 py-3 rounded-xl bg-mine-gold text-mine-bg font-semibold text-sm active:bg-mine-goldLight flex items-center justify-center gap-2">
+          <span>🚀</span> 确认发布挂牌公告
+        </button>
+        <button onclick="closeModal('modal-publish-listing')" class="px-5 py-3 rounded-xl border border-mine-border text-mine-text2 text-sm">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const token = localStorage.getItem('mine_token');
 if (!token) location.href = '/auth.html';
@@ -503,10 +820,13 @@ async function init() {
     const me = await fetch('/api/auth/me', { headers: authH() }).then(r => r.json());
     if (!me.user) { location.href = '/auth.html'; return; }
     currentUser = me.user;
-    document.getElementById('nav-user').textContent = me.user.name;
-    document.getElementById('mobile-user-avatar').textContent = me.user.avatar_letter || me.user.name.charAt(0);
+    const navUser = document.getElementById('nav-user');
+    if (navUser) navUser.textContent = me.user.name;
+    const mobileAvatar = document.getElementById('mobile-user-avatar');
+    if (mobileAvatar) mobileAvatar.textContent = me.user.avatar_letter || me.user.name.charAt(0);
     if (me.user.role === 'admin') {
       document.getElementById('admin-nav-btn')?.classList.remove('hidden');
+      document.getElementById('inquiries-nav-btn')?.classList.remove('hidden');
       // 手机端底部 Tab 加管理入口
       const tabBar = document.querySelector('.fixed.bottom-0 .flex');
       const adminTab = document.createElement('button');
@@ -515,6 +835,12 @@ async function init() {
       adminTab.onclick = () => showView('admin');
       adminTab.innerHTML = '<span class="tab-icon text-xl">⚙️</span><span class="tab-label">管理</span>';
       tabBar.appendChild(adminTab);
+      const inqTab = document.createElement('button');
+      inqTab.className = 'bottom-tab flex-1 flex flex-col items-center py-2.5 gap-0.5';
+      inqTab.setAttribute('data-view', 'inquiries');
+      inqTab.onclick = () => showView('inquiries');
+      inqTab.innerHTML = '<span class="tab-icon text-xl">📬</span><span class="tab-label">意向</span>';
+      tabBar.appendChild(inqTab);
     }
     const phases = await fetch('/api/project-tasks/phases').then(r => r.json());
     allPhases = phases.phases || [];
@@ -528,10 +854,12 @@ async function init() {
       bar.appendChild(btn);
     });
     const sel = document.getElementById('task-phase');
+    const delivSel = document.getElementById('deliv-phase');
     allPhases.forEach(p => {
       const opt = document.createElement('option');
       opt.value = p.phase; opt.textContent = p.icon + ' ' + p.label;
       sel.appendChild(opt);
+      if (delivSel) { const dopt = opt.cloneNode(true); delivSel.appendChild(dopt); }
     });
     await loadWorkgroups();
     loadRecentUploads();
@@ -540,7 +868,7 @@ async function init() {
 
 // ── 视图切换 ──────────────────────────────────────────
 function showView(name) {
-  ['projects','tasks','activities','upload','admin'].forEach(v => {
+  ['projects','tasks','activities','upload','admin','inquiries'].forEach(v => {
     document.getElementById('view-' + v)?.classList.add('hidden');
   });
   document.getElementById('view-' + name)?.classList.remove('hidden');
@@ -548,9 +876,30 @@ function showView(name) {
   document.querySelectorAll('[data-view]').forEach(el => el.classList.remove('active'));
   document.querySelectorAll(`[data-view="${name}"]`).forEach(el => el.classList.add('active'));
 
+  // tasks 视图内部自带滚动区，禁止 main 容器重复滚动
+  const mainEl = document.querySelector('main');
+  if (mainEl) {
+    if (name === 'tasks') {
+      mainEl.classList.remove('overflow-y-auto');
+      mainEl.classList.add('overflow-hidden');
+    } else {
+      mainEl.classList.remove('overflow-hidden');
+      mainEl.classList.add('overflow-y-auto');
+    }
+  }
+
   if (name === 'activities') loadActivityProjectSelect();
   if (name === 'admin' && currentUser?.role === 'admin') loadAdminView();
+  if (name === 'inquiries' && currentUser?.role === 'admin') loadWorkbenchInquiries();
   if (name === 'upload') loadRecentUploads();
+  if (name !== 'tasks') {
+    // 离开任务视图时重置
+    currentProject = null;
+    document.getElementById('add-task-btn')?.classList.add('hidden');
+    document.getElementById('project-analysis-card')?.classList.add('hidden');
+    document.getElementById('deliverables-section')?.classList.add('hidden');
+    const mdp = document.getElementById('missing-data-panel-wb'); if (mdp) mdp.innerHTML = '';
+  }
 }
 
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
@@ -608,6 +957,10 @@ async function loadWorkgroups() {
       <span class="text-mine-text3 ml-1">${wg.project_count||0}</span>
     </button>
   `).join('');
+  // 默认自动选中第一个工作组
+  if (!currentWg && wgs.length > 0) {
+    await selectWorkgroup(wgs[0].id);
+  }
 }
 async function selectWorkgroup(id) {
   const data = await fetch('/api/workgroups/' + id, { headers: authH() }).then(r => r.json());
@@ -618,7 +971,8 @@ async function selectWorkgroup(id) {
   document.getElementById('wg-info-box')?.classList.remove('hidden');
   document.getElementById('wg-info-name').textContent = currentWg.name;
   document.getElementById('wg-info-members').textContent = wgMembers.length + ' 名成员';
-  document.getElementById('mobile-wg-name').textContent = currentWg.name;
+  const mobileWgName = document.getElementById('mobile-wg-name');
+  if (mobileWgName) mobileWgName.textContent = currentWg.name;
   document.getElementById('drawer-wg-name').textContent = currentWg.name;
   document.getElementById('drawer-wg-actions')?.classList.remove('hidden');
   refreshAssigneeSelect();
@@ -686,9 +1040,13 @@ function refreshAssigneeSelect() {
 // ── 项目管理 ──────────────────────────────────────────
 async function openAssignProjectModal() {
   if (!currentWg) return;
-  const data = await fetch('/api/mine-projects?limit=50', { headers:authH() }).then(r=>r.json());
+  const data = await fetch('/api/mine-projects?limit=50&unassigned=1', { headers:authH() }).then(r=>r.json());
   const sel = document.getElementById('assign-project-select');
-  sel.innerHTML = (data.projects||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  if (!data.projects || data.projects.length === 0) {
+    sel.innerHTML = '<option value="">暂无未分配工作组的项目</option>';
+  } else {
+    sel.innerHTML = (data.projects||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  }
   openModal('modal-assign-project');
 }
 async function assignProject() {
@@ -702,6 +1060,26 @@ async function assignProject() {
 function openNewProjectModal() { location.href = '/upload.html'; }
 
 // ── 项目看板 ──────────────────────────────────────────
+// 按矿种生成 SVG 默认封面
+function getMineralCoverImg(mineralTypes) {
+  const m = (mineralTypes || '').split(',')[0].trim().toLowerCase();
+  const imgMap = {
+    gold:      '/assets/images/gold-ore.png',
+    silver:    '/assets/images/silver-ore.png',
+    copper:    '/assets/images/copper-ore.png',
+    iron:      '/assets/images/iron-ore.png',
+    coal:      '/assets/images/coal-ore.png',
+    lead:      '/assets/images/lead-zinc-ore.png',
+    zinc:      '/assets/images/lead-zinc-ore.png',
+    lithium:   '/assets/images/lithium-ore.png',
+    nickel:    '/assets/images/nickel-ore.png',
+    tungsten:  '/assets/images/tungsten-ore.png',
+    tin:       '/assets/images/tin-ore.png',
+    rare_earth:'/assets/images/rare-earth-ore.png',
+  };
+  return imgMap[m] || '/assets/images/default-mine.png';
+}
+
 async function loadWgProjects() {
   if (!currentWg) return;
   document.getElementById('view-projects-desc').textContent = currentWg.name;
@@ -718,42 +1096,65 @@ async function loadWgProjects() {
       <button onclick="openAssignProjectModal()" class="px-4 py-2.5 rounded-xl bg-mine-gold/10 text-mine-gold border border-mine-gold/20 text-sm">加入项目</button>
     </div>`; return;
   }
-  const stageLabels = {'general-exploration':'普查','detailed-exploration':'详查','prospecting':'勘探','feasibility':'可研','production-ready':'待产','production':'生产中'};
-  const mineralLabels = {gold:'金矿',silver:'银矿',copper:'铜矿',lead:'铅矿',zinc:'锌矿'};
+  const stageLabels = {'grassroots':'草根勘查','general-exploration':'普查','early-exploration':'初级勘查','exploration':'勘查','advanced-exploration':'高级勘查','detailed-exploration':'详查','prospecting':'勘探','feasibility':'可研','feasibility-study':'可研','production-ready':'待产','production':'生产中','unknown':''};
+  const mineralLabels = {gold:'金矿',silver:'银矿',copper:'铜矿',lead:'铅矿',zinc:'锌矿',iron:'铁矿',coal:'煤矿',molybdenum:'钼矿',tungsten:'钨矿',manganese:'锰矿',nickel:'镍矿',chromite:'铬矿',other:'其他'};
   board.innerHTML = '';
   for (const p of projects) {
     const donePct = p.task_count>0 ? Math.round((p.task_done/p.task_count)*100) : 0;
-    const minerals = (p.mineral_types||'').split(',').map(m=>mineralLabels[m]||m).join('·');
+    // 过滤unknown，未命中key的矿种直接显示原文（可能已是中文）
+    const minerals = (p.mineral_types||'').split(',').map(m=>m.trim()).filter(m=>m && m!=='unknown').map(m=>mineralLabels[m]||m).join('·');
+    // 阶段标签：unknown或超长中文描述（>8字）直接不显示
+    const rawStage = p.development_stage || '';
+    const stageLabel = rawStage.length > 8 ? '' : (stageLabels[rawStage] || rawStage);
     const card = document.createElement('div');
-    card.className = 'rounded-2xl bg-mine-surface border border-mine-border p-4 phase-card active:bg-mine-surface2 cursor-pointer';
+    card.className = 'rounded-2xl bg-mine-surface border border-mine-border overflow-hidden phase-card cursor-pointer flex flex-col';
+    card.dataset.projectId = p.id;
+    // 封面图区域：cover_image > 项目照片第一张 > 矿种真实图片
+    const coverSrc = p.cover_image || p.first_photo || getMineralCoverImg(p.mineral_types);
+    const coverHtml = `<div class="w-full h-28 overflow-hidden flex-shrink-0"><img src="${coverSrc}" alt="封面" class="w-full h-full object-cover" onerror="this.src='${getMineralCoverImg(p.mineral_types)}'"/></div>`;
+    const dataTagsHtml = [
+      p.estimated_reserve ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-mine-gold/10 text-mine-gold border border-mine-gold/20">储量: ${p.estimated_reserve}</span>` : '',
+      p.reserve_grade     ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-900/30 text-blue-400 border border-blue-500/20">品位: ${p.reserve_grade}</span>` : '',
+      p.area_km2          ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-mine-surface2 text-mine-text2 border border-mine-border">${p.area_km2} km²</span>` : '',
+    ].filter(Boolean).join('');
     card.innerHTML = `
-      <div class="flex items-start justify-between mb-2">
-        <div class="flex-1 min-w-0">
-          <div class="text-xs text-mine-text3 font-mono">${p.code}</div>
-          <h3 class="font-semibold text-sm mt-0.5 leading-tight">${p.name}</h3>
+      ${coverHtml}
+      <div class="p-4 flex flex-col flex-1">
+        <!-- 阶段标签 -->
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[11px] px-1.5 py-0.5 rounded bg-mine-surface2 text-mine-text3 border border-mine-border">${stageLabel}</span>
+          ${p.status==='active'
+            ? '<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-mine-success/15 text-mine-success border border-mine-success/20">已发布</span>'
+            : '<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-mine-surface2 text-mine-text3 border border-mine-border">未发布</span>'}
         </div>
-        <span class="text-xs px-1.5 py-0.5 rounded bg-mine-surface2 text-mine-text3 border border-mine-border ml-2 flex-shrink-0">${stageLabels[p.development_stage]||p.development_stage}</span>
-      </div>
-      <div class="text-xs text-mine-text3 mb-3">${p.province||''} · ${minerals}</div>
-      <div class="mb-3">
-        <div class="flex justify-between text-xs mb-1.5">
-          <span class="text-mine-text3">推进进度</span>
-          <span class="text-mine-text2">${p.task_done||0}/${p.task_count||0}</span>
+        <!-- 项目名称 -->
+        <h3 class="project-card-name font-semibold text-sm leading-snug mb-1 line-clamp-2">${p.name}</h3>
+        <div class="text-xs text-mine-text3 mb-2">${p.province||''}${p.province && minerals ? ' · ' : ''}${minerals}</div>
+        <!-- 核心数据标签 -->
+        ${dataTagsHtml ? `<div class="flex flex-wrap gap-1 mb-2">${dataTagsHtml}</div>` : ''}
+        <!-- 进度条 -->
+        <div class="mb-3">
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-mine-text3">推进进度</span>
+            <span class="text-mine-text2">${p.task_done||0}/${p.task_count||0}</span>
+          </div>
+          <div class="w-full bg-mine-surface2 rounded-full h-1.5">
+            <div class="bg-mine-gold h-1.5 rounded-full progress-bar" style="width:${donePct}%"></div>
+          </div>
         </div>
-        <div class="w-full bg-mine-surface2 rounded-full h-1.5">
-          <div class="bg-mine-gold h-1.5 rounded-full progress-bar" style="width:${donePct}%"></div>
-        </div>
-      </div>
-      <div class="flex items-center justify-between pt-3 border-t border-mine-border">
-        <div class="flex items-center gap-2 text-xs">
-          <span class="text-mine-text3">💬${p.activity_count||0}</span>
-          <span class="text-mine-gold font-bold">${p.ai_score?p.ai_score+'分':'AI未评'}</span>
-          <span id="level-badge-${p.id}" class="px-1.5 py-0.5 rounded border text-[11px] font-bold level-${p.priority_level||'C'}">${p.priority_level||'C'}级</span>
-        </div>
-        <div class="flex gap-1.5">
-          <button onclick="event.stopPropagation();openPriorityModal(${p.id},'${p.name.replace(/'/g,'&#39;')}')" class="px-2.5 py-1.5 rounded-lg bg-mine-surface2 text-mine-text2 text-xs border border-mine-border active:bg-mine-surface3" title="评分&参与人">⭐</button>
-          <button onclick="event.stopPropagation();openProjectWorkbench(${p.id},'${p.name.replace(/'/g,'&#39;')}')" class="px-2.5 py-1.5 rounded-lg bg-mine-gold/10 text-mine-gold text-xs border border-mine-gold/20 active:bg-mine-gold/20">工作台</button>
-          <a href="/project-detail.html?id=${p.id}" onclick="event.stopPropagation()" class="px-2.5 py-1.5 rounded-lg bg-mine-surface2 text-mine-text2 text-xs border border-mine-border active:bg-mine-surface3">详情</a>
+        <!-- 底部：评分 + 操作按钮 -->
+        <div class="flex items-center justify-between pt-3 border-t border-mine-border mt-auto">
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-mine-text3">💬${p.activity_count||0}</span>
+            <span class="text-mine-gold font-bold">${p.ai_score?p.ai_score+'分':'未评'}</span>
+            <span id="level-badge-${p.id}" class="px-1.5 py-0.5 rounded border text-[11px] font-bold level-${p.priority_level||'C'}">${p.priority_level||'C'}级</span>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="event.stopPropagation();openPriorityModal(${p.id},'${p.name.replace(/'/g,'&#39;')}')" class="px-2 py-1.5 rounded-lg bg-mine-surface2 text-mine-text2 text-xs border border-mine-border active:bg-mine-surface3" title="评分">⭐</button>
+            <button onclick="event.stopPropagation();openProjectWorkbench(${p.id},'${p.name.replace(/'/g,'&#39;')}')" class="px-2 py-1.5 rounded-lg bg-mine-gold/10 text-mine-gold text-xs border border-mine-gold/20 active:bg-mine-gold/20">工作台</button>
+            <a href="/project-detail.html?id=${p.id}" onclick="event.stopPropagation()" class="px-2 py-1.5 rounded-lg bg-mine-surface2 text-mine-text2 text-xs border border-mine-border active:bg-mine-surface3">详情</a>
+            <button onclick="event.stopPropagation();deleteProject(${p.id},'${p.name.replace(/'/g,'&#39;')}')" class="px-2 py-1.5 rounded-lg bg-mine-danger/10 text-mine-danger text-xs border border-mine-danger/20 active:bg-mine-danger/20" title="删除">🗑</button>
+          </div>
         </div>
       </div>`;
     card.onclick = () => openProjectWorkbench(p.id, p.name);
@@ -768,14 +1169,59 @@ function filterByPhase(phase) {
 }
 
 // ── 任务工作台 ────────────────────────────────────────
+function startEditProjectName() {
+  if (!currentProject) return;
+  const titleEl = document.getElementById('task-view-title');
+  const inputEl = document.getElementById('task-title-input');
+  if (!titleEl || !inputEl) return;
+  // 已在编辑状态则忽略
+  if (!inputEl.classList.contains('hidden')) return;
+  const oldName = titleEl.textContent;
+  titleEl.classList.add('hidden');
+  inputEl.classList.remove('hidden');
+  inputEl.value = oldName;
+  inputEl.focus();
+  inputEl.select();
+  const save = async () => {
+    const newName = inputEl.value.trim();
+    inputEl.classList.add('hidden');
+    titleEl.classList.remove('hidden');
+    if (!newName || newName === oldName) return;
+    titleEl.textContent = newName;
+    try {
+      const res = await fetch(`/api/mine-projects/${currentProject}`, {
+        method: 'PUT',
+        headers: authH(),
+        body: JSON.stringify({ name: newName })
+      });
+      if (!res.ok) { showToast('保存失败'); titleEl.textContent = oldName; return; }
+      showToast('项目名称已更新');
+      // 同步更新看板卡片
+      const cardTitle = document.querySelector(`[data-project-id="${currentProject}"] .project-card-name`);
+      if (cardTitle) cardTitle.textContent = newName;
+    } catch(e) { showToast('保存失败'); titleEl.textContent = oldName; }
+  };
+  inputEl.onblur = save;
+  inputEl.onkeydown = (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); inputEl.blur(); }
+    if (e.key === 'Escape') { inputEl.value = oldName; inputEl.blur(); }
+  };
+}
+
 async function openProjectWorkbench(projectId, projectName) {
   currentProject = projectId;
   document.getElementById('task-view-title').textContent = projectName;
   document.getElementById('task-view-desc').textContent = '矿业项目推进工作流';
   document.getElementById('add-task-btn').classList.remove('hidden');
+  // project-analysis-card 和 deliverables-section 由 switchToPhase 统一控制显示
   refreshAssigneeSelect();
   showView('tasks');
-  await loadTaskPhases(projectId);
+  await Promise.all([
+    loadTaskPhases(projectId),
+    loadProjectAnalysis(projectId),
+    loadDeliverables(projectId),
+    loadMissingDataWB(projectId),
+  ]);
 }
 async function loadTaskPhases(projectId) {
   const [progressData, tasksData] = await Promise.all([
@@ -785,7 +1231,7 @@ async function loadTaskPhases(projectId) {
   const phases = progressData.phases || [];
   const currentPhase = progressData.currentPhase;
 
-  // 进度步骤条
+  // 进度步骤条（点击切换 Tab）
   const stepsEl = document.getElementById('phase-steps');
   document.getElementById('workflow-progress').classList.remove('hidden');
   stepsEl.innerHTML = phases.map((p, i) => {
@@ -793,17 +1239,28 @@ async function loadTaskPhases(projectId) {
     const isCurrent = p.phase===currentPhase;
     const color = isDone?'text-mine-success':isCurrent?'text-mine-gold':'text-mine-text3';
     const bg = isDone?'bg-mine-success/20 border-mine-success/40':isCurrent?'bg-mine-gold/15 border-mine-gold/40':'bg-mine-surface2 border-mine-border';
-    return `<div class="flex items-center">
-      <div class="flex flex-col items-center px-2.5 cursor-pointer" onclick="scrollToPhase('${p.phase}')">
-        <div class="w-8 h-8 rounded-full ${bg} border flex items-center justify-center text-sm mb-0.5">${isDone?'✓':p.icon}</div>
-        <div class="text-[9px] ${color} whitespace-nowrap">${p.label}</div>
-        ${p.total>0?`<div class="text-[8px] text-mine-text3">${p.done}/${p.total}</div>`:''}
+    // 底部数字：项目文件显示文件数，项目照片显示照片数，其他显示任务进度
+    let badgeHtml = '';
+    if (p.phase === 'project_files') {
+      const fc = p.fileCount || 0;
+      badgeHtml = `<div class="text-[8px] text-mine-text3">${fc} 个文件</div>`;
+    } else if (p.phase === 'project_photos') {
+      const pc = p.photoCount || 0;
+      badgeHtml = `<div class="text-[8px] text-mine-text3">${pc} 张照片</div>`;
+    } else if (p.total > 0) {
+      badgeHtml = `<div class="text-[8px] text-mine-text3">${p.done}/${p.total}</div>`;
+    }
+    return `<div class="flex items-center" id="phase-step-wrap-${p.phase}">
+      <div class="flex flex-col items-center px-2.5 cursor-pointer select-none" onclick="switchToPhase('${p.phase}')">
+        <div id="phase-step-icon-${p.phase}" class="w-8 h-8 rounded-full ${bg} border flex items-center justify-center text-sm mb-0.5 transition-all">${isDone?'✓':p.icon}</div>
+        <div id="phase-step-label-${p.phase}" class="text-[9px] ${color} whitespace-nowrap">${p.label}</div>
+        ${badgeHtml}
       </div>
       ${i<phases.length-1?'<div class="w-4 h-px bg-mine-border mt-[-14px]"></div>':''}
     </div>`;
   }).join('');
 
-  // 任务列表
+  // 任务列表（所有阶段先渲染，由 switchToPhase 控制显示哪一个）
   const tasks = tasksData.tasks || [];
   const tasksByPhase = {};
   tasks.forEach(t => { if (!tasksByPhase[t.phase]) tasksByPhase[t.phase]=[]; tasksByPhase[t.phase].push(t); });
@@ -813,31 +1270,76 @@ async function loadTaskPhases(projectId) {
   for (const pd of allPhases) {
     const phaseTasks = tasksByPhase[pd.phase] || [];
     const doneCount = phaseTasks.filter(t=>t.status==='done').length;
+    const allDone = phaseTasks.length > 0 && doneCount === phaseTasks.length;
+    const isCurrent = pd.phase === currentPhase;
     const el = document.createElement('div');
     el.id = 'phase-' + pd.phase;
-    el.className = 'rounded-2xl bg-mine-surface border border-mine-border overflow-hidden';
+    // 默认全部隐藏，由 switchToPhase 决定显示哪个
+    el.className = 'hidden rounded-2xl bg-mine-surface border border-mine-border overflow-hidden';
     el.innerHTML = `
-      <div class="px-4 py-3 bg-mine-surface2 flex items-center justify-between cursor-pointer active:bg-mine-surface3" onclick="togglePhase('${pd.phase}')">
+      <!-- 阶段标题栏（不可折叠，始终展开） -->
+      <div class="px-4 py-3 bg-mine-gold/8 border-b border-mine-gold/20 flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <span class="text-lg">${pd.icon}</span>
+          <span class="text-xl">${pd.icon}</span>
           <div>
-            <div class="font-semibold text-sm">${pd.label}</div>
-            <div class="text-[11px] text-mine-text3 hidden sm:block">${pd.desc}</div>
+            <div class="font-semibold text-sm text-mine-gold">${pd.label}</div>
+            <div class="text-[11px] text-mine-text3">${pd.desc}</div>
           </div>
+          ${isCurrent ? '<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-mine-gold/15 text-mine-gold border border-mine-gold/30 ml-1">进行中</span>' : ''}
+          ${allDone && phaseTasks.length > 0 ? '<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-mine-success/15 text-mine-success border border-mine-success/30 ml-1">✓ 已完成</span>' : ''}
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
-          <span class="text-xs text-mine-text2">${doneCount}/${phaseTasks.length}</span>
-          <button onclick="event.stopPropagation();document.getElementById('task-phase').value='${pd.phase}';openAddTaskModal()" class="text-xs px-2 py-1 rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/20 active:bg-mine-gold/20">+任务</button>
-          <span class="text-mine-text3 text-xs">▼</span>
+          <span class="text-xs text-mine-text2">${doneCount}/${phaseTasks.length} 任务</span>
+          <button onclick="document.getElementById('task-phase').value='${pd.phase}';openAddTaskModal()" class="text-xs px-2 py-1.5 rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/20 active:bg-mine-gold/20">+ 任务</button>
         </div>
       </div>
-      <div id="phase-body-${pd.phase}" class="divide-y divide-mine-border">
-        ${phaseTasks.length===0
-          ? '<div class="px-4 py-3 text-xs text-mine-text3">暂无任务</div>'
-          : phaseTasks.map(t => renderTaskItem(t)).join('')}
+      <!-- 阶段内容（各阶段专属操作区） -->
+      <div class="divide-y divide-mine-border">
+        ${pd.phase === 'info_collection' ? `
+          <div class="px-4 py-4">
+            <div id="phase-ai-content-${projectId}"><div class="text-xs text-mine-text3">加载中...</div></div>
+          </div>
+          ${phaseTasks.length > 0 ? `<div class="divide-y divide-mine-border">${phaseTasks.map(t => renderTaskItem(t)).join('')}</div>` : ''}
+        ` : pd.phase === 'project_files' ? `
+          <div class="px-4 py-4">
+            <div id="phase-files-content-${projectId}"><div class="text-xs text-mine-text3">加载中...</div></div>
+          </div>
+        ` : pd.phase === 'project_photos' ? `
+          <div class="px-4 py-4">
+            <div id="phase-photos-content-${projectId}"><div class="text-xs text-mine-text3">加载中...</div></div>
+          </div>
+        ` : pd.phase === 'listing' ? `
+          ${phaseTasks.length===0
+            ? '<div class="px-4 py-4 text-xs text-mine-text3">暂无任务，点击右上角 + 任务 添加</div>'
+            : phaseTasks.map(t => renderTaskItem(t)).join('')}
+          <div id="listing-actions-${projectId}" class="px-4 py-4 bg-mine-gold/3">
+            <div class="text-xs text-mine-text3 font-medium mb-3 flex items-center gap-1.5"><span class="text-mine-gold">📋</span> 挂牌发布操作</div>
+            <div id="listing-action-content-${projectId}"><div class="text-xs text-mine-text3">加载中...</div></div>
+          </div>
+        ` : `
+          ${phaseTasks.length===0
+            ? '<div class="px-4 py-4 text-xs text-mine-text3">暂无任务，点击右上角 + 任务 添加</div>'
+            : phaseTasks.map(t => renderTaskItem(t)).join('')}
+        `}
       </div>`;
     container.appendChild(el);
+    if (pd.phase === 'listing') {
+      loadListingActions(projectId);
+    }
+    if (pd.phase === 'project_files') {
+      loadPhaseFiles(projectId);
+    }
+    if (pd.phase === 'project_photos') {
+      loadPhasePhotos(projectId);
+    }
+    if (pd.phase === 'info_collection') {
+      loadPhaseAI(projectId);
+    }
   }
+
+  // 默认激活：优先保留上次选中阶段，否则当前进行阶段，否则第一个
+  const defaultPhase = window._activePhase || currentPhase || (allPhases[0]?.phase);
+  if (defaultPhase) switchToPhase(defaultPhase, phases);
 }
 function renderTaskItem(t) {
   const statusMap = {pending:'待处理',in_progress:'进行中',done:'已完成',blocked:'阻塞'};
@@ -865,12 +1367,66 @@ function renderTaskItem(t) {
       </div>
     </div>`;
 }
-function scrollToPhase(phase) {
-  document.getElementById('phase-'+phase)?.scrollIntoView({behavior:'smooth',block:'start'});
+// Tab 式阶段切换：只显示选中阶段的面板，高亮对应进度图标
+function switchToPhase(phase, phasesData) {
+  // 隐藏所有阶段面板
+  allPhases.forEach(pd => {
+    const el = document.getElementById('phase-' + pd.phase);
+    if (el) el.classList.add('hidden');
+  });
+  // 显示目标阶段
+  const target = document.getElementById('phase-' + phase);
+  if (target) {
+    target.classList.remove('hidden');
+    // 内容区滚回顶部
+    const scrollArea = document.querySelector('#view-tasks .flex-1.overflow-y-auto');
+    if (scrollArea) scrollArea.scrollTop = 0;
+  }
+  // AI评价卡 & 工作成果区块：仅在"项目简介"阶段显示
+  const analysisCard = document.getElementById('project-analysis-card');
+  const deliverablesSection = document.getElementById('deliverables-section');
+  if (phase === 'info_collection') {
+    analysisCard?.classList.remove('hidden');
+    deliverablesSection?.classList.remove('hidden');
+  } else {
+    analysisCard?.classList.add('hidden');
+    deliverablesSection?.classList.add('hidden');
+  }
+  // 更新进度条图标选中样式
+  allPhases.forEach(pd => {
+    const iconEl = document.getElementById(`phase-step-icon-${pd.phase}`);
+    const labelEl = document.getElementById(`phase-step-label-${pd.phase}`);
+    if (!iconEl || !labelEl) return;
+    if (pd.phase === phase) {
+      iconEl.classList.remove('border-mine-border', 'bg-mine-surface2', 'border-mine-success/40', 'bg-mine-success/20');
+      iconEl.classList.add('border-mine-gold', 'bg-mine-gold/15', 'ring-2', 'ring-mine-gold/30');
+      labelEl.classList.remove('text-mine-text3', 'text-mine-success');
+      labelEl.classList.add('text-mine-gold', 'font-semibold');
+    } else {
+      iconEl.classList.remove('border-mine-gold', 'bg-mine-gold/15', 'ring-2', 'ring-mine-gold/30');
+      labelEl.classList.remove('text-mine-gold', 'font-semibold');
+      const pd2 = (phasesData || []).find(p => p.phase === pd.phase);
+      const isDone = pd2 && pd2.done > 0 && pd2.done === pd2.total && pd2.total > 0;
+      if (isDone) {
+        iconEl.classList.add('border-mine-success/40', 'bg-mine-success/20');
+        labelEl.classList.add('text-mine-success');
+      } else {
+        iconEl.classList.add('border-mine-border', 'bg-mine-surface2');
+        labelEl.classList.add('text-mine-text3');
+      }
+    }
+  });
+  window._activePhase = phase;
+  // 切换到对应阶段时重新加载专属数据（避免首次加载时序问题）
+  if (currentProject) {
+    if (phase === 'project_files')    loadPhaseFiles(currentProject);
+    if (phase === 'project_photos')   loadPhasePhotos(currentProject);
+    if (phase === 'info_collection')  loadPhaseAI(currentProject);
+    if (phase === 'listing')          loadListingActions(currentProject);
+  }
 }
-function togglePhase(phase) {
-  document.getElementById('phase-body-'+phase)?.classList.toggle('hidden');
-}
+function scrollToPhase(phase) { switchToPhase(phase); }
+function togglePhase(phase) { /* Tab 模式下不再折叠，保留避免报错 */ }
 function openAddTaskModal() { if (!currentProject) return; openModal('modal-add-task'); }
 async function addTask() {
   const phase = document.getElementById('task-phase').value;
@@ -896,6 +1452,19 @@ async function deleteTask(taskId) {
   if (!confirm('确定删除？')) return;
   await fetch(`/api/project-tasks/${taskId}`, { method:'DELETE', headers:authH() });
   loadTaskPhases(currentProject);
+}
+
+async function deleteProject(projectId, projectName) {
+  if (!confirm(`确定要删除项目「${projectName}」吗？\n删除后不可恢复，项目相关任务和资料记录也将停止显示。`)) return;
+  try {
+    const res = await fetch(`/api/mine-projects/${projectId}`, { method:'DELETE', headers:authH() });
+    const data = await res.json();
+    if (!res.ok) { alert('删除失败：' + (data.error||'未知错误')); return; }
+    // 刷新项目看板
+    if (currentWg) loadWgProjects();
+  } catch(e) {
+    alert('删除失败：网络错误');
+  }
 }
 
 // ── 动态记录 ──────────────────────────────────────────
@@ -959,6 +1528,487 @@ async function loadRecentUploads() {
       </div>`;
     }).join('');
   } catch(e) {}
+}
+
+// ── AI分析结果 ────────────────────────────────────────
+async function loadProjectAnalysis(projectId) {
+  const el = document.getElementById('analysis-card-content');
+  if (!el) return;
+  const pid = projectId || currentProject;
+  if (!pid) { el.innerHTML = '<span class="text-mine-text3">请先选择项目</span>'; return; }
+  try {
+    const data = await fetch(`/api/mine-analysis/project/${pid}`, { headers: authH() }).then(r => r.json());
+    const proj = data.project || {};
+    const rec = data.analysis;
+
+    if (!rec && !proj.ai_score) {
+      el.innerHTML = `<div class="text-mine-text3 py-1">暂无AI分析结果。上传报告后可在 <a href="/ai-analysis.html" class="text-mine-gold underline">AI分析页</a> 触发深度评分。</div>`;
+      document.getElementById('analysis-score-badge')?.classList.add('hidden');
+      return;
+    }
+
+    let analysis = null;
+    if (rec && rec.content) {
+      try { analysis = JSON.parse(rec.content); } catch(e) {}
+    }
+
+    const score = analysis?.overallScore ?? proj.ai_score ?? '--';
+    const grade = analysis?.grade ?? proj.ai_grade ?? '';
+    const summary = analysis?.summary ?? proj.ai_summary ?? '';
+    const gradeColor = { 'A': 'text-mine-success', 'B': 'text-mine-gold', 'C': 'text-orange-400', 'D': 'text-mine-danger' }[grade] || 'text-mine-text2';
+    const gradeLabel = analysis?.gradeLabel || (grade ? grade + '级' : '');
+    const createdAt = rec?.created_at ? rec.created_at.slice(0, 10) : '';
+
+    // 更新卡片头的分数徽章
+    const badge = document.getElementById('analysis-score-badge');
+    if (badge && score !== '--') {
+      badge.textContent = score + '分' + (gradeLabel ? ' · ' + gradeLabel : '');
+      badge.classList.remove('hidden');
+    }
+
+    // 预填补充信息表单
+    _prefillReanalysisForm(proj, analysis);
+
+    let dimsHtml = '';
+    if (analysis?.dimensions?.length) {
+      dimsHtml = `<div class="mt-2 space-y-2">` + analysis.dimensions.map(d => {
+        const pct = d.max > 0 ? Math.round((d.score / d.max) * 100) : 0;
+        return `<div>
+          <div class="flex items-center justify-between mb-0.5">
+            <span class="text-mine-text2">${d.name}</span>
+            <span class="font-medium">${d.score}<span class="text-mine-text3">/${d.max}</span></span>
+          </div>
+          <div class="h-1.5 rounded-full bg-mine-surface2 overflow-hidden">
+            <div class="h-full rounded-full bg-mine-gold/70 transition-all" style="width:${pct}%"></div>
+          </div>
+          ${d.note ? `<div class="text-[10px] text-mine-text3 mt-0.5 leading-relaxed">${d.note}</div>` : ''}
+        </div>`;
+      }).join('') + `</div>`;
+    }
+
+    let risksHtml = '';
+    if (analysis?.risks?.length) {
+      const levelColor = { '高': 'text-mine-danger', '中': 'text-orange-400', '低': 'text-mine-success' };
+      risksHtml = `<div class="mt-3 p-3 rounded-xl bg-mine-surface2 border border-mine-border">
+        <div class="text-mine-text2 mb-2 font-medium text-[11px] uppercase tracking-wide">主要风险</div>
+        <div class="space-y-1.5">` +
+        analysis.risks.map(r => `<div class="flex gap-2"><span class="w-7 flex-shrink-0 ${levelColor[r.level]||'text-mine-text2'} font-bold">[${r.level||'中'}]</span><span class="text-mine-text2 leading-relaxed">${r.category}：${r.detail}</span></div>`).join('') +
+        `</div></div>`;
+    }
+
+    let recsHtml = '';
+    if (analysis?.recommendations?.length) {
+      recsHtml = `<div class="mt-3 p-3 rounded-xl bg-mine-gold/5 border border-mine-gold/20">
+        <div class="text-mine-gold mb-2 font-medium text-[11px] uppercase tracking-wide">投资建议</div>
+        <ul class="space-y-1">` +
+        analysis.recommendations.map(r => `<li class="flex gap-1.5"><span class="text-mine-gold flex-shrink-0">›</span><span class="text-mine-text2 leading-relaxed">${r}</span></li>`).join('') +
+        `</ul></div>`;
+    }
+
+    el.innerHTML = `
+      <div class="flex items-end gap-3 mb-2">
+        <div class="leading-none">
+          <span class="text-4xl font-bold ${gradeColor}">${score}</span>
+          <span class="text-mine-text3 text-sm ml-0.5">分</span>
+        </div>
+        ${gradeLabel ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold border ${gradeColor} border-current">${gradeLabel}</span>` : ''}
+        ${analysis?.stage?.name ? `<span class="text-[11px] text-mine-text3 bg-mine-surface2 px-2 py-0.5 rounded-full">${analysis.stage.name}</span>` : ''}
+        ${createdAt ? `<span class="text-[10px] text-mine-text3 ml-auto">${createdAt}</span>` : ''}
+      </div>
+      ${summary ? `<div class="text-mine-text2 leading-relaxed text-[12px] border-l-2 border-mine-gold/40 pl-2.5 mb-1">${summary}</div>` : ''}
+      ${dimsHtml}
+      ${risksHtml}
+      ${recsHtml}`;
+  } catch(e) {
+    el.innerHTML = `<span class="text-mine-danger">加载失败：${e.message}</span>`;
+  }
+}
+
+function _prefillReanalysisForm(proj, analysis) {
+  const stage = proj.development_stage || analysis?.stage?.code || '';
+  const minetype = proj.mine_type || '';
+  if (document.getElementById('ra-mineral')) document.getElementById('ra-mineral').value = proj.mineral_types || '';
+  if (document.getElementById('ra-stage')) document.getElementById('ra-stage').value = stage;
+  if (document.getElementById('ra-reserve')) document.getElementById('ra-reserve').value = proj.estimated_reserve || '';
+  if (document.getElementById('ra-grade')) document.getElementById('ra-grade').value = proj.reserve_grade || '';
+  if (document.getElementById('ra-area')) document.getElementById('ra-area').value = proj.area_km2 || '';
+  if (document.getElementById('ra-minetype')) document.getElementById('ra-minetype').value = minetype;
+  if (document.getElementById('ra-desc')) document.getElementById('ra-desc').value = proj.description || '';
+}
+
+function toggleAnalysisCard() {
+  const body = document.getElementById('analysis-card-body');
+  const chevron = document.getElementById('analysis-card-chevron');
+  if (!body) return;
+  const hidden = body.classList.toggle('hidden');
+  if (chevron) chevron.style.transform = hidden ? 'rotate(180deg)' : '';
+}
+
+function toggleReanalysisPanel() {
+  const panel = document.getElementById('reanalysis-panel');
+  const chevron = document.getElementById('reanalysis-chevron');
+  if (!panel) return;
+  const hidden = panel.classList.toggle('hidden');
+  if (chevron) chevron.style.transform = hidden ? '' : 'rotate(180deg)';
+}
+
+async function runReanalysis() {
+  if (!currentProject) return;
+  const btn = document.querySelector('#reanalysis-panel button');
+  const status = document.getElementById('reanalysis-status');
+
+  // 收集表单数据
+  const mineral = document.getElementById('ra-mineral')?.value.trim() || '';
+  const stage = document.getElementById('ra-stage')?.value || '';
+  const reserve = document.getElementById('ra-reserve')?.value.trim() || '';
+  const grade = document.getElementById('ra-grade')?.value.trim() || '';
+  const area = document.getElementById('ra-area')?.value || '';
+  const minetype = document.getElementById('ra-minetype')?.value || '';
+  const desc = document.getElementById('ra-desc')?.value.trim() || '';
+
+  // 先更新项目字段
+  const updateBody = {};
+  if (mineral) updateBody.mineral_types = mineral;
+  if (stage) updateBody.development_stage = stage;
+  if (reserve) updateBody.estimated_reserve = reserve;
+  if (grade) updateBody.reserve_grade = grade;
+  if (area) updateBody.area_km2 = parseFloat(area);
+  if (minetype) updateBody.mine_type = minetype;
+  if (desc) updateBody.description = desc;
+
+  if (btn) { btn.disabled = true; btn.textContent = '正在分析...'; }
+  if (status) { status.classList.remove('hidden'); status.textContent = '正在保存项目信息...'; }
+
+  try {
+    // 步骤1：更新项目基本信息
+    if (Object.keys(updateBody).length > 0) {
+      const putRes = await fetch(`/api/mine-projects/${currentProject}`, {
+        method: 'PUT', headers: authH(), body: JSON.stringify(updateBody)
+      });
+      if (!putRes.ok) { const d = await putRes.json(); throw new Error(d.error || '保存失败'); }
+    }
+
+    if (status) status.textContent = '正在调用AI分析...';
+
+    // 步骤2：构建分析文本（整合所有已知信息）
+    const parts = [];
+    if (mineral) parts.push(`矿种：${mineral}`);
+    if (stage) parts.push(`开发阶段：${stage}`);
+    if (reserve) parts.push(`估算储量：${reserve}`);
+    if (grade) parts.push(`品位：${grade}`);
+    if (area) parts.push(`矿权面积：${area} km²`);
+    if (minetype) parts.push(`开采方式：${minetype}`);
+    if (desc) parts.push(`补充说明：\n${desc}`);
+
+    const reportText = `【项目信息补充更新 - 重新分析请求】\n项目ID: ${currentProject}\n\n${parts.join('\n')}\n\n请基于以上信息对该矿权项目进行完整的五阶段投资价值评分分析。`;
+
+    // 步骤3：触发 AI 分析（关联项目）
+    const analysisRes = await fetch('/api/mine-analysis/analyze-text', {
+      method: 'POST',
+      headers: authH(),
+      body: JSON.stringify({
+        report_text: reportText,
+        mineral_type: mineral,
+        development_stage: stage,
+        project_id: currentProject,
+      })
+    });
+    if (!analysisRes.ok) { const d = await analysisRes.json(); throw new Error(d.error || 'AI分析失败'); }
+
+    if (status) { status.textContent = '✓ 分析完成，正在刷新...'; }
+    // 关闭补充面板，刷新分析卡片
+    document.getElementById('reanalysis-panel')?.classList.add('hidden');
+    document.getElementById('reanalysis-chevron').style.transform = '';
+    await loadProjectAnalysis(currentProject);
+    // 确保卡片展开
+    const body = document.getElementById('analysis-card-body');
+    if (body?.classList.contains('hidden')) toggleAnalysisCard();
+    showToast('AI分析已更新');
+  } catch(e) {
+    if (status) status.textContent = '❌ 失败：' + e.message;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '保存并重新 AI 分析'; }
+    setTimeout(() => status?.classList.add('hidden'), 4000);
+  }
+}
+
+// ── 项目报告文件（工作成果） ───────────────────────────
+async function loadDeliverables(projectId) {
+  const list = document.getElementById('deliverables-list');
+  if (!list) return;
+  const pid = projectId || currentProject;
+  if (!pid) return;
+  try {
+    const data = await fetch(`/api/mine-reports/project/${pid}`, { headers: authH() }).then(r => r.json());
+    const reports = data.reports || [];
+    if (reports.length === 0) {
+      list.innerHTML = '<p class="text-xs text-mine-text3 py-2">暂无上传文件。<a href="/ai-analysis.html" class="text-mine-gold underline ml-1">去上传 →</a></p>';
+      return;
+    }
+    const typeLabel = { geology: '地质勘查', processing: '选矿试验', feasibility: '技术经济', license: '矿权证照', operation: '生产运营', exploration: '勘查报告', other: '其他' };
+    list.innerHTML = reports.map(r => {
+      const size = r.file_size
+        ? (r.file_size < 1024 * 1024 ? (r.file_size / 1024).toFixed(0) + ' KB' : (r.file_size / 1024 / 1024).toFixed(1) + ' MB')
+        : '';
+      const ext = (r.original_filename || '').split('.').pop().toUpperCase();
+      const extColor = ext === 'PDF' ? 'bg-red-500/15 text-red-400' : (ext === 'DOCX' || ext === 'DOC') ? 'bg-blue-500/15 text-blue-400' : 'bg-mine-surface2 text-mine-text3';
+      const date = r.created_at ? r.created_at.slice(0, 10) : '';
+      return `<div class="flex items-center gap-3 p-3 rounded-xl bg-mine-surface2 border border-mine-border">
+        <div class="w-9 h-9 rounded-lg ${extColor} flex items-center justify-center text-[11px] font-bold flex-shrink-0">${ext || '📄'}</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm text-mine-text truncate font-medium">${r.original_filename}</div>
+          <div class="text-[11px] text-mine-text3 mt-0.5">${typeLabel[r.report_type] || r.report_type}${size ? ' · ' + size : ''}${date ? ' · ' + date : ''}</div>
+        </div>
+        <button onclick="downloadReport(${r.id},\`${r.original_filename.replace(/`/g, '\\`')}\`)"
+           class="flex-shrink-0 px-3 py-1.5 rounded-lg bg-mine-gold/10 text-mine-gold text-xs border border-mine-gold/20 active:bg-mine-gold/20">
+          下载
+        </button>
+      </div>`;
+    }).join('');
+    // 有文件时自动展开
+    const body = document.getElementById('deliverables-body');
+    const chevron = document.getElementById('deliverables-chevron');
+    if (body?.classList.contains('hidden')) {
+      body.classList.remove('hidden');
+      if (chevron) chevron.style.transform = 'rotate(180deg)';
+    }
+  } catch(e) {
+    list.innerHTML = `<p class="text-xs text-mine-danger">加载失败：${e.message}</p>`;
+  }
+}
+
+function toggleDeliverables() {
+  const body = document.getElementById('deliverables-body');
+  const chevron = document.getElementById('deliverables-chevron');
+  if (!body) return;
+  const hidden = body.classList.toggle('hidden');
+  if (chevron) chevron.style.transform = hidden ? '' : 'rotate(180deg)';
+}
+
+async function downloadReport(reportId, filename) {
+  try {
+    const res = await fetch(`/api/mine-reports/${reportId}/download`, { headers: authH() });
+    if (!res.ok) { showToast('下载失败：' + (await res.json().then(d=>d.error).catch(()=>'未知错误'))); return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  } catch(e) { showToast('下载失败：' + e.message); }
+}
+
+// ── 缺失数据面板 ─────────────────────────────────────
+async function loadMissingDataWB(projectId) {
+  const panel = document.getElementById('missing-data-panel-wb');
+  if (!panel) return;
+  const pid = projectId || currentProject;
+  if (!pid) return;
+  try {
+    const data = await fetch(`/api/mine-analysis/missing-data?project_id=${pid}`, { headers: authH() }).then(r => r.json());
+    const missing = data.missingData || [];
+    if (missing.length === 0) {
+      panel.innerHTML = '';
+      return;
+    }
+    panel.innerHTML = `<div class="rounded-xl bg-orange-500/5 border border-orange-500/20 p-3">
+      <div class="flex items-center gap-2 mb-2">
+        <span>⚠️</span>
+        <span class="text-sm font-semibold text-orange-400">缺失 ${missing.length} 项关键数据</span>
+      </div>
+      <div class="flex flex-wrap gap-1.5">
+        ${missing.map(m => `<span class="px-2 py-0.5 rounded-full text-[11px] bg-orange-500/10 text-orange-400 border border-orange-500/20">${m.label || m.field}</span>`).join('')}
+      </div>
+      <p class="text-[11px] text-mine-text3 mt-2">上传相关资料或手动填写下方字段可补全这些数据。</p>
+    </div>`;
+  } catch(e) { panel.innerHTML = ''; }
+}
+
+// ── 文件上传识别缺失字段 ──────────────────────────────
+function onRaFileChange(input) {
+  const file = input.files[0];
+  const nameEl = document.getElementById('ra-file-name');
+  const btn = document.getElementById('ra-extract-btn');
+  if (file) {
+    nameEl.textContent = file.name;
+    btn.classList.remove('hidden');
+  } else {
+    nameEl.textContent = '点击选择 PDF / Word 文件';
+    btn.classList.add('hidden');
+  }
+}
+
+async function extractFromFile() {
+  const input = document.getElementById('ra-file-input');
+  const file = input?.files[0];
+  if (!file || !currentProject) return;
+
+  const btn = document.getElementById('ra-extract-btn');
+  const status = document.getElementById('ra-extract-status');
+  btn.disabled = true;
+  btn.textContent = '正在上传并识别...';
+  status.classList.remove('hidden');
+  status.textContent = '上传文件中...';
+
+  try {
+    // 步骤1：上传文件（关联当前项目，不重新创建项目）
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('project_id', currentProject);
+    formData.append('report_type', 'geology');
+
+    const uploadData = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/mine-reports/upload');
+      xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          status.textContent = `正在上传：${Math.round(e.loaded / 1024)}KB / ${Math.round(e.total / 1024)}KB（${pct}%）`;
+        }
+      };
+      xhr.onload = () => {
+        try {
+          const d = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) resolve(d);
+          else reject(new Error(d.error || '上传失败'));
+        } catch { reject(new Error('响应解析失败')); }
+      };
+      xhr.onerror = () => reject(new Error('网络错误，请检查连接'));
+      xhr.send(formData);
+    });
+    if (!uploadData.id && !uploadData.report_id) throw new Error(uploadData.error || '上传失败');
+
+    status.textContent = 'AI 正在识别关键字段...';
+
+    // 步骤2：用 extract_mode 从已上传报告中提取结构化信息
+    const reportId = uploadData.report_id || uploadData.id;
+    const extractRes = await fetch('/api/mine-analysis/analyze-text', {
+      method: 'POST',
+      headers: authH(),
+      body: JSON.stringify({
+        extract_mode: true,
+        report_ids: reportId ? [reportId] : [],
+        report_text: uploadData.extracted_text || '',
+        mineral_type: document.getElementById('ra-mineral')?.value || '',
+        project_id: currentProject,
+      })
+    });
+    const extractData = await extractRes.json();
+    if (!extractRes.ok) throw new Error(extractData.error || '识别失败');
+
+    const fields = extractData.analysis?.extractedFields || {};
+    let filled = 0;
+
+    // 步骤3：将识别结果填入表单（只填非空且当前为空的字段）
+    const fillIfEmpty = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val && !el.value) { el.value = val; filled++; }
+    };
+    const fillAlways = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val) { el.value = val; filled++; }
+    };
+
+    fillAlways('ra-mineral', fields.mineral_types);
+    fillIfEmpty('ra-reserve', fields.estimated_reserve);
+    fillIfEmpty('ra-grade', fields.reserve_grade);
+    fillIfEmpty('ra-area', fields.area_km2);
+    if (fields.mine_type && document.getElementById('ra-minetype')) {
+      const map = { '露天': 'open-pit', '地下': 'underground', '联合': 'combined', 'open-pit': 'open-pit', 'underground': 'underground', 'combined': 'combined' };
+      const mapped = map[fields.mine_type] || '';
+      if (mapped) { document.getElementById('ra-minetype').value = mapped; filled++; }
+    }
+    if (fields.development_stage && document.getElementById('ra-stage')) {
+      document.getElementById('ra-stage').value = fields.development_stage;
+      filled++;
+    }
+    // 把提取的描述信息追加到补充说明
+    if (fields.description || extractData.analysis?.summary) {
+      const descEl = document.getElementById('ra-desc');
+      if (descEl) {
+        const append = [fields.description, extractData.analysis?.summary].filter(Boolean).join('\n');
+        descEl.value = descEl.value ? descEl.value + '\n' + append : append;
+        filled++;
+      }
+    }
+
+    status.textContent = filled > 0
+      ? `✓ 已自动填入 ${filled} 个字段，请核查后点击"保存并重新AI分析"`
+      : '未识别到可填入的字段，请手动填写';
+
+    // 刷新缺失数据面板
+    loadMissingDataWB(currentProject);
+
+    // 刷新报告文件列表
+    loadDeliverables(currentProject);
+
+  } catch(e) {
+    status.textContent = '❌ ' + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'AI 读取文件，自动填入字段';
+  }
+}
+
+// ── 提交工作成果（占位：跳转上传页） ─────────────────
+function openAddDeliverableModal() {
+  if (currentProject) {
+    location.href = `/ai-analysis.html?project_id=${currentProject}`;
+  } else {
+    location.href = '/ai-analysis.html';
+  }
+}
+
+// ── 意向管理 ────────────────────────────────────────
+async function loadWorkbenchInquiries() {
+  const statusFilter = document.getElementById('wb-inquiry-status-filter')?.value || 'all';
+  const list = document.getElementById('wb-inquiries-list');
+  if (!list) return;
+  list.innerHTML = '<div class="text-xs text-mine-text3 text-center py-8">加载中...</div>';
+  try {
+    const url = statusFilter === 'all' ? '/api/admin/inquiries' : `/api/admin/inquiries?status=${statusFilter}`;
+    const res = await fetch(url, { headers: authH() });
+    const data = await res.json();
+    const inquiries = data.inquiries || [];
+    if (inquiries.length === 0) { list.innerHTML = '<div class="text-xs text-mine-text3 text-center py-8">暂无意向记录</div>'; return; }
+    const statusLabels = { pending: '待跟进', contacted: '已联系', closed: '已关闭' };
+    const statusColors = { pending: 'bg-mine-warning/15 text-mine-warning', contacted: 'bg-mine-success/15 text-mine-success', closed: 'bg-mine-surface2 text-mine-text3' };
+    list.innerHTML = inquiries.map(i => `
+      <div class="p-4 rounded-2xl bg-mine-surface border border-mine-border">
+        <div class="flex items-start justify-between gap-3 mb-3">
+          <div>
+            <div class="text-sm font-semibold">${i.project_name || '未知项目'} <span class="text-xs text-mine-text3 font-normal">${i.project_code || ''}</span></div>
+            <div class="text-xs text-mine-text3 mt-0.5">${new Date(i.created_at).toLocaleString('zh-CN')}</div>
+          </div>
+          <span class="text-[11px] px-2 py-0.5 rounded-full flex-shrink-0 ${statusColors[i.status] || statusColors.pending}">${statusLabels[i.status] || i.status}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+          <div><span class="text-mine-text3">姓名：</span><span class="text-mine-text">${i.contact_name || i.user_name || '-'}</span></div>
+          <div><span class="text-mine-text3">电话：</span><span class="text-mine-text font-medium">${i.contact_phone || i.user_phone || '-'}</span></div>
+          <div><span class="text-mine-text3">机构：</span><span class="text-mine-text">${i.contact_org || '-'}</span></div>
+          ${i.budget ? `<div><span class="text-mine-text3">预算：</span><span class="text-mine-gold">${i.budget}</span></div>` : ''}
+        </div>
+        ${i.message ? `<div class="text-xs text-mine-text2 bg-mine-surface2 rounded-lg p-2 mb-3">${i.message}</div>` : ''}
+        <div class="flex gap-2">
+          <button onclick="updateWbInquiryStatus(${i.id},'contacted')" class="px-3 py-1 text-xs rounded-lg bg-mine-success/10 text-mine-success border border-mine-success/20">已联系</button>
+          <button onclick="updateWbInquiryStatus(${i.id},'closed')" class="px-3 py-1 text-xs rounded-lg bg-mine-surface2 text-mine-text3 border border-mine-border">关闭</button>
+          <button onclick="updateWbInquiryStatus(${i.id},'pending')" class="px-3 py-1 text-xs rounded-lg bg-mine-warning/10 text-mine-warning border border-mine-warning/20">重置</button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) { list.innerHTML = `<div class="text-xs text-mine-danger text-center py-8">加载失败: ${e.message}</div>`; }
+}
+
+async function updateWbInquiryStatus(id, status) {
+  try {
+    const res = await fetch(`/api/admin/inquiries/${id}/status`, {
+      method: 'PUT',
+      headers: { ...authH(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    if (!res.ok) throw new Error((await res.json()).error);
+    loadWorkbenchInquiries();
+  } catch(e) { alert('更新失败：' + e.message); }
 }
 
 // ── 管理员视图 ────────────────────────────────────────
@@ -1134,6 +2184,560 @@ async function removeParticipant(userId) {
   if (!confirm('确定移除该参与人？')) return;
   const r = await fetch(`/api/project-priority/${priorityProjectId}/participants/${userId}`, { method: 'DELETE', headers: authH() });
   if (r.ok) { await loadPriorityData(priorityProjectId); showToast('已移除'); }
+}
+
+// ── 项目文件操作区 ────────────────────────────────────
+async function loadPhaseFiles(projectId) {
+  const container = document.getElementById(`phase-files-content-${projectId}`);
+  if (!container) return;
+  container.innerHTML = '<div class="text-xs text-mine-text3">加载中...</div>';
+  const token = localStorage.getItem('mine_token');
+  // 从 mine-reports 接口取文件列表
+  const data = await fetch(`/api/mine-reports/project/${projectId}`, { headers: { 'Authorization': 'Bearer ' + token } }).then(r => r.json()).catch(() => ({}));
+  const files = data.reports || [];
+  container.innerHTML = `
+    <div class="mb-3">
+      <label class="block w-full cursor-pointer">
+        <div class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 border-dashed border-mine-border hover:border-mine-gold/50 text-xs text-mine-text3 hover:text-mine-gold transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          上传文件（PDF / Word / Excel / 图片）
+        </div>
+        <input type="file" class="hidden" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" onchange="uploadPhaseFiles(${projectId}, this)"/>
+      </label>
+      <div id="phase-files-upload-status-${projectId}" class="mt-1 text-xs text-mine-text3 hidden"></div>
+    </div>
+    ${files.length === 0
+      ? '<div class="text-xs text-mine-text3 py-2">尚未上传任何文件</div>'
+      : `<div class="space-y-1.5">${files.map(f => `
+          <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-mine-surface border border-mine-border text-xs">
+            <span class="text-base flex-shrink-0">${fileIcon(f.file_type || f.original_filename)}</span>
+            <div class="flex-1 min-w-0">
+              <div class="truncate text-mine-text1">${f.original_filename}</div>
+              <div class="text-mine-text3">${f.parse_status === 'done' ? '✓ 已解析' : f.parse_status === 'processing' ? '⏳ 解析中' : '待解析'} · ${formatFileSize(f.file_size)}</div>
+            </div>
+            <a href="/api/mine-reports/${f.id}/download?token=${localStorage.getItem('mine_token')}" target="_blank" class="text-mine-gold flex-shrink-0">查看</a>
+          </div>`).join('')}</div>`}`;
+}
+
+function fileIcon(nameOrType) {
+  const n = (nameOrType || '').toLowerCase();
+  if (n.includes('pdf')) return '📄';
+  if (n.includes('doc')) return '📝';
+  if (n.includes('xls')) return '📊';
+  if (n.match(/jpg|jpeg|png|gif|webp/)) return '🖼️';
+  return '📎';
+}
+function formatFileSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + 'B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + 'KB';
+  return (bytes/1024/1024).toFixed(1) + 'MB';
+}
+
+async function uploadPhaseFiles(projectId, input) {
+  if (!input.files || !input.files.length) return;
+  const token = localStorage.getItem('mine_token');
+  const statusEl = document.getElementById(`phase-files-upload-status-${projectId}`);
+  statusEl.classList.remove('hidden');
+  for (const file of input.files) {
+    statusEl.textContent = `上传中: ${file.name}...`;
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('project_id', projectId);
+    fd.append('skip_analysis', '1');
+    await new Promise((resolve) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/mine-reports/upload');
+      xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round(e.loaded / e.total * 100);
+          statusEl.textContent = `上传中: ${file.name} ${pct}%`;
+        }
+      };
+      xhr.onload = () => resolve();
+      xhr.onerror = () => resolve();
+      xhr.send(fd);
+    });
+  }
+  statusEl.textContent = '上传完成';
+  setTimeout(() => statusEl.classList.add('hidden'), 2000);
+  input.value = '';
+  loadPhaseFiles(projectId);
+}
+
+// ── 项目照片操作区 ────────────────────────────────────
+async function loadPhasePhotos(projectId) {
+  const container = document.getElementById(`phase-photos-content-${projectId}`);
+  if (!container) return;
+  container.innerHTML = '<div class="text-xs text-mine-text3">加载中...</div>';
+  const token = localStorage.getItem('mine_token');
+  const data = await fetch(`/api/mine-projects/${projectId}/photos`, { headers: { 'Authorization': 'Bearer ' + token } }).then(r => r.json()).catch(() => ({}));
+  const photos = data.photos || [];
+  container.innerHTML = `
+    <div class="mb-3">
+      <label class="block w-full cursor-pointer">
+        <div class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 border-dashed border-mine-border hover:border-mine-gold/50 text-xs text-mine-text3 hover:text-mine-gold transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          上传照片（JPG / PNG / HEIC）
+        </div>
+        <input type="file" class="hidden" multiple accept="image/*" onchange="uploadPhasePhotos(${projectId}, this)"/>
+      </label>
+      <div id="phase-photos-upload-status-${projectId}" class="mt-1 text-xs text-mine-text3 hidden"></div>
+    </div>
+    ${photos.length === 0
+      ? '<div class="text-xs text-mine-text3 py-2">尚未上传任何照片</div>'
+      : `<div class="grid grid-cols-3 gap-2">${photos.map(ph => `
+          <div class="relative rounded-lg overflow-hidden aspect-square bg-mine-surface2 group">
+            <img src="${ph.stored_name}" alt="${ph.filename}" class="w-full h-full object-cover"/>
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <a href="${ph.stored_name}" target="_blank" class="text-white text-xs px-2 py-1 rounded bg-white/20">查看</a>
+              <button onclick="deletePhasePhoto(${projectId},${ph.id})" class="text-white text-xs px-2 py-1 rounded bg-red-500/70">删除</button>
+            </div>
+            ${ph.caption ? `<div class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-1.5 py-0.5 truncate">${ph.caption}</div>` : ''}
+          </div>`).join('')}</div>`}`;
+}
+
+async function uploadPhasePhotos(projectId, input) {
+  if (!input.files || !input.files.length) return;
+  const token = localStorage.getItem('mine_token');
+  const statusEl = document.getElementById(`phase-photos-upload-status-${projectId}`);
+  statusEl.classList.remove('hidden');
+  for (const file of input.files) {
+    statusEl.textContent = `上传中: ${file.name}...`;
+    const fd = new FormData();
+    fd.append('photo', file);
+    await new Promise((resolve) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `/api/mine-projects/${projectId}/photos`);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          statusEl.textContent = `上传中: ${file.name} ${Math.round(e.loaded/e.total*100)}%`;
+        }
+      };
+      xhr.onload = () => resolve();
+      xhr.onerror = () => resolve();
+      xhr.send(fd);
+    });
+  }
+  statusEl.textContent = '上传完成';
+  setTimeout(() => statusEl.classList.add('hidden'), 2000);
+  input.value = '';
+  loadPhasePhotos(projectId);
+}
+
+async function deletePhasePhoto(projectId, photoId) {
+  if (!confirm('确认删除此照片？')) return;
+  const token = localStorage.getItem('mine_token');
+  await fetch(`/api/mine-projects/${projectId}/photos/${photoId}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+  loadPhasePhotos(projectId);
+}
+
+// ── AI分析操作区 ────────────────────────────────────
+async function loadPhaseAI(projectId) {
+  const container = document.getElementById(`phase-ai-content-${projectId}`);
+  if (!container) return;
+  container.innerHTML = '<div class="text-xs text-mine-text3">加载中...</div>';
+  const token = localStorage.getItem('mine_token');
+  // 获取最新的 AI 分析报告
+  const data = await fetch(`/api/mine-analysis/project/${projectId}`, { headers: { 'Authorization': 'Bearer ' + token } }).then(r => r.json()).catch(() => ({}));
+  if (!data.analysis) {
+    container.innerHTML = `
+      <div class="text-xs text-mine-text3 mb-3">尚无AI分析报告，请先上传项目文件再生成分析。</div>
+      <a href="/ai-analysis.html" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/20 text-xs">
+        🤖 去上传并分析
+      </a>`;
+    return;
+  }
+  const a = data.analysis;
+  const score = data.project?.ai_score || a.ai_score || 0;
+  const scoreColor = score>=80?'text-green-400':score>=60?'text-mine-gold':'text-mine-warning';
+  container.innerHTML = `
+    <div class="flex items-center gap-3 mb-3 p-3 rounded-xl bg-mine-surface border border-mine-border">
+      <div class="text-3xl font-bold ${scoreColor}">${score}</div>
+      <div>
+        <div class="text-xs text-mine-text2 font-medium">综合评分</div>
+        <div class="text-[11px] text-mine-text3">${new Date(a.created_at).toLocaleDateString('zh-CN')}</div>
+      </div>
+      <button onclick="location.href='/ai-analysis.html?project_id=${projectId}'" class="ml-auto text-xs px-2.5 py-1.5 rounded-lg bg-mine-surface2 border border-mine-border text-mine-text2">查看详情 →</button>
+    </div>
+    <div class="text-xs text-mine-text3 leading-relaxed line-clamp-4">${(a.content||'').substring(0,200)}...</div>`;
+}
+
+// ── 挂牌发布操作区 ────────────────────────────────────
+async function loadListingActions(projectId) {
+  const container = document.getElementById(`listing-action-content-${projectId}`);
+  if (!container) return;
+  // 如果正在生成报告，不重渲染（避免破坏进行中的状态显示）
+  if (window._generatingReports && window._generatingReports.has(projectId)) return;
+  try {
+    // 检查是否有决策报告
+    const data = await fetch(`/api/mine-analysis/project/${projectId}`, { headers: authH() }).then(r => r.json());
+    const hasDecisionReport = !!(data.analysis?.id);
+    const proj = data.project || {};
+    const isPublished = proj.status === 'active';
+
+    // ── 已发布状态 ──────────────────────────────
+    if (isPublished) {
+      const analysis = (() => { try { return JSON.parse(data.analysis?.content); } catch(e) { return null; } })();
+      const score = analysis?.overallScore ?? proj.ai_score ?? '--';
+      container.innerHTML = `
+        <div class="rounded-xl border border-mine-success/30 bg-mine-success/8 p-3 mb-3">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-base">🟢</span>
+            <div class="font-medium text-mine-success text-sm">项目已发布挂牌</div>
+            ${score !== '--' ? `<span class="ml-auto text-xs text-mine-gold font-bold">${score}分</span>` : ''}
+          </div>
+          <div class="text-xs text-mine-text3 mb-3">该项目已在前台展示，投资人可以看到。</div>
+          <div class="flex gap-2">
+            <button onclick="openPublishModal(${projectId})"
+              class="flex-1 py-2 rounded-lg bg-mine-gold/15 text-mine-gold text-xs font-semibold border border-mine-gold/30 active:bg-mine-gold/25">
+              ✏️ 修改公告
+            </button>
+            <button onclick="unpublishProject(${projectId})"
+              class="flex-1 py-2 rounded-lg bg-mine-danger/10 text-mine-danger text-xs font-semibold border border-mine-danger/20 active:bg-mine-danger/20">
+              📤 下架项目
+            </button>
+          </div>
+        </div>`;
+      return;
+    }
+
+    // ── 未发布 + 无报告 ─────────────────────────
+    if (!hasDecisionReport) {
+      container.innerHTML = `
+        <div class="rounded-xl border border-orange-500/25 bg-orange-500/5 p-3 mb-3">
+          <div class="flex items-start gap-2 mb-2">
+            <span class="text-base flex-shrink-0">⚠️</span>
+            <div>
+              <div class="text-sm font-medium text-orange-400">尚无专业决策报告</div>
+              <div class="text-xs text-mine-text3 mt-0.5">建议先生成专业决策报告，有助于提升投资人信任度</div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="generateDecisionReport(${projectId})" id="gen-report-btn-${projectId}"
+              class="flex-1 py-2 rounded-lg bg-mine-gold/15 text-mine-gold text-xs font-semibold border border-mine-gold/30 active:bg-mine-gold/25 flex items-center justify-center gap-1">
+              <span>✨</span> 生成专业决策报告
+            </button>
+            <button onclick="openPublishModal(${projectId})"
+              class="px-3 py-2 rounded-lg bg-mine-surface2 text-mine-text2 text-xs border border-mine-border active:bg-mine-surface3">
+              跳过直接发布
+            </button>
+          </div>
+          <div id="gen-report-status-${projectId}" class="hidden mt-2 text-xs text-mine-text3 text-center"></div>
+          <div id="gen-report-stream-${projectId}" class="hidden mt-2 p-2 rounded-lg bg-mine-surface2 text-xs text-mine-text2 leading-relaxed max-h-32 overflow-y-auto"></div>
+        </div>`;
+    } else {
+      // ── 未发布 + 有报告 ─────────────────────────
+      const analysis = (() => { try { return JSON.parse(data.analysis.content); } catch(e) { return null; } })();
+      const score = analysis?.overallScore ?? proj.ai_score ?? '--';
+      const summary = analysis?.summary ?? '';
+      container.innerHTML = `
+        <div class="rounded-xl border border-mine-success/25 bg-mine-success/5 p-3 mb-3">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-base">✅</span>
+            <div class="font-medium text-mine-success text-sm">已有专业决策报告</div>
+            <span class="ml-auto text-xs text-mine-gold font-bold">${score}分</span>
+          </div>
+          ${summary ? `<div class="text-xs text-mine-text2 leading-relaxed line-clamp-2 border-l-2 border-mine-success/30 pl-2 mb-2">${summary}</div>` : ''}
+          <button onclick="generateDecisionReport(${projectId})" id="gen-report-btn-${projectId}"
+            class="w-full py-1.5 rounded-lg bg-mine-surface2 text-mine-text2 text-xs border border-mine-border active:bg-mine-surface3 mb-1">
+            重新生成决策报告
+          </button>
+          <div id="gen-report-status-${projectId}" class="hidden mt-1 text-xs text-mine-text3 text-center"></div>
+          <div id="gen-report-stream-${projectId}" class="hidden mt-2 p-2 rounded-lg bg-mine-surface2 text-xs text-mine-text2 leading-relaxed max-h-32 overflow-y-auto"></div>
+        </div>
+        <button onclick="openPublishModal(${projectId})"
+          class="w-full py-3 rounded-xl bg-mine-gold text-mine-bg text-sm font-semibold active:bg-mine-goldLight flex items-center justify-center gap-2">
+          <span>🚀</span> 发布项目挂牌公告
+        </button>`;
+    }
+  } catch(e) {
+    if (container) container.innerHTML = `<div class="text-xs text-mine-danger">加载失败: ${e.message}</div>`;
+  }
+}
+
+async function generateDecisionReport(projectId) {
+  // 防止重复触发：正在生成中时忽略点击
+  if (window._generatingReports && window._generatingReports.has(projectId)) return;
+  if (!window._generatingReports) window._generatingReports = new Set();
+  window._generatingReports.add(projectId);
+
+  const btn = document.getElementById(`gen-report-btn-${projectId}`);
+  const statusEl = document.getElementById(`gen-report-status-${projectId}`);
+  const streamEl = document.getElementById(`gen-report-stream-${projectId}`);
+  if (!btn || !statusEl || !streamEl) {
+    window._generatingReports.delete(projectId);
+    return;
+  }
+
+  // 锁定按钮，显示生成状态
+  btn.disabled = true;
+  btn.innerHTML = '<span class="animate-pulse mr-1">⏳</span>生成中，请勿重复点击...';
+  statusEl.classList.remove('hidden');
+  statusEl.textContent = '正在连接AI服务...';
+  streamEl.classList.remove('hidden');
+  streamEl.textContent = '';
+
+  let succeeded = false;
+  try {
+    const resp = await fetch(`/api/mine-ai/decision-report?project_id=${projectId}`, {
+      headers: authH()
+    });
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      throw new Error(errData.error || `HTTP ${resp.status}`);
+    }
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    statusEl.textContent = 'AI 正在生成专业决策报告...';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n');
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const raw = line.slice(6).trim();
+          if (raw === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(raw);
+            const delta = parsed.choices?.[0]?.delta?.content || parsed.content || '';
+            fullText += delta;
+            streamEl.textContent = fullText;
+            streamEl.scrollTop = streamEl.scrollHeight;
+          } catch(e) {}
+        }
+      }
+    }
+    succeeded = true;
+    statusEl.textContent = '✓ 决策报告生成完成';
+    showToast('决策报告已生成');
+    // 生成成功：直接更新按钮为"重新生成"，不重渲染整块 DOM（避免破坏正在显示的状态）
+    btn.disabled = false;
+    btn.innerHTML = '↻ 重新生成决策报告';
+    // 延迟 2 秒后重新加载整个操作区（刷新评分摘要等），此时 SSE 状态已完整显示
+    setTimeout(() => loadListingActions(projectId), 2000);
+  } catch(e) {
+    statusEl.textContent = '❌ 生成失败：' + e.message;
+    // 失败才解锁按钮允许重试
+    btn.disabled = false;
+    btn.innerHTML = '↻ 重新生成';
+  } finally {
+    window._generatingReports.delete(projectId);
+  }
+}
+
+let publishProjectId = null;
+
+// 项目名称脱敏：保留省份+矿种，隐藏具体县/矿区地名
+function desensitizeProjName(name) {
+  if (!name) return '';
+  // 去掉公司/企业字样
+  let n = name.replace(/(有限公司|股份公司|矿业公司|集团|控股|企业|有限责任公司)/g, '');
+  // 保留省级地名（X省/X自治区/X市直辖）
+  const provMatch = n.match(/^([\u4e00-\u9fa5]{2,4}(?:省|自治区|维吾尔自治区|壮族自治区|回族自治区))/);
+  const prov = provMatch ? provMatch[1] : '';
+  // 提取矿种关键词
+  const mineralMatch = n.match(/(金|银|铜|铅|锌|铁|煤|钼|钨|锂|稀土|磷|硫铁|多金属)矿/);
+  const mineral = mineralMatch ? mineralMatch[0] : '';
+  // 提取规模词
+  const scaleMatch = n.match(/(大型|中型|小型|特大型)/);
+  const scale = scaleMatch ? scaleMatch[1] : '';
+  if (prov && mineral) {
+    return `${prov}${scale ? scale : 'XX'}${mineral}项目`;
+  }
+  // 降级：保留省份，其余用XX替代
+  if (prov) return `${prov}XX矿权项目`;
+  // 无省份：只保留矿种
+  if (mineral) return `XX${mineral}项目`;
+  // 兜底：前两字+XX
+  return n.slice(0, 2) + 'XX矿权项目';
+}
+
+async function openPublishModal(projectId) {
+  publishProjectId = projectId;
+  const modal = document.getElementById('modal-publish-listing');
+  if (!modal) return;
+  // 重置状态
+  document.getElementById('publish-status').textContent = '';
+  document.getElementById('publish-status').className = 'text-xs text-center mt-1 hidden';
+  document.getElementById('publish-cover-preview').classList.add('hidden');
+  document.getElementById('publish-cover-input').value = '';
+  document.getElementById('publish-submit-btn').disabled = false;
+  // 并行加载：项目+AI分析 & 项目照片
+  try {
+    const [data, photosData] = await Promise.all([
+      fetch(`/api/mine-analysis/project/${projectId}`, { headers: authH() }).then(r => r.json()),
+      fetch(`/api/mine-projects/${projectId}/photos`, { headers: authH() }).then(r => r.json()).catch(() => ({}))
+    ]);
+    const proj = data.project || {};
+    const analysis = (() => { try { return JSON.parse(data.analysis?.content); } catch(e) { return null; } })();
+
+    const stageLabels = {'general-exploration':'普查阶段','detailed-exploration':'详查阶段','prospecting':'勘探阶段','exploration':'勘探阶段','advanced-exploration':'高级勘查阶段','feasibility':'可研阶段','production-ready':'待产阶段','production':'生产阶段','unknown':''};
+    const mineralLabels = {gold:'金矿',silver:'银矿',copper:'铜矿',lead:'铅矿',zinc:'锌矿',iron:'铁矿',coal:'煤矿',other:'其他'};
+    const minerals = (proj.mineral_types||'').split(',').map(m=>mineralLabels[m]||m).filter(m => m && m !== 'unknown').join('、');
+
+    // 脱敏项目名
+    const maskedName = desensitizeProjName(proj.name);
+
+    document.getElementById('pub-name').value = maskedName;
+    document.getElementById('pub-location').value = [proj.province, proj.city].filter(Boolean).join(' ') || '';
+    document.getElementById('pub-mineral').value = minerals || proj.mineral_types || '';
+    document.getElementById('pub-stage').value = stageLabels[proj.development_stage] || proj.development_stage || '';
+    document.getElementById('pub-area').value = proj.area_km2 ? proj.area_km2 + ' km²' : '';
+    document.getElementById('pub-reserve').value = proj.estimated_reserve || '';
+    document.getElementById('pub-grade').value = proj.reserve_grade || '';
+    document.getElementById('pub-price').value = proj.asking_price || '';
+    document.getElementById('pub-contact').value = proj.contact_masked || '';
+
+    // AI 分析数据：评分、亮点、投资建议
+    const score = analysis?.overallScore ?? proj.ai_score;
+    const grade = analysis?.grade ?? proj.ai_grade ?? '';
+    const scoreStr = score ? `综合评分：${score}分${grade ? '（' + grade + '级）' : ''}` : '';
+    const recoms = analysis?.recommendations?.length
+      ? analysis.recommendations.slice(0, 3).map(r => '• ' + r).join('\n') : '';
+    const highlights = analysis?.dimensions?.length
+      ? analysis.dimensions.filter(d => d.score >= 70).map(d => `• ${d.name}：${d.score}分`).join('\n') : '';
+    const summary = analysis?.summary || proj.ai_summary || proj.description || '';
+
+    // 挂牌公告正文（含AI分析内容）
+    const announceText = `【矿权项目挂牌公告】
+
+项目名称：${maskedName}
+所在地区：${[proj.province, proj.city].filter(Boolean).join(' ')}
+主要矿种：${minerals || proj.mineral_types || ''}
+开发阶段：${stageLabels[proj.development_stage] || proj.development_stage || ''}
+矿权面积：${proj.area_km2 ? proj.area_km2 + ' km²' : ''}
+估算储量：${proj.estimated_reserve || ''}
+转让价格：${proj.asking_price ? '人民币 ' + proj.asking_price + ' 万元' : '面议'}
+${scoreStr ? '\n' + scoreStr : ''}
+【项目亮点】
+${summary || '请补充项目亮点介绍...'}
+${highlights ? '\n核心优势：\n' + highlights : ''}
+${recoms ? '\n投资建议：\n' + recoms : ''}
+
+【联系方式】
+${proj.contact_masked || '请联系平台获取详情'}
+
+发布时间：${new Date().toLocaleDateString('zh-CN')}
+`.trim();
+    document.getElementById('pub-announce').value = announceText;
+
+    // 封面图：优先 cover_image，其次项目照片第一张
+    const photos = photosData.photos || [];
+    const coverSrc = proj.cover_image || (photos.length > 0 ? photos[0].stored_name || photos[0].url || '' : '');
+    if (coverSrc) {
+      const prev = document.getElementById('publish-cover-preview');
+      prev.src = coverSrc;
+      prev.classList.remove('hidden');
+    }
+  } catch(e) {
+    document.getElementById('pub-name').value = '';
+    document.getElementById('pub-announce').value = '';
+  }
+  modal.classList.remove('hidden');
+}
+
+async function uploadPublishCover() {
+  const input = document.getElementById('publish-cover-input');
+  const file = input?.files[0];
+  if (!file || !publishProjectId) return;
+  const statusEl = document.getElementById('publish-cover-status');
+  statusEl.textContent = '上传中...';
+  statusEl.classList.remove('hidden');
+  try {
+    const fd = new FormData();
+    fd.append('cover', file);
+    const data = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `/api/mine-projects/${publishProjectId}/cover`);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          statusEl.textContent = `上传中 ${pct}%（${Math.round(e.loaded / 1024)}KB / ${Math.round(e.total / 1024)}KB）`;
+        }
+      };
+      xhr.onload = () => {
+        try {
+          const d = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) resolve(d);
+          else reject(new Error(d.error || '上传失败'));
+        } catch { reject(new Error('响应解析失败')); }
+      };
+      xhr.onerror = () => reject(new Error('网络错误'));
+      xhr.send(fd);
+    });
+    const prev = document.getElementById('publish-cover-preview');
+    prev.src = data.cover_image;
+    prev.classList.remove('hidden');
+    statusEl.textContent = '✓ 封面已上传';
+    setTimeout(() => statusEl.classList.add('hidden'), 2000);
+  } catch(e) {
+    statusEl.textContent = '❌ ' + e.message;
+  }
+}
+
+async function unpublishProject(projectId) {
+  if (!confirm('确定要下架该项目吗？下架后投资人将无法在前台看到此项目。')) return;
+  try {
+    const res = await fetch(`/api/mine-projects/${projectId}/unpublish`, {
+      method: 'POST',
+      headers: authH()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '下架失败');
+    // 刷新挂牌操作区和看板卡片
+    loadListingActions(projectId);
+    // 更新看板卡片的发布状态标签
+    const card = document.querySelector(`[data-project-id="${projectId}"]`);
+    if (card) {
+      const badge = card.querySelector('.status-badge');
+      if (badge) { badge.className = 'status-badge text-[10px] px-1.5 py-0.5 rounded-full bg-mine-surface2 text-mine-text3 border border-mine-border'; badge.textContent = '未发布'; }
+    }
+    // 重新加载当前工作组项目列表以刷新卡片
+    if (typeof loadWorkgroupProjects === 'function') loadWorkgroupProjects(currentWorkgroup);
+  } catch(e) {
+    alert('下架失败：' + e.message);
+  }
+}
+
+async function doPublishListing() {
+  if (!publishProjectId) return;
+  const btn = document.getElementById('publish-submit-btn');
+  const statusEl = document.getElementById('publish-status');
+  btn.disabled = true;
+  statusEl.className = 'text-xs text-center mt-2';
+  statusEl.textContent = '发布中...';
+  try {
+    const body = {
+      status: 'active',
+      name: document.getElementById('pub-name').value.trim(),
+      asking_price: document.getElementById('pub-price').value.trim(),
+      contact_masked: document.getElementById('pub-contact').value.trim(),
+      description: document.getElementById('pub-announce').value.trim(),
+    };
+    const res = await fetch(`/api/mine-projects/${publishProjectId}`, {
+      method: 'PUT', headers: authH(), body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '发布失败');
+    statusEl.textContent = '✓ 项目已成功发布！';
+    statusEl.className = 'text-xs text-center mt-2 text-mine-success';
+    showToast('项目已成功挂牌发布！');
+    setTimeout(() => {
+      closeModal('modal-publish-listing');
+      loadWgProjects();
+      loadListingActions(publishProjectId);
+    }, 1500);
+  } catch(e) {
+    statusEl.textContent = '❌ ' + e.message;
+    statusEl.className = 'text-xs text-center mt-2 text-mine-danger';
+    btn.disabled = false;
+  }
 }
 
 function showToast(msg) {

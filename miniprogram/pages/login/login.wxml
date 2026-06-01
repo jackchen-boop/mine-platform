@@ -1,0 +1,39 @@
+<view class="container login-container">
+  <view class="logo-section">
+    <view class="logo-icon">⛏️</view>
+    <text class="logo-title">矿脉科技</text>
+    <text class="logo-subtitle">MinePulse</text>
+  </view>
+
+  <view class="login-form">
+    <view class="form-group">
+      <text class="label">账号</text>
+      <input class="input-field" placeholder="邮箱或手机号" bindinput="onAccountInput" value="{{account}}" />
+    </view>
+
+    <view class="form-group">
+      <text class="label">密码</text>
+      <input class="input-field" password placeholder="输入密码" bindinput="onPasswordInput" value="{{password}}" />
+    </view>
+
+    <view class="error-msg" wx:if="{{errorMsg}}">{{errorMsg}}</view>
+
+    <button class="btn-primary" bindtap="doLogin">登录</button>
+
+    <view class="divider-line">
+      <view class="line"></view>
+      <text class="divider-text">或</text>
+      <view class="line"></view>
+    </view>
+
+    <button class="wx-login-btn" bindtap="doWxLogin">
+      <text class="wx-icon">💬</text>
+      <text>微信一键登录</text>
+    </button>
+  </view>
+
+  <view class="footer">
+    <text class="footer-text">还没有账号？</text>
+    <text class="footer-link" bindtap="goRegister">立即注册</text>
+  </view>
+</view>

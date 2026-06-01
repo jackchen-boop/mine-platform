@@ -1,0 +1,45 @@
+<view class="container">
+  <!-- 用户信息 -->
+  <view class="user-card">
+    <view class="user-avatar">
+      <text class="avatar-text">{{userInitial}}</text>
+    </view>
+    <view class="user-info">
+      <text class="user-name">{{userInfo.name || userInfo.email || '未命名用户'}}</text>
+      <text class="user-role">{{roleText}}</text>
+    </view>
+  </view>
+
+  <!-- 统计数据 -->
+  <view class="stats-row">
+    <view class="stat-item">
+      <text class="stat-num">{{stats.projects}}</text>
+      <text class="stat-label">项目</text>
+    </view>
+    <view class="stat-item">
+      <text class="stat-num">{{stats.reports}}</text>
+      <text class="stat-label">报告</text>
+    </view>
+  </view>
+
+  <!-- 菜单 -->
+  <view class="menu-list">
+    <view class="menu-item" bindtap="goMyReports">
+      <text class="menu-icon">📄</text>
+      <text class="menu-text">我的报告</text>
+      <text class="menu-arrow">▶</text>
+    </view>
+    <view class="menu-item" bindtap="goSettings">
+      <text class="menu-icon">⚙️</text>
+      <text class="menu-text">设置</text>
+      <text class="menu-arrow">▶</text>
+    </view>
+    <view class="menu-item" bindtap="showAbout">
+      <text class="menu-icon">ℹ️</text>
+      <text class="menu-text">关于</text>
+      <text class="menu-arrow">▶</text>
+    </view>
+  </view>
+
+  <button class="logout-btn" bindtap="doLogout">退出登录</button>
+</view>
