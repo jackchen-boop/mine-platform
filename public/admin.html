@@ -73,6 +73,7 @@
         <div class="sidebar-item" data-page="workgroups" onclick="switchPage('workgroups')"><span class="text-lg">🛡️</span> 工作组管理</div>
         <div class="sidebar-item" data-page="projects" onclick="switchPage('projects')"><span class="text-lg">📁</span> 项目管理</div>
         <div class="sidebar-item" data-page="inquiries" onclick="switchPage('inquiries')"><span class="text-lg">📬</span> 意向管理</div>
+        <div class="sidebar-item" data-page="extraction" onclick="switchPage('extraction')"><span class="text-lg">📚</span> 提取案例库</div>
         <div class="sidebar-item" data-page="settings" onclick="switchPage('settings')"><span class="text-lg">⚙️</span> 系统设置</div>
       </div>
     </aside>
@@ -84,6 +85,7 @@
       <button onclick="switchPage('workgroups')" class="text-xs text-mine-text2 flex flex-col items-center gap-1"><span class="text-lg">🛡️</span>工作组</button>
       <button onclick="switchPage('projects')" class="text-xs text-mine-text2 flex flex-col items-center gap-1"><span class="text-lg">📁</span>项目</button>
       <button onclick="switchPage('inquiries')" class="text-xs text-mine-text2 flex flex-col items-center gap-1"><span class="text-lg">📬</span>意向</button>
+      <button onclick="switchPage('extraction')" class="text-xs text-mine-text2 flex flex-col items-center gap-1"><span class="text-lg">📚</span>案例库</button>
       <button onclick="switchPage('settings')" class="text-xs text-mine-text2 flex flex-col items-center gap-1"><span class="text-lg">⚙️</span>设置</button>
     </div>
 
@@ -162,6 +164,39 @@
           </div>
         </div>
         <div id="inquiries-table" class="space-y-3"></div>
+      </div>
+
+      <!-- ===== EXTRACTION EXAMPLES ===== -->
+      <div id="page-extraction" class="page-section hidden">
+        <h2 class="text-xl font-bold text-mine-text mb-4">提取案例库管理</h2>
+        <p class="text-sm text-mine-text2 mb-4">
+          案例库收录经管理员确认的高质量提取结果，作为后续同矿种文档智能提取的参考样本。
+          案例越准确，AI 提取越精准。
+        </p>
+
+        <!-- 筛选栏 -->
+        <div class="flex flex-wrap gap-3 mb-4">
+          <select id="extraction-mineral-filter" onchange="loadExtractionExamples()"
+            class="border border-mine-border rounded-lg px-3 py-2 text-sm bg-mine-surface text-mine-text">
+            <option value="">全部矿种</option>
+            <option value="金矿">金矿</option>
+            <option value="铜矿">铜矿</option>
+            <option value="铅锌矿">铅锌矿</option>
+            <option value="银矿">银矿</option>
+            <option value="铁矿">铁矿</option>
+            <option value="煤矿">煤矿</option>
+            <option value="锂矿">锂矿</option>
+            <option value="稀土">稀土</option>
+          </select>
+          <button onclick="loadExtractionExamples()"
+            class="bg-mine-gold text-mine-bg px-4 py-2 rounded-lg text-sm font-medium hover:bg-mine-goldLight">刷新</button>
+        </div>
+
+        <!-- 统计概览 -->
+        <div id="extraction-stats" class="grid grid-cols-3 gap-3 mb-4"></div>
+
+        <!-- 案例列表 -->
+        <div id="extraction-list" class="space-y-3"></div>
       </div>
 
       <!-- ===== SETTINGS ===== -->
@@ -262,6 +297,7 @@
       if (page === 'projects') loadProjects();
       if (page === 'inquiries') loadInquiries();
       if (page === 'settings') loadSettings();
+      if (page === 'extraction') loadExtractionExamples();
     }
 
     // ===== Modal =====
@@ -867,6 +903,153 @@
         }
       } catch (e) {
         resultDiv.innerHTML = '<span class="text-sm text-mine-danger">连接失败: ' + e.message + '</span>';
+      }
+    }
+
+    // ─── 提取案例库管理 ───
+
+    async function loadExtractionExamples() {
+      const mineral = document.getElementById('extraction-mineral-filter')?.value || '';
+      if (!token) return;
+
+      const listEl = document.getElementById('extraction-list');
+      const statsEl = document.getElementById('extraction-stats');
+      listEl.innerHTML = '<div class="text-xs text-mine-text3 text-center py-8">加载中...</div>';
+
+      try {
+        const params = mineral ? `?mineral=${encodeURIComponent(mineral)}` : '';
+        const res = await fetch(`/api/admin/extraction-examples${params}`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || `请求失败 (${res.status})`);
+        }
+
+        const data = await res.json();
+        const examples = data.examples || [];
+
+        // 渲染统计概览
+        const total = data.total || examples.length;
+        const minerals = [...new Set(examples.map(e => e.mineral_types).filter(Boolean))];
+        statsEl.innerHTML = `
+          <div class="bg-mine-surface rounded-lg p-3 border border-mine-border text-center">
+            <div class="text-2xl font-bold text-mine-gold">${total}</div>
+            <div class="text-xs text-mine-text2 mt-1">案例总数</div>
+          </div>
+          <div class="bg-mine-surface rounded-lg p-3 border border-mine-border text-center">
+            <div class="text-2xl font-bold text-blue-400">${minerals.length}</div>
+            <div class="text-xs text-mine-text2 mt-1">覆盖矿种</div>
+          </div>
+          <div class="bg-mine-surface rounded-lg p-3 border border-mine-border text-center">
+            <div class="text-2xl font-bold text-green-400">${examples.length}</div>
+            <div class="text-xs text-mine-text2 mt-1">当前展示</div>
+          </div>
+        `;
+
+        // 渲染案例列表
+        if (examples.length === 0) {
+          listEl.innerHTML = `
+            <div class="bg-mine-surface rounded-lg p-8 text-center border border-mine-border">
+              <div class="text-3xl mb-2">📚</div>
+              <div class="text-mine-text2">案例库暂无数据</div>
+              <div class="text-xs text-mine-text3 mt-1">
+                在工作台上传矿文档并使用"智能提取"后，确认结果将自动进入案例库
+              </div>
+            </div>`;
+          return;
+        }
+
+        listEl.innerHTML = examples.map(ex => {
+          const fields = (() => {
+            try { return JSON.parse(ex.extracted || '{}'); } catch { return {}; }
+          })();
+
+          return `
+            <div class="bg-mine-surface rounded-lg border border-mine-border overflow-hidden">
+              <!-- 头部：矿种 + 省份 + 时间 + 删除 -->
+              <div class="flex items-center justify-between px-4 py-3 border-b border-mine-border bg-mine-surface2">
+                <div class="flex items-center gap-2">
+                  <span class="inline-block bg-mine-gold/20 text-mine-gold text-xs px-2 py-0.5 rounded border border-mine-gold/30">${ex.mineral_types || '未知矿种'}</span>
+                  <span class="text-sm text-mine-text2">${ex.province || '未知省份'}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-mine-text3">${ex.created_at || ''}</span>
+                  <button onclick="deleteExtractionExample(${ex.id})"
+                    class="text-mine-danger hover:text-red-400 text-xs px-2 py-1 rounded border border-mine-danger/30 hover:border-mine-danger/60 transition-colors"
+                    title="从案例库移除">删除</button>
+                </div>
+              </div>
+
+              <!-- 正文：左原文右结果 -->
+              <div class="grid grid-cols-1 md:grid-cols-2">
+                <!-- 左侧：原文片段 -->
+                <div class="p-4 border-b border-mine-border md:border-b-0 md:border-r md:border-mine-border">
+                  <div class="text-xs font-medium text-mine-text3 mb-2 uppercase tracking-wide">文档原文片段</div>
+                  <div class="text-sm text-mine-text2 leading-relaxed bg-mine-surface2 rounded p-2 line-clamp-6">
+                    ${(ex.source_text || '（无原文记录）').substring(0, 300)}${(ex.source_text || '').length > 300 ? '...' : ''}
+                  </div>
+                </div>
+
+                <!-- 右侧：提取结果 -->
+                <div class="p-4">
+                  <div class="text-xs font-medium text-mine-text3 mb-2 uppercase tracking-wide">确认的提取结果</div>
+                  <div class="space-y-1.5 text-sm">
+                    ${renderExtractedField('矿种', fields.mineral_types, '🟡')}
+                    ${renderExtractedField('储量', fields.estimated_reserve, '💰')}
+                    ${renderExtractedField('品位', fields.reserve_grade, '🔷')}
+                    ${renderExtractedField('面积', fields.area_km2 ? fields.area_km2 + ' km²' : null, '📐')}
+                    ${renderExtractedField('开发阶段', stageLabel(fields.development_stage), '📊')}
+                    ${renderExtractedField('矿山类型', mineTypeLabel(fields.mine_type), '⛏️')}
+                    ${renderExtractedField('省市', [fields.province, fields.city].filter(Boolean).join(' '), '📍')}
+                    ${renderExtractedField('报价', fields.asking_price, '💵')}
+                  </div>
+                </div>
+              </div>
+            </div>`;
+        }).join('');
+
+      } catch (e) {
+        listEl.innerHTML = `
+          <div class="bg-mine-danger/10 border border-mine-danger/30 rounded-lg p-4 text-mine-danger text-sm">
+            加载失败：${e.message}
+          </div>`;
+        statsEl.innerHTML = '';
+      }
+    }
+
+    function renderExtractedField(label, value, icon) {
+      if (!value) return `<div class="flex items-center gap-2 text-mine-text3">${icon} <span class="font-medium">${label}：</span><span class="italic text-mine-text3/60">未提取</span></div>`;
+      return `<div class="flex items-center gap-2">${icon} <span class="font-medium text-mine-text2">${label}：</span><span class="text-mine-text">${value}</span></div>`;
+    }
+
+    const STAGE_LABELS = {
+      'grassroots': '草根勘查',
+      'early-exploration': '初级勘查',
+      'advanced-exploration': '高级勘查',
+      'feasibility-study': '可研',
+      'production': '矿山运营',
+      'unknown': '未知'
+    };
+
+    function stageLabel(code) { return STAGE_LABELS[code] || code || null; }
+    function mineTypeLabel(type) {
+      return { 'open-pit': '露天', 'underground': '地下', 'combined': '联合开采' }[type] || type || null;
+    }
+
+    async function deleteExtractionExample(id) {
+      if (!confirm('确定将此案例从案例库移除？\n（不影响原始项目数据和文件，仅移除学习样本）')) return;
+      try {
+        const res = await fetch(`/api/admin/extraction-examples/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || '删除失败');
+        showToast('案例已从案例库移除');
+        loadExtractionExamples();
+      } catch (e) {
+        alert('删除失败：' + e.message);
       }
     }
 
