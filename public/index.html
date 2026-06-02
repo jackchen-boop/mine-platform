@@ -7,6 +7,7 @@
   <meta name="description" content="矿脉科技是专注金银铜等贵金属矿的B2B矿权交易平台，提供AI矿权分析、报告识别、处置咨询等专业服务。" />
   <link rel="icon" href="logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/assets/labels.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
@@ -69,6 +70,7 @@
           <a href="/ai-analysis.html" class="px-4 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors">AI分析</a>
           <a href="/workbench.html" class="px-4 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors">工作台</a>
           <a href="/live.html" class="px-4 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors">直播路演</a>
+          <a href="/admin.html" id="nav-admin-link" class="hidden px-4 py-2 text-sm text-mine-text2 hover:text-mine-gold transition-colors">管理后台</a>
           <a href="/auth.html" id="nav-auth-btn" class="ml-4 px-5 py-2 text-sm font-medium rounded-lg bg-mine-gold/10 text-mine-gold border border-mine-gold/30 hover:bg-mine-gold/20 transition-colors">登录 / 注册</a>
         </div>
         <div class="flex items-center gap-2 md:hidden">
@@ -85,6 +87,7 @@
         <a href="/ai-analysis.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">AI分析</a>
         <a href="/workbench.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">工作台</a>
         <a href="/live.html" class="block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">直播路演</a>
+        <a href="/admin.html" id="mobile-admin-link" class="hidden block px-3 py-2 text-sm text-mine-text2 hover:text-mine-gold">管理后台</a>
         <a href="/auth.html" id="mobile-auth-btn" class="block px-3 py-2 text-sm text-mine-gold">登录 / 注册</a>
       </div>
     </div>
@@ -145,12 +148,51 @@
         <p class="text-mine-text2 max-w-2xl mx-auto">覆盖金矿、银矿、铜矿等多金属矿种，从普查到生产各阶段项目</p>
       </div>
 
-      <div class="flex flex-wrap gap-3 justify-center mb-10">
+      <!-- 矿种快捷按钮 -->
+      <div class="flex flex-wrap gap-3 justify-center mb-4">
         <button class="filter-btn active px-4 py-2 text-sm rounded-lg border border-mine-gold/40 bg-mine-gold/15 text-mine-gold" data-filter="all">全部</button>
         <button class="filter-btn px-4 py-2 text-sm rounded-lg border border-mine-border text-mine-text2 hover:border-mine-gold/40 hover:text-mine-gold transition-colors" data-filter="gold">金矿</button>
         <button class="filter-btn px-4 py-2 text-sm rounded-lg border border-mine-border text-mine-text2 hover:border-mine-gold/40 hover:text-mine-gold transition-colors" data-filter="copper">铜矿</button>
         <button class="filter-btn px-4 py-2 text-sm rounded-lg border border-mine-border text-mine-text2 hover:border-mine-gold/40 hover:text-mine-gold transition-colors" data-filter="silver">银矿</button>
-        <button class="filter-btn px-4 py-2 text-sm rounded-lg border border-mine-border text-mine-text2 hover:border-mine-gold/40 hover:text-mine-gold transition-colors" data-filter="hot">热门项目</button>
+        <button class="filter-btn px-4 py-2 text-sm rounded-lg border border-mine-border text-mine-text2 hover:border-mine-gold/40 hover:text-mine-gold transition-colors" data-filter="lead-zinc">铅锌矿</button>
+        <button class="filter-btn px-4 py-2 text-sm rounded-lg border border-mine-border text-mine-text2 hover:border-mine-gold/40 hover:text-mine-gold transition-colors" data-filter="magnesium">镁基矿</button>
+        <button class="filter-btn px-4 py-2 text-sm rounded-lg border border-mine-border text-mine-text2 hover:border-mine-gold/40 hover:text-mine-gold transition-colors" data-filter="hot">热门</button>
+      </div>
+
+      <!-- 高级筛选（下拉 + 排序） -->
+      <div class="flex flex-wrap gap-3 justify-center mb-10 items-center">
+        <select id="filter-province" class="px-3 py-2 text-sm rounded-lg border border-mine-border bg-mine-surface text-mine-text2 focus:border-mine-gold/40 focus:text-mine-gold outline-none transition-colors" style="min-width:120px">
+          <option value="">全部省份</option>
+          <option value="山西">山西</option>
+          <option value="云南">云南</option>
+          <option value="内蒙古">内蒙古</option>
+          <option value="新疆">新疆</option>
+          <option value="西藏">西藏</option>
+          <option value="甘肃">甘肃</option>
+          <option value="四川">四川</option>
+          <option value="贵州">贵州</option>
+          <option value="广西">广西</option>
+          <option value="河南">河南</option>
+          <option value="湖南">湖南</option>
+          <option value="江西">江西</option>
+          <option value="其他">其他</option>
+        </select>
+        <select id="filter-stage" class="px-3 py-2 text-sm rounded-lg border border-mine-border bg-mine-surface text-mine-text2 focus:border-mine-gold/40 focus:text-mine-gold outline-none transition-colors" style="min-width:120px">
+          <option value="">全部阶段</option>
+          <option value="general-exploration">普查</option>
+          <option value="detailed-exploration">详查</option>
+          <option value="advanced-exploration">勘探</option>
+          <option value="feasibility-study">预可研/可研</option>
+          <option value="production">采矿证</option>
+        </select>
+        <select id="filter-sort" class="px-3 py-2 text-sm rounded-lg border border-mine-border bg-mine-surface text-mine-text2 focus:border-mine-gold/40 focus:text-mine-gold outline-none transition-colors" style="min-width:140px">
+          <option value="recommended">综合推荐</option>
+          <option value="ai_score">AI评分最高</option>
+          <option value="price_asc">要价从低到高</option>
+          <option value="price_desc">要价从高到低</option>
+          <option value="newest">最新上架</option>
+        </select>
+        <button id="filter-reset" class="px-4 py-2 text-sm rounded-lg border border-mine-border text-mine-text3 hover:text-mine-gold hover:border-mine-gold/40 transition-colors">重置</button>
       </div>
 
       <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -259,38 +301,56 @@
       document.getElementById('mobile-menu').classList.toggle('hidden');
     });
 
-    async function loadProjects(filter = 'all') {
+    // 筛选状态
+    let currentFilter = {
+      mineral: 'all',
+      province: '',
+      stage: '',
+      sort_by: 'recommended'
+    };
+
+    async function loadProjects() {
       try {
-        let url = '/api/mine-projects/published';
+        const params = new URLSearchParams();
+        if (currentFilter.mineral && currentFilter.mineral !== 'all' && currentFilter.mineral !== 'hot') {
+          params.set('mineral', currentFilter.mineral);
+        }
+        if (currentFilter.mineral === 'hot') {
+          params.set('hot_only', '1');
+        }
+        if (currentFilter.province) params.set('province', currentFilter.province);
+        if (currentFilter.stage) params.set('stage', currentFilter.stage);
+        if (currentFilter.sort_by) params.set('sort_by', currentFilter.sort_by);
+
+        const url = '/api/mine-projects/published?' + params.toString();
         const res = await fetch(url);
         const data = await res.json();
         const grid = document.getElementById('projects-grid');
         grid.innerHTML = '';
 
-        const mineralLabels = { gold: '金矿', silver: '银矿', copper: '铜矿', lead: '铅矿', zinc: '锌矿' };
-        const stageLabels = { 'general-exploration': '普查', 'detailed-exploration': '详查', 'prospecting': '勘探', 'feasibility': '可研', 'production-ready': '待产', 'production': '生产中' };
+        const mineralLabels = { gold: '金矿', silver: '银矿', copper: '铜矿', lead: '铅矿', zinc: '锌矿', magnesium: '镁基矿' };
         const oreImgs = { gold: '/assets/images/gold-ore.png', silver: '/assets/images/silver-ore.png', copper: '/assets/images/copper-ore.png' };
 
-        let projects = data.projects || [];
-        if (filter === 'hot') projects = projects.filter(p => p.is_hot);
-        else if (filter !== 'all') projects = projects.filter(p => (p.mineral_types || '').includes(filter));
+        const projects = data.projects || [];
 
         if (projects.length === 0) {
-          grid.innerHTML = '<p class="text-mine-text3 text-sm col-span-full text-center py-8">暂无已发布的矿权项目</p>';
+          grid.innerHTML = '<p class="text-mine-text3 text-sm col-span-full text-center py-8">暂无符合条件的矿权项目</p>';
           return;
         }
 
         projects.forEach(p => {
           const minerals = (p.mineral_types || '').split(',');
           const mainMineral = minerals[0];
-          // 优先使用项目上传照片
+          // 图片优先级：上传照片 > 封面图 > 默认矿种图
           let publishedPhotos = [];
           if (Array.isArray(p.published_photos)) {
             publishedPhotos = p.published_photos;
           } else {
             try { publishedPhotos = JSON.parse(p.published_photos || '[]'); } catch(e) {}
           }
-          const img = publishedPhotos.length > 0 ? publishedPhotos[0].url : (oreImgs[mainMineral] || oreImgs.gold);
+          const img = publishedPhotos.length > 0
+            ? publishedPhotos[0].stored_name
+            : (p.cover_image || oreImgs[mainMineral] || oreImgs.gold);
           const mineralTags = minerals.map(m => `<span class="text-xs px-2 py-0.5 rounded mineral-tag text-mine-gold">${mineralLabels[m] || m}</span>`).join('');
 
           // 报告摘要
@@ -310,7 +370,7 @@
             <div class="p-5">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-xs text-mine-text3 font-mono">${p.code}</span>
-                <span class="text-xs px-2 py-0.5 rounded bg-mine-surface3 text-mine-text2">${stageLabels[p.development_stage] || p.development_stage}</span>
+                <span class="text-xs px-2 py-0.5 rounded bg-mine-surface3 text-mine-text2">${stageLabel(p.development_stage)}</span>
               </div>
               <h3 class="text-base font-semibold mb-2 truncate">${p.name}</h3>
               <p class="text-xs text-mine-text3 mb-1">${p.province || ''} ${p.city ? '· '+p.city : ''}</p>
@@ -352,6 +412,7 @@
       } catch (e) {}
     }
 
+    // 矿种快捷按钮点击
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.filter-btn').forEach(b => {
@@ -360,8 +421,41 @@
         });
         btn.classList.remove('text-mine-text2', 'border-mine-border');
         btn.classList.add('bg-mine-gold/15', 'text-mine-gold', 'border-mine-gold/40');
-        loadProjects(btn.dataset.filter);
+        currentFilter.mineral = btn.dataset.filter;
+        loadProjects();
       });
+    });
+
+    // 省份/阶段/排序下拉变更
+    document.getElementById('filter-province').addEventListener('change', e => {
+      currentFilter.province = e.target.value;
+      loadProjects();
+    });
+    document.getElementById('filter-stage').addEventListener('change', e => {
+      currentFilter.stage = e.target.value;
+      loadProjects();
+    });
+    document.getElementById('filter-sort').addEventListener('change', e => {
+      currentFilter.sort_by = e.target.value;
+      loadProjects();
+    });
+
+    // 重置按钮
+    document.getElementById('filter-reset').addEventListener('click', () => {
+      currentFilter = { mineral: 'all', province: '', stage: '', sort_by: 'recommended' };
+      document.getElementById('filter-province').value = '';
+      document.getElementById('filter-stage').value = '';
+      document.getElementById('filter-sort').value = 'recommended';
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('bg-mine-gold/15', 'text-mine-gold', 'border-mine-gold/40');
+        b.classList.add('text-mine-text2', 'border-mine-border');
+      });
+      const allBtn = document.querySelector('[data-filter="all"]');
+      if (allBtn) {
+        allBtn.classList.remove('text-mine-text2', 'border-mine-border');
+        allBtn.classList.add('bg-mine-gold/15', 'text-mine-gold', 'border-mine-gold/40');
+      }
+      loadProjects();
     });
 
     loadProjects();
@@ -387,6 +481,14 @@
 
       const mobileAuthBtn = document.getElementById('mobile-auth-btn');
       if (mobileAuthBtn) mobileAuthBtn.outerHTML = `<a href="/dashboard.html" id="mobile-auth-btn" class="block px-3 py-2 text-sm text-mine-gold">${user.name}</a><button onclick="localStorage.removeItem('mine_token');localStorage.removeItem('mine_user');location.reload()" class="block w-full text-left px-3 py-2 text-sm text-mine-danger">退出登录</button>`;
+
+      // admin 用户显示"管理后台"入口
+      if (user.role === 'admin') {
+        const navAdminLink = document.getElementById('nav-admin-link');
+        if (navAdminLink) navAdminLink.classList.remove('hidden');
+        const mobileAdminLink = document.getElementById('mobile-admin-link');
+        if (mobileAdminLink) mobileAdminLink.classList.remove('hidden');
+      }
 
       // Hero 注册会员按钮改为进入会员中心
       const heroReg = document.getElementById('hero-register-btn');

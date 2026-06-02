@@ -73,7 +73,7 @@ router.use(optionalAuth);
 // GET /api/mine-projects — 项目列表（支持公开访问，脱敏）
 router.get('/', (req, res) => {
   try {
-    const { mineral, province, stage, keyword, hot_only, page = 1, limit = 10, mine_only, unassigned } = req.query;
+    const { mineral, province, stage, keyword, hot_only, page = 1, limit = 10, mine_only, unassigned, sort_by = 'newest' } = req.query;
     const isLoggedIn = req.headers.authorization;
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -116,7 +116,16 @@ router.get('/', (req, res) => {
     const selectFields = isLoggedIn ? `${publicFields}, ${privateFields}` : publicFields;
 
     const total = db.prepare(`SELECT COUNT(*) as c FROM mine_projects mp WHERE ${where}`).get(...params).c;
-    const projects = db.prepare(`SELECT ${selectFields} FROM mine_projects mp LEFT JOIN workgroups wg ON wg.id = mp.workgroup_id WHERE ${where} ORDER BY mp.is_featured DESC, mp.is_hot DESC, mp.created_at DESC LIMIT ? OFFSET ?`)
+
+    // 管理端排序逻辑
+    const adminSortMap = {
+      newest:   'mp.created_at DESC',
+      ai_score: 'mp.ai_score DESC NULLS LAST',
+      featured: 'mp.is_featured DESC, mp.is_hot DESC, mp.created_at DESC'
+    };
+    const orderBy = adminSortMap[sort_by] || adminSortMap.newest;
+
+    const projects = db.prepare(`SELECT ${selectFields} FROM mine_projects mp LEFT JOIN workgroups wg ON wg.id = mp.workgroup_id WHERE ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`)
       .all(...params, parseInt(limit), offset);
 
     res.json({ projects, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
@@ -128,11 +137,53 @@ router.get('/', (req, res) => {
 // GET /api/mine-projects/published — 前台展示的已发布项目（必须在 /:id 之前注册）
 router.get('/published', (req, res) => {
   try {
+    const { mineral, province, stage, price_min, price_max, sort_by = 'recommended', hot_only } = req.query;
+
+    let conditions = ["mp.status = 'active'"];
+    let params = [];
+
+    if (mineral) {
+      conditions.push('mp.mineral_types LIKE ?');
+      params.push(`%${mineral}%`);
+    }
+    if (province) {
+      conditions.push('mp.province = ?');
+      params.push(province);
+    }
+    if (stage) {
+      conditions.push('mp.development_stage = ?');
+      params.push(stage);
+    }
+    if (price_min) {
+      conditions.push('CAST(mp.asking_price AS REAL) >= ?');
+      params.push(parseFloat(price_min));
+    }
+    if (price_max) {
+      conditions.push('CAST(mp.asking_price AS REAL) <= ?');
+      params.push(parseFloat(price_max));
+    }
+    if (hot_only) {
+      conditions.push('mp.is_hot = 1');
+    }
+
+    const where = conditions.join(' AND ');
+
+    // 排序逻辑
+    const sortMap = {
+      recommended: 'mp.is_featured DESC, mp.is_hot DESC, (CASE WHEN mp.ai_score IS NOT NULL THEN 1 ELSE 0 END) DESC, mp.ai_score DESC, mp.created_at DESC',
+      ai_score:    'mp.ai_score DESC NULLS LAST, mp.is_featured DESC',
+      price_asc:   'CAST(mp.asking_price AS REAL) ASC',
+      price_desc:  'CAST(mp.asking_price AS REAL) DESC',
+      newest:      'mp.created_at DESC',
+      reserve:     'mp.estimated_reserve DESC'
+    };
+    const orderBy = sortMap[sort_by] || sortMap.recommended;
+
     const projects = db.prepare(`
       SELECT mp.id, mp.code, COALESCE(mp.listing_name, mp.name) AS name, mp.mineral_types,
              mp.province, mp.city, mp.area_km2, mp.estimated_reserve, mp.reserve_grade,
              mp.development_stage, mp.asking_price, mp.highlights, mp.is_hot, mp.is_featured,
-             mp.ai_score, mp.ai_grade, mp.ai_summary,
+             mp.ai_score, mp.ai_grade, mp.ai_summary, mp.cover_image,
              mp.description_masked AS description,
              aa.content AS report_content,
              (SELECT json_group_array(json_object('filename', pp.filename, 'stored_name', pp.stored_name))
@@ -140,13 +191,14 @@ router.get('/published', (req, res) => {
               LIMIT 3) AS published_photos
       FROM mine_projects mp
       LEFT JOIN ai_analyses aa ON aa.id = mp.report_id
-      WHERE mp.status = 'active'
-      ORDER BY mp.ai_score DESC, mp.is_featured DESC, mp.is_hot DESC
-    `).all();
+      WHERE ${where}
+      ORDER BY ${orderBy}
+    `).all(...params);
 
     // 解析 report_content JSON
     const result = projects.map(p => {
       try { p.report_content = JSON.parse(p.report_content || 'null'); } catch(e) { p.report_content = null; }
+      try { p.published_photos = JSON.parse(p.published_photos || '[]'); } catch(e) { p.published_photos = []; }
       return p;
     });
 
@@ -230,13 +282,28 @@ router.post('/', requireAuth, (req, res) => {
 // PUT /api/mine-projects/:id — 更新项目信息
 router.put('/:id', requireAuth, (req, res) => {
   try {
-    const project = db.prepare('SELECT * FROM mine_projects WHERE id = ? AND status = ?').get(req.params.id, 'active');
+    const project = db.prepare("SELECT * FROM mine_projects WHERE id = ? AND status != 'deleted'").get(req.params.id);
     if (!project) return res.status(404).json({ error: '项目不存在' });
+
+    // 发布拦截：状态从非 active 变为 active 时校验必须项
+    if (req.body.status === 'active' && project.status !== 'active') {
+      const missing = [];
+      if (!project.name) missing.push('name');
+      if (!project.mineral_types || project.mineral_types === 'unknown') missing.push('mineral_types');
+      if (!project.province) missing.push('province');
+      if (!project.report_id) missing.push('ai_analysis');
+      if (missing.length > 0) {
+        return res.status(400).json({
+          error: '项目信息不完整，无法发布',
+          missingFields: missing
+        });
+      }
+    }
 
     const allowed = ['name', 'mineral_types', 'province', 'city', 'area_km2', 'estimated_reserve',
       'reserve_grade', 'development_stage', 'mine_type', 'description', 'description_masked',
       'asking_price', 'license_status', 'highlights', 'disposal_options', 'depth_range',
-      'license_expires', 'contact_masked', 'cover_image'];
+      'license_expires', 'contact_masked', 'cover_image', 'status'];
     const updates = [];
     const values = [];
     for (const key of allowed) {
@@ -286,6 +353,55 @@ router.post('/:id/unpublish', requireAuth, (req, res) => {
     db.prepare("UPDATE mine_projects SET status = 'inactive' WHERE id = ?").run(req.params.id);
     res.json({ message: '已下架' });
   } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/mine-projects/:id/publish-check — 发布前检查，返回缺失项
+router.get('/:id/publish-check', requireAuth, (req, res) => {
+  try {
+    const project = db.prepare("SELECT * FROM mine_projects WHERE id = ? AND status != 'deleted'").get(req.params.id);
+    if (!project) return res.status(404).json({ error: '项目不存在' });
+
+    // 权限检查：项目 owner、admin 或工作组成员
+    if (req.user.role !== 'admin' && project.owner_id !== req.user.id) {
+      const inWg = db.prepare('SELECT 1 FROM workgroup_members WHERE workgroup_id = ? AND user_id = ?').get(project.workgroup_id, req.user.id);
+      if (!inWg) return res.status(403).json({ error: '无权限' });
+    }
+
+    // 检查项目图片数量
+    const photoCount = db.prepare('SELECT COUNT(*) as cnt FROM project_photos WHERE project_id = ?').get(req.params.id)?.cnt || 0;
+
+    const required = [];
+    const suggested = [];
+    const optional = [];
+
+    // 必须项
+    if (!project.name) required.push({ field: 'name', label: '项目名称', message: '项目名称不能为空' });
+    if (!project.mineral_types || project.mineral_types === 'unknown') required.push({ field: 'mineral_types', label: '矿种', message: '必须填写矿种（如金矿、铜矿）' });
+    if (!project.province) required.push({ field: 'province', label: '省份', message: '必须填写项目所在省份' });
+    if (!project.report_id) required.push({ field: 'ai_analysis', label: 'AI分析', message: '必须先生成AI分析报告' });
+
+    // 建议项
+    if (!project.estimated_reserve) suggested.push({ field: 'estimated_reserve', label: '储量', message: '建议填写储量信息，提升投资人关注度' });
+    if (!project.reserve_grade) suggested.push({ field: 'reserve_grade', label: '品位', message: '建议填写品位信息' });
+    if (!project.area_km2) suggested.push({ field: 'area_km2', label: '面积', message: '建议填写矿权面积' });
+    if (!project.development_stage) suggested.push({ field: 'development_stage', label: '开发阶段', message: '建议填写开发阶段' });
+    if (!project.description && !project.description_masked) suggested.push({ field: 'description', label: '项目描述', message: '建议填写项目描述' });
+    if (!project.cover_image) suggested.push({ field: 'cover_image', label: '封面图', message: '建议上传项目封面图' });
+
+    // 可选项
+    if (!project.asking_price) optional.push({ field: 'asking_price', label: '挂牌价格', message: '可选填写挂牌价格' });
+    if (!project.highlights) optional.push({ field: 'highlights', label: '核心亮点', message: '可选填写核心亮点' });
+    if (photoCount === 0) optional.push({ field: 'photos', label: '项目图片', message: '可选上传项目现场照片' });
+
+    res.json({
+      canPublish: required.length === 0,
+      required,
+      suggested,
+      optional
+    });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

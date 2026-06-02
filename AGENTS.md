@@ -76,11 +76,11 @@ AGENTS.md         # 本文件（API 契约维护）
 | # | 任务 | 核心文件 | 说明 |
 |---|------|---------|------|
 | A1 | AI 提示词优化 | `server/lib/mine-evaluation.js` | 校准九部分报告的 prompt：DCF 折现率参数、储量分类术语、品位单位是否符合行业规范 |
-| A2 | 发布审核规则 | `server/routes/mine-projects.js` | 定义项目可发布的前置条件（有AI报告？有封面？有联系方式？），后端加校验，返回缺失项列表 |
-| A3 | 数据完整性规则 | `server/routes/mine-analysis.js` | 哪些字段缺失会影响投资决策，给出专业提示文案 |
+| A2 | 数据完整性规则 | `server/routes/mine-analysis.js` | 哪些字段缺失会影响投资决策，给出专业提示文案 |
+| A3 | 发布审核规则 | `server/routes/mine-projects.js` | 定义项目可发布的前置条件（有AI报告？有封面？有联系方式？），后端加校验，返回缺失项列表 |
 | A4 | 意向状态机 | `server/routes/mine-inquiries.js` | 定义意向流转：待处理→已联系→推进中→成交/放弃，各状态的业务含义 |
 | A5 | 字段脱敏规则维护 | `server/routes/mine-projects.js` | `listing_name`/`name`、`description_masked`/`description` 的披露策略 |
-| A6 | 项目筛选/排序逻辑 | `server/routes/mine-projects.js` | 投资人最关注什么维度？当前排序（ai_score DESC）是否合理 |
+| A6 | ~~项目筛选/排序逻辑~~ ✅ 已完成 | `server/routes/mine-projects.js` | 投资人最关注什么维度？当前排序（ai_score DESC）是否合理 |
 | A7 | AI 报告 JSON 结构文档化 | `AGENTS.md` 本文件 | 将 `ai_analyses.content` 的 JSON 字段结构写入接口说明，让 B 能正确渲染 |
 
 **对话启动模板（复制给 AI 使用）：**
@@ -235,6 +235,7 @@ inactive（未发布）→ active（已发布）→ deleted（软删除）
 | PUT | `/api/mine-projects/:id` | 是 | 更新项目信息 |
 | DELETE | `/api/mine-projects/:id` | 是 | 软删除项目 |
 | POST | `/api/mine-projects/:id/unpublish` | 是 | 下架项目（status → inactive） |
+| GET | `/api/mine-projects/:id/publish-check` | 是 | 发布前检查，返回缺失项列表（required/suggested/optional） |
 | POST | `/api/mine-projects/:id/cover` | 是 | 上传项目封面图 |
 | GET | `/api/mine-projects/:id/photos` | 是 | 获取项目图片列表 |
 | POST | `/api/mine-projects/:id/photos` | 是 | 上传项目图片 |
@@ -243,8 +244,31 @@ inactive（未发布）→ active（已发布）→ deleted（软删除）
 **`/published` 返回字段：**
 `id, code, name(脱敏), mineral_types, province, city, area_km2, estimated_reserve, reserve_grade, development_stage, asking_price, highlights, is_hot, is_featured, ai_score, ai_grade, ai_summary, description(脱敏), report_content(AI分析JSON), published_photos`
 
-**列表筛选参数：**
-`mineral`, `province`, `stage`, `keyword`, `hot_only`, `page`, `limit`, `mine_only`, `unassigned`
+**`/published` 筛选参数：**
+
+| 参数 | 类型 | 说明 | 示例 |
+|------|------|------|------|
+| `mineral` | string | 矿种过滤（LIKE匹配） | `gold`, `copper`, `silver`, `magnesium` |
+| `province` | string | 省份过滤（精确匹配） | `山西`, `云南` |
+| `stage` | string | 开发阶段过滤 | `grassroots`, `detailed-exploration`, `feasibility-study`, `production` |
+| `price_min` | number | 最低要价（万元） | `500` |
+| `price_max` | number | 最高要价（万元） | `5000` |
+| `hot_only` | string | 仅热门项目 | `1` |
+| `sort_by` | string | 排序方式（默认 `recommended`） | 见下表 |
+
+**`sort_by` 枚举：**
+
+| 值 | 排序逻辑 | 说明 |
+|----|---------|------|
+| `recommended` | is_featured DESC → is_hot DESC → 有AI评分优先 → ai_score DESC → created_at DESC | 综合推荐（默认） |
+| `ai_score` | ai_score DESC NULLS LAST → is_featured DESC | AI评分最高 |
+| `price_asc` | CAST(asking_price AS REAL) ASC | 要价从低到高 |
+| `price_desc` | CAST(asking_price AS REAL) DESC | 要价从高到低 |
+| `newest` | created_at DESC | 最新上架 |
+| `reserve` | estimated_reserve DESC | 储量从大到小 |
+
+**管理端列表筛选参数：**
+`mineral`, `province`, `stage`, `keyword`, `hot_only`, `page`, `limit`, `mine_only`, `unassigned`, `sort_by`（值：`newest`默认 / `ai_score` / `featured`）
 
 ---
 
@@ -259,6 +283,25 @@ inactive（未发布）→ active（已发布）→ deleted（软删除）
 | GET | `/api/mine-analysis/history` | 是 | 获取分析历史 |
 | GET | `/api/mine-analysis/missing-data` | 是 | 获取数据缺失提示 |
 | GET | `/api/mine-analysis/stage-criteria` | 否 | 获取阶段评判标准 |
+| POST | `/api/mine-analysis/confirm-extraction` | 是 | 用户确认提取结果，存入案例库供后续 few-shot 使用 |
+
+**`confirm-extraction` 请求体：**
+```json
+{
+  "mineral_types": "金矿",
+  "province": "四川省",
+  "source_text": "触发提取的原始文档片段（≤500字）",
+  "extracted_fields": {
+    "estimated_reserve": "金金属量 23.71 吨",
+    "reserve_grade": "3.26 g/t",
+    "area_km2": 33.97,
+    "development_stage": "advanced-exploration",
+    "mine_type": "underground"
+  },
+  "report_id": 123,
+  "project_id": 456
+}
+```
 
 ---
 
@@ -388,6 +431,7 @@ inactive（未发布）→ active（已发布）→ deleted（软删除）
 | `workgroup_members` | workgroup_id, user_id, role | 工作组成员 |
 | `inquiries` | id, project_id, user_id, contact, message, status | 投资意向 |
 | `credits` | user_id, balance | 用户积分 |
+| `extraction_examples` | id, mineral_types, province, source_text, extracted(JSON), confirmed_by, quality_score | 智能提取案例库（用户确认后的高质量提取结果） |
 
 **重要关联：**
 - `mine_projects.report_id` → `ai_analyses.id`（最新 AI 报告）
@@ -395,6 +439,13 @@ inactive（未发布）→ active（已发布）→ deleted（软删除）
 - `mine_projects.workgroup_id` → `workgroups.id`
 
 **项目 status 值：** `inactive`（未发布）| `active`（已发布）| `deleted`（软删除）
+
+### 数据完整性规则说明
+
+`detectMissingData()` 函数根据项目开发阶段动态评估字段缺失的严重程度：
+- severity 随阶段变化：如"储量"在勘查阶段缺失为 low，在可研阶段缺失为 high
+- 每个缺失字段附带行业化的提示文案（`message` 字段），而非简单的"请填写"
+- 返回结果按 severity 降序排列（high 优先展示）
 
 ---
 
