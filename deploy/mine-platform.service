@@ -1,0 +1,18 @@
+[Unit]
+Description=MinePulse Platform Node.js Application
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/mine-platform
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=3000
+# 如需自定义 JWT 密钥，取消下面注释并修改
+# Environment=JWT_SECRET=your-strong-secret-key
+
+[Install]
+WantedBy=multi-user.target
