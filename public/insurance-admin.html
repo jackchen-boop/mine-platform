@@ -78,6 +78,7 @@
         <div class="flex gap-6 border-b border-fin-border mb-6">
           <button onclick="switchTab('leads')" id="tabLeads" class="tab-active pb-3 text-sm font-medium">咨询线索</button>
           <button onclick="switchTab('orders')" id="tabOrders" class="tab-inactive pb-3 text-sm font-medium">保单订单</button>
+          <button onclick="switchTab('users')" id="tabUsers" class="tab-inactive pb-3 text-sm font-medium">用户管理</button>
         </div>
 
         <!-- Leads -->
@@ -148,6 +149,24 @@
             </div>
           </div>
         </div>
+        <!-- Users -->
+        <div id="usersPanel" class="hidden">
+          <div class="card rounded-xl p-4 mb-4 flex flex-wrap gap-3 items-center">
+            <input id="userKeyword" placeholder="搜索姓名/邮箱/手机" class="bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+            <button onclick="loadUsers()" class="px-4 py-2 rounded-lg bg-fin-gold/10 text-fin-gold border border-fin-gold/30 text-sm font-medium hover:bg-fin-gold/20">查询</button>
+            <button onclick="openUserForm()" class="ml-auto px-4 py-2 rounded-lg bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg text-sm font-bold">＋ 新建用户</button>
+          </div>
+          <div class="card rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-fin-surface2 text-fin-text2">
+                  <tr><th class="text-left px-4 py-3">ID</th><th class="text-left px-4 py-3">姓名</th><th class="text-left px-4 py-3">邮箱</th><th class="text-left px-4 py-3">角色</th><th class="text-left px-4 py-3">状态</th><th class="text-left px-4 py-3">注册时间</th><th class="text-left px-4 py-3">操作</th></tr>
+                </thead>
+                <tbody id="usersTable" class="divide-y divide-fin-border"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   </div>
@@ -159,6 +178,34 @@
         <button onclick="closeModal('leadModal')" class="absolute top-4 right-4 text-fin-text3 hover:text-fin-gold text-2xl">&times;</button>
         <h2 class="text-xl font-bold mb-4 gold-gradient">线索详情</h2>
         <div id="leadDetail" class="space-y-4 text-sm"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Modal -->
+  <div id="userModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm overflow-y-auto">
+    <div class="min-h-screen px-4 py-8 flex justify-center items-start">
+      <div class="card w-full max-w-lg rounded-2xl p-6 relative">
+        <button onclick="closeModal('userModal')" class="absolute top-4 right-4 text-fin-text3 hover:text-fin-gold text-2xl">&times;</button>
+        <h2 class="text-xl font-bold mb-4 gold-gradient" id="userModalTitle">新建用户</h2>
+        <div id="userForm" class="space-y-3">
+          <input type="hidden" id="userId">
+          <div><label class="text-xs text-fin-text3">姓名 *</label><input id="userName" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text focus:border-fin-gold focus:outline-none"></div>
+          <div><label class="text-xs text-fin-text3">邮箱 *</label><input id="userEmail" type="email" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text focus:border-fin-gold focus:outline-none"></div>
+          <div><label class="text-xs text-fin-text3">手机</label><input id="userPhone" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text focus:border-fin-gold focus:outline-none"></div>
+          <div><label class="text-xs text-fin-text3">密码 *</label><input id="userPassword" type="password" placeholder="至少8位" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text focus:border-fin-gold focus:outline-none"></div>
+          <div><label class="text-xs text-fin-text3">角色</label>
+            <select id="userRole" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+              <option value="admin">管理员</option>
+              <option value="investor">投资人</option>
+              <option value="mine_enterprise">矿企</option>
+            </select>
+          </div>
+          <div class="flex gap-3 pt-3">
+            <button onclick="closeModal('userModal')" class="flex-1 py-2 rounded-lg border border-fin-border text-fin-text2 text-sm">取消</button>
+            <button onclick="saveUser()" class="flex-1 py-2 rounded-lg bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg text-sm font-bold">保存</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -177,7 +224,7 @@
   <script>
     let token = localStorage.getItem('insurance_admin_token') || '';
     let currentUser = null;
-    const state = { leads: { page:1, pageSize:20, total:0, data:[] }, orders: { page:1, pageSize:20, total:0, data:[] } };
+    const state = { leads: { page:1, pageSize:20, total:0, data:[] }, orders: { page:1, pageSize:20, total:0, data:[] }, users: { data:[] } };
 
     if (token) { checkAuth(); }
 
@@ -232,9 +279,12 @@
     function switchTab(tab) {
       document.getElementById('leadsPanel').classList.toggle('hidden', tab !== 'leads');
       document.getElementById('ordersPanel').classList.toggle('hidden', tab !== 'orders');
+      document.getElementById('usersPanel').classList.toggle('hidden', tab !== 'users');
       document.getElementById('tabLeads').className = tab === 'leads' ? 'tab-active pb-3 text-sm font-medium' : 'tab-inactive pb-3 text-sm font-medium';
       document.getElementById('tabOrders').className = tab === 'orders' ? 'tab-active pb-3 text-sm font-medium' : 'tab-inactive pb-3 text-sm font-medium';
+      document.getElementById('tabUsers').className = tab === 'users' ? 'tab-active pb-3 text-sm font-medium' : 'tab-inactive pb-3 text-sm font-medium';
       if (tab === 'orders' && state.orders.data.length === 0) loadOrders();
+      if (tab === 'users' && state.users.data.length === 0) loadUsers();
     }
 
     async function loadStats() {
@@ -498,6 +548,97 @@
     function marriageLabel(m) { return { single:'未婚', married_no_child:'已婚未育', married_with_child:'已婚有子女', divorced:'离异/单亲' }[m] || m; }
     function loanLabel(l) { return { no:'无', mortgage:'房贷', car:'车贷', both:'房贷+车贷' }[l] || l; }
     function formatDate(d) { if (!d) return '-'; return new Date(d).toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }); }
+
+    // === User Management ===
+    async function loadUsers() {
+      try {
+        const params = new URLSearchParams();
+        const kw = document.getElementById('userKeyword').value;
+        if (kw) params.set('keyword', kw);
+        const data = await api('/api/admin/users?' + params.toString());
+        state.users.data = data.users || data;
+        renderUsers();
+      } catch(e) { alert('加载用户失败：' + e.message); }
+    }
+
+    function renderUsers() {
+      const tbody = document.getElementById('usersTable');
+      const roleMap = { admin: '管理员', investor: '投资人', mine_enterprise: '矿企' };
+      const roleColors = { admin: ['bg-fin-gold/10','text-fin-gold','border-fin-gold/20'], investor: ['bg-blue-500/10','text-blue-400','border-blue-500/20'], mine_enterprise: ['bg-purple-500/10','text-purple-400','border-purple-500/20'] };
+      tbody.innerHTML = state.users.data.map(u => {
+        const [bg, text, border] = roleColors[u.role] || roleColors.investor;
+        return `
+        <tr class="hover:bg-fin-surface2/50 transition-colors">
+          <td class="px-4 py-3 text-fin-text3">#${u.id}</td>
+          <td class="px-4 py-3"><div class="font-medium">${u.name}</div><div class="text-xs text-fin-text3">${u.phone || '-'}</div></td>
+          <td class="px-4 py-3 text-fin-text2 text-xs">${u.email}</td>
+          <td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded-full border ${bg} ${text} ${border}">${roleMap[u.role] || u.role}</span></td>
+          <td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded-full border ${u.status==='active'?'bg-fin-success/10 text-fin-success border-fin-success/20':'bg-fin-danger/10 text-fin-danger border-fin-danger/20'}">${u.status==='active'?'正常':'禁用'}</span></td>
+          <td class="px-4 py-3 text-fin-text3 text-xs">${formatDate(u.created_at)}</td>
+          <td class="px-4 py-3 flex gap-2">
+            <button onclick="editUser(${u.id})" class="text-fin-gold hover:underline text-xs">编辑</button>
+            ${u.id !== currentUser?.id ? `<button onclick="deleteUser(${u.id})" class="text-fin-danger hover:underline text-xs">删除</button>` : ''}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function openUserForm() {
+      document.getElementById('userModalTitle').textContent = '新建用户';
+      document.getElementById('userId').value = '';
+      document.getElementById('userName').value = '';
+      document.getElementById('userEmail').value = '';
+      document.getElementById('userPhone').value = '';
+      document.getElementById('userPassword').value = '';
+      document.getElementById('userRole').value = 'admin';
+      document.getElementById('userModal').classList.remove('hidden');
+    }
+
+    async function editUser(id) {
+      try {
+        const data = await api('/api/admin/users/' + id);
+        const u = data.user || data;
+        document.getElementById('userModalTitle').textContent = '编辑用户';
+        document.getElementById('userId').value = u.id;
+        document.getElementById('userName').value = u.name || '';
+        document.getElementById('userEmail').value = u.email || '';
+        document.getElementById('userPhone').value = u.phone || '';
+        document.getElementById('userPassword').value = '';
+        document.getElementById('userRole').value = u.role || 'investor';
+        document.getElementById('userModal').classList.remove('hidden');
+      } catch(e) { alert(e.message); }
+    }
+
+    async function saveUser() {
+      const id = document.getElementById('userId').value;
+      const name = document.getElementById('userName').value.trim();
+      const email = document.getElementById('userEmail').value.trim();
+      const phone = document.getElementById('userPhone').value.trim();
+      const password = document.getElementById('userPassword').value;
+      const role = document.getElementById('userRole').value;
+      if (!name || !email) { alert('姓名和邮箱为必填项'); return; }
+      if (!id && !password) { alert('请设置密码（至少8位）'); return; }
+      if (password && password.length < 8) { alert('密码至少8位'); return; }
+      try {
+        if (id) {
+          const payload = { name, email, phone, role };
+          if (password) payload.password = password;
+          await api('/api/admin/users/' + id, { method: 'PUT', body: JSON.stringify(payload) });
+        } else {
+          await api('/api/admin/users', { method: 'POST', body: JSON.stringify({ name, email, phone, password, role }) });
+        }
+        closeModal('userModal');
+        loadUsers();
+      } catch(e) { alert(e.message); }
+    }
+
+    async function deleteUser(id) {
+      if (!confirm('确定删除此用户？')) return;
+      try {
+        await api('/api/admin/users/' + id, { method: 'DELETE' });
+        loadUsers();
+      } catch(e) { alert(e.message); }
+    }
   </script>
 </body>
 </html>
