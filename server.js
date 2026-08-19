@@ -110,6 +110,14 @@ app.use('/api/project-priority',  projectPriorityRoutes);
 app.use('/api/metal-prices',      metalPricesRoutes);
 app.use('/api/insurance',         insuranceRoutes);
 
+// 保险工具子路径（不影响 minelab.top 原有页面）
+app.get('/insurance/', (req, res) => {
+  res.sendFile(join(__dirname, 'public', 'insurance-assessment.html'));
+});
+app.get('/insurance/admin', (req, res) => {
+  res.sendFile(join(__dirname, 'public', 'insurance-admin.html'));
+});
+
 // 所有其他 GET 请求回退到 index.html
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/')) return next();
