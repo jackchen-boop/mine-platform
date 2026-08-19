@@ -24,6 +24,7 @@ export function initSchema() {
       id                INTEGER PRIMARY KEY AUTOINCREMENT,
       code              TEXT    NOT NULL UNIQUE,
       name              TEXT    NOT NULL,
+      listing_name      TEXT,
       name_en           TEXT,
       mineral_types     TEXT    NOT NULL,
       province          TEXT,
@@ -355,6 +356,109 @@ export function initSchema() {
       ON extraction_examples(mineral_types);
     CREATE INDEX IF NOT EXISTS idx_extraction_examples_province
       ON extraction_examples(mineral_types, province);
+  `);
+
+  // 意向状态机扩展字段
+  try { db.exec('ALTER TABLE inquiries ADD COLUMN follow_up_note TEXT'); } catch(e) {}
+  try { db.exec('ALTER TABLE inquiries ADD COLUMN assigned_to INTEGER REFERENCES users(id)'); } catch(e) {}
+  try { db.exec('ALTER TABLE inquiries ADD COLUMN status_updated_at TEXT'); } catch(e) {}
+  try { db.exec('ALTER TABLE inquiries ADD COLUMN status_updated_by INTEGER REFERENCES users(id)'); } catch(e) {}
+
+  // 意向状态变更日志表
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS inquiry_status_logs (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      inquiry_id   INTEGER NOT NULL REFERENCES inquiries(id),
+      from_status  TEXT,
+      to_status    TEXT    NOT NULL,
+      note         TEXT,
+      operated_by  INTEGER NOT NULL REFERENCES users(id),
+      created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_inquiry_status_logs_inquiry
+      ON inquiry_status_logs(inquiry_id, created_at DESC);
+  `);
+
+  // ===== 保险咨询线索表 =====
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS insurance_leads (
+      id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+      name               TEXT    NOT NULL,
+      phone              TEXT    NOT NULL,
+      wechat             TEXT,
+      source             TEXT    DEFAULT 'insurance-assessment',
+      referrer           TEXT,
+      age                TEXT,
+      marriage           TEXT,
+      has_loan           TEXT,
+      annual_income      REAL,
+      investable_assets  REAL,
+      monthly_expense    REAL,
+      risks              TEXT,
+      risk_score         INTEGER DEFAULT 0,
+      investment_style   TEXT,
+      allocation         TEXT,
+      recommendations    TEXT,
+      status             TEXT    DEFAULT 'new',
+      assigned_to        INTEGER REFERENCES users(id),
+      follow_up_note     TEXT,
+      last_contacted_at  TEXT,
+      created_at         TEXT    NOT NULL DEFAULT (datetime('now')),
+      updated_at         TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_insurance_leads_status
+      ON insurance_leads(status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_insurance_leads_phone
+      ON insurance_leads(phone);
+    CREATE INDEX IF NOT EXISTS idx_insurance_leads_assigned
+      ON insurance_leads(assigned_to, status);
+  `);
+
+  // ===== 保险订单表 =====
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS insurance_orders (
+      id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+      lead_id            INTEGER NOT NULL REFERENCES insurance_leads(id),
+      order_no           TEXT    NOT NULL UNIQUE,
+      customer_name      TEXT    NOT NULL,
+      customer_phone     TEXT    NOT NULL,
+      product_type       TEXT    NOT NULL,
+      product_name       TEXT,
+      insurer            TEXT    DEFAULT 'Prudential HK',
+      premium_amount     REAL,
+      premium_currency   TEXT    DEFAULT 'USD',
+      payment_term       TEXT,
+      sum_assured        REAL,
+      commission_amount  REAL,
+      commission_rate    REAL,
+      status             TEXT    DEFAULT 'pending',
+      signed_at          TEXT,
+      issued_at          TEXT,
+      remark             TEXT,
+      created_by         INTEGER NOT NULL REFERENCES users(id),
+      created_at         TEXT    NOT NULL DEFAULT (datetime('now')),
+      updated_at         TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_insurance_orders_status
+      ON insurance_orders(status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_insurance_orders_lead
+      ON insurance_orders(lead_id);
+  `);
+
+  // ===== 保险线索跟进记录表 =====
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS insurance_lead_logs (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      lead_id      INTEGER NOT NULL REFERENCES insurance_leads(id),
+      action       TEXT    NOT NULL,
+      old_status   TEXT,
+      new_status   TEXT,
+      note         TEXT,
+      operated_by  INTEGER NOT NULL REFERENCES users(id),
+      created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_insurance_lead_logs_lead
+      ON insurance_lead_logs(lead_id, created_at DESC);
   `);
 
   console.log('✓ 矿业平台数据库 schema 初始化完成');

@@ -26,8 +26,11 @@ import adminRoutes from './server/routes/admin.js';
 import workgroupRoutes from './server/routes/workgroups.js';
 import projectTaskRoutes from './server/routes/project-tasks.js';
 import projectPriorityRoutes from './server/routes/project-priority.js';
+import metalPricesRoutes from './server/routes/metal-prices.js';
+import insuranceRoutes from './server/routes/insurance.js';
 
 import { setupLiveWebSocket } from './server/websocket/live-signal.js';
+import { startMetalPriceFetcher } from './server/services/metalPrices.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -104,6 +107,8 @@ app.use('/api/admin',          adminRoutes);
 app.use('/api/workgroups',        workgroupRoutes);
 app.use('/api/project-tasks',     projectTaskRoutes);
 app.use('/api/project-priority',  projectPriorityRoutes);
+app.use('/api/metal-prices',      metalPricesRoutes);
+app.use('/api/insurance',         insuranceRoutes);
 
 // 所有其他 GET 请求回退到 index.html
 app.get('*', (req, res, next) => {
@@ -123,5 +128,8 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 
 // 启动 WebSocket 直播信令服务器
 setupLiveWebSocket(server);
+
+// 启动金属价格定时采集（每天凌晨2点，启动时立即采集一次）
+startMetalPriceFetcher();
 
 export default app;

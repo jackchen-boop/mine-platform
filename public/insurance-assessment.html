@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>家庭财富风险管理 · 港险配置方案</title>
+  <meta name="description" content="为高净值家庭定制的香港保险与资产配置诊断工具">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            fin: {
+              bg: '#0a0a0f',
+              surface: '#12121a',
+              surface2: '#1a1a26',
+              surface3: '#222230',
+              gold: '#c9a96e',
+              goldLight: '#e0c88a',
+              goldDark: '#9a7d4a',
+              text: '#e2e8f0',
+              text2: '#94a3b8',
+              text3: '#64748b',
+              border: '#2a2a3a',
+              success: '#22c55e',
+              warning: '#f59e0b',
+              danger: '#ef4444'
+            }
+          },
+          fontFamily: {
+            serif: ['"Noto Serif SC"', 'serif'],
+            sans: ['"Noto Sans SC"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Noto Sans SC', sans-serif; background: #0a0a0f; color: #e2e8f0; }
+    .gold-gradient { background: linear-gradient(135deg, #c9a96e 0%, #e0c88a 50%, #9a7d4a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .gold-border { border: 1px solid rgba(201,169,110,0.3); }
+    .gold-glow { box-shadow: 0 0 30px rgba(201,169,110,0.12); }
+    .card-glass { background: rgba(26,26,38,0.85); backdrop-filter: blur(12px); border: 1px solid rgba(201,169,110,0.12); }
+    .hero-radial { background: radial-gradient(ellipse at top, rgba(201,169,110,0.15) 0%, transparent 50%), radial-gradient(ellipse at bottom, rgba(30,64,175,0.1) 0%, transparent 50%); }
+    .step { display: none; animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) forwards; }
+    .step.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-gold { 0%,100% { box-shadow: 0 0 0 0 rgba(201,169,110,0.25); } 50% { box-shadow: 0 0 0 12px rgba(201,169,110,0); } }
+    .animate-pulse-gold { animation: pulse-gold 2s infinite; }
+    .option-card { transition: all 0.25s ease; }
+    .option-card:hover { border-color: rgba(201,169,110,0.5); background: rgba(201,169,110,0.06); }
+    .option-card.selected { border-color: #c9a96e; background: rgba(201,169,110,0.1); }
+    .option-card.selected .check-ring { border-color: #c9a96e; background: #c9a96e; }
+    input, select { font-size: 16px; }
+    .bar-fill { transition: width 1s cubic-bezier(0.22,1,0.36,1); width: 0%; }
+    .number-roll { font-variant-numeric: tabular-nums; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
+    .grain { position: fixed; inset: 0; pointer-events: none; opacity: 0.03; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  </style>
+</head>
+<body class="min-h-screen hero-radial">
+  <div class="grain"></div>
+  <div class="max-w-lg mx-auto min-h-screen px-5 pb-12 relative">
+
+    <!-- Header -->
+    <header class="pt-8 pb-6 text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-fin-gold/30 bg-fin-gold/5 mb-4">
+        <span class="w-1.5 h-1.5 rounded-full bg-fin-gold animate-pulse"></span>
+        <span class="text-xs tracking-widest text-fin-gold uppercase">Prudential · Hong Kong</span>
+      </div>
+      <h1 class="text-[26px] font-serif font-bold leading-tight mb-2">
+        <span class="gold-gradient">家庭财富风险管理</span>
+      </h1>
+      <p class="text-fin-text2 text-sm">3分钟定制你的香港保险与资产配置方案</p>
+    </header>
+
+    <!-- Progress -->
+    <div class="mb-8" id="progressWrap">
+      <div class="flex justify-between text-xs text-fin-text3 mb-2">
+        <span>风险评估</span>
+        <span id="progressText">0%</span>
+      </div>
+      <div class="h-1 bg-fin-surface3 rounded-full overflow-hidden">
+        <div id="progressFill" class="h-full bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight rounded-full transition-all duration-500" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Step 0 -->
+    <div class="step active" data-step="0">
+      <div class="card-glass rounded-2xl p-8 text-center gold-glow">
+        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-fin-gold/20 to-fin-gold/5 border border-fin-gold/30 flex items-center justify-center animate-pulse-gold">
+          <span class="text-3xl">🛡️</span>
+        </div>
+        <h2 class="text-xl font-serif font-bold mb-3">看清风险，才能守住财富</h2>
+        <p class="text-fin-text2 text-sm leading-relaxed mb-8">
+          通过评估你的家庭结构、收入资产和风险担忧，我们将为你生成一份专业的香港保险配置建议，帮助你提前做好重疾、养老、教育和财富传承规划。
+        </p>
+        <div class="grid grid-cols-3 gap-3 mb-8 text-xs text-fin-text2">
+          <div class="bg-fin-surface2/50 rounded-lg p-3 border border-fin-border">
+            <div class="text-fin-gold text-lg mb-1">01</div>
+            <div>填写基础信息</div>
+          </div>
+          <div class="bg-fin-surface2/50 rounded-lg p-3 border border-fin-border">
+            <div class="text-fin-gold text-lg mb-1">02</div>
+            <div>识别风险缺口</div>
+          </div>
+          <div class="bg-fin-surface2/50 rounded-lg p-3 border border-fin-border">
+            <div class="text-fin-gold text-lg mb-1">03</div>
+            <div>获取配置方案</div>
+          </div>
+        </div>
+        <button class="w-full py-4 rounded-xl bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg font-bold text-base shadow-lg shadow-fin-gold/20 active:scale-[0.98] transition-transform" onclick="nextStep()">开始专业测评</button>
+      </div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="step" data-step="1">
+      <div class="card-glass rounded-2xl p-6 mb-4">
+        <div class="text-fin-gold text-xs tracking-widest mb-2">STEP 01</div>
+        <h2 class="text-xl font-bold mb-1">家庭结构</h2>
+        <p class="text-fin-text2 text-sm mb-6">这些信息决定了你最需要优先配置的保障类型。</p>
+
+        <div class="space-y-5">
+          <div>
+            <label class="block text-sm font-medium mb-2 text-fin-text">年龄阶段</label>
+            <select id="age" class="w-full bg-fin-surface2 border border-fin-border rounded-xl px-4 py-3.5 text-fin-text focus:border-fin-gold focus:outline-none transition-colors" onchange="validateStep1()">
+              <option value="">请选择</option>
+              <option value="25">25岁以下</option>
+              <option value="30">25-30岁</option>
+              <option value="35">31-35岁</option>
+              <option value="40">36-40岁</option>
+              <option value="45">41-45岁</option>
+              <option value="50">46-50岁</option>
+              <option value="55">50岁以上</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2 text-fin-text">婚姻状况</label>
+            <select id="marriage" class="w-full bg-fin-surface2 border border-fin-border rounded-xl px-4 py-3.5 text-fin-text focus:border-fin-gold focus:outline-none transition-colors" onchange="validateStep1()">
+              <option value="">请选择</option>
+              <option value="single">未婚</option>
+              <option value="married_no_child">已婚未育</option>
+              <option value="married_with_child">已婚有子女</option>
+              <option value="divorced">离异/单亲</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2 text-fin-text">负债情况</label>
+            <select id="hasLoan" class="w-full bg-fin-surface2 border border-fin-border rounded-xl px-4 py-3.5 text-fin-text focus:border-fin-gold focus:outline-none transition-colors" onchange="validateStep1()">
+              <option value="">请选择</option>
+              <option value="no">无房贷/车贷</option>
+              <option value="mortgage">有房贷</option>
+              <option value="car">有车贷</option>
+              <option value="both">房贷+车贷</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button id="btnStep1" class="w-full py-4 rounded-xl bg-fin-surface3 text-fin-text3 font-bold transition-all disabled:opacity-40" onclick="nextStep()" disabled>下一步</button>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" data-step="2">
+      <div class="card-glass rounded-2xl p-6 mb-4">
+        <div class="text-fin-gold text-xs tracking-widest mb-2">STEP 02</div>
+        <h2 class="text-xl font-bold mb-1">财务状况</h2>
+        <p class="text-fin-text2 text-sm mb-6">数据仅用于生成方案，严格保密。</p>
+
+        <div class="space-y-5">
+          <div>
+            <label class="block text-sm font-medium mb-2 text-fin-text">家庭年收入（万元）</label>
+            <input type="number" id="annualIncome" placeholder="例如：80" class="w-full bg-fin-surface2 border border-fin-border rounded-xl px-4 py-3.5 text-fin-text focus:border-fin-gold focus:outline-none transition-colors" oninput="validateStep2()">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2 text-fin-text">可投资资产（万元）</label>
+            <input type="number" id="investableAssets" placeholder="例如：200" class="w-full bg-fin-surface2 border border-fin-border rounded-xl px-4 py-3.5 text-fin-text focus:border-fin-gold focus:outline-none transition-colors" oninput="validateStep2()">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2 text-fin-text">每月固定支出（万元）</label>
+            <input type="number" id="monthlyExpense" placeholder="例如：3" step="0.1" class="w-full bg-fin-surface2 border border-fin-border rounded-xl px-4 py-3.5 text-fin-text focus:border-fin-gold focus:outline-none transition-colors" oninput="validateStep2()">
+          </div>
+        </div>
+      </div>
+      <button id="btnStep2" class="w-full py-4 rounded-xl bg-fin-surface3 text-fin-text3 font-bold transition-all disabled:opacity-40" onclick="nextStep()" disabled>下一步</button>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step" data-step="3">
+      <div class="card-glass rounded-2xl p-6 mb-4">
+        <div class="text-fin-gold text-xs tracking-widest mb-2">STEP 03</div>
+        <h2 class="text-xl font-bold mb-1">你最担心的风险</h2>
+        <p class="text-fin-text2 text-sm mb-6">可多选，我们将据此计算保障优先级。</p>
+
+        <div class="space-y-3" id="riskOptions">
+          <div class="option-card flex items-center p-4 rounded-xl border border-fin-border bg-fin-surface2/50 cursor-pointer" data-value="critical_illness" onclick="toggleMulti(this, 'risks')">
+            <div class="w-10 h-10 rounded-lg bg-fin-surface3 flex items-center justify-center text-lg mr-4">🏥</div>
+            <div class="flex-1">
+              <div class="font-medium">重大疾病</div>
+              <div class="text-xs text-fin-text3">患癌、心梗等大病医疗与收入中断</div>
+            </div>
+            <div class="check-ring w-6 h-6 rounded-full border-2 border-fin-border flex items-center justify-center"></div>
+          </div>
+          <div class="option-card flex items-center p-4 rounded-xl border border-fin-border bg-fin-surface2/50 cursor-pointer" data-value="accident" onclick="toggleMulti(this, 'risks')">
+            <div class="w-10 h-10 rounded-lg bg-fin-surface3 flex items-center justify-center text-lg mr-4">🛡️</div>
+            <div class="flex-1">
+              <div class="font-medium">意外身故/伤残</div>
+              <div class="text-xs text-fin-text3">家庭失去经济支柱的风险</div>
+            </div>
+            <div class="check-ring w-6 h-6 rounded-full border-2 border-fin-border flex items-center justify-center"></div>
+          </div>
+          <div class="option-card flex items-center p-4 rounded-xl border border-fin-border bg-fin-surface2/50 cursor-pointer" data-value="retirement" onclick="toggleMulti(this, 'risks')">
+            <div class="w-10 h-10 rounded-lg bg-fin-surface3 flex items-center justify-center text-lg mr-4">🏖️</div>
+            <div class="flex-1">
+              <div class="font-medium">养老储备不足</div>
+              <div class="text-xs text-fin-text3">社保养老金不够，想提前规划</div>
+            </div>
+            <div class="check-ring w-6 h-6 rounded-full border-2 border-fin-border flex items-center justify-center"></div>
+          </div>
+          <div class="option-card flex items-center p-4 rounded-xl border border-fin-border bg-fin-surface2/50 cursor-pointer" data-value="education" onclick="toggleMulti(this, 'risks')">
+            <div class="w-10 h-10 rounded-lg bg-fin-surface3 flex items-center justify-center text-lg mr-4">🎓</div>
+            <div class="flex-1">
+              <div class="font-medium">子女教育金</div>
+              <div class="text-xs text-fin-text3">为留学或升学提前储备资金</div>
+            </div>
+            <div class="check-ring w-6 h-6 rounded-full border-2 border-fin-border flex items-center justify-center"></div>
+          </div>
+          <div class="option-card flex items-center p-4 rounded-xl border border-fin-border bg-fin-surface2/50 cursor-pointer" data-value="wealth_depreciation" onclick="toggleMulti(this, 'risks')">
+            <div class="w-10 h-10 rounded-lg bg-fin-surface3 flex items-center justify-center text-lg mr-4">💰</div>
+            <div class="flex-1">
+              <div class="font-medium">资产贬值/汇率风险</div>
+              <div class="text-xs text-fin-text3">想做美元/港币多元配置</div>
+            </div>
+            <div class="check-ring w-6 h-6 rounded-full border-2 border-fin-border flex items-center justify-center"></div>
+          </div>
+          <div class="option-card flex items-center p-4 rounded-xl border border-fin-border bg-fin-surface2/50 cursor-pointer" data-value="asset_protection" onclick="toggleMulti(this, 'risks')">
+            <div class="w-10 h-10 rounded-lg bg-fin-surface3 flex items-center justify-center text-lg mr-4">🏛️</div>
+            <div class="flex-1">
+              <div class="font-medium">资产隔离/债务风险</div>
+              <div class="text-xs text-fin-text3">企业主隔离经营与家庭资产</div>
+            </div>
+            <div class="check-ring w-6 h-6 rounded-full border-2 border-fin-border flex items-center justify-center"></div>
+          </div>
+          <div class="option-card flex items-center p-4 rounded-xl border border-fin-border bg-fin-surface2/50 cursor-pointer" data-value="inheritance" onclick="toggleMulti(this, 'risks')">
+            <div class="w-10 h-10 rounded-lg bg-fin-surface3 flex items-center justify-center text-lg mr-4">📜</div>
+            <div class="flex-1">
+              <div class="font-medium">财富传承</div>
+              <div class="text-xs text-fin-text3">定向、私密、低损耗传给下一代</div>
+            </div>
+            <div class="check-ring w-6 h-6 rounded-full border-2 border-fin-border flex items-center justify-center"></div>
+          </div>
+        </div>
+      </div>
+      <button id="btnStep3" class="w-full py-4 rounded-xl bg-fin-surface3 text-fin-text3 font-bold transition-all disabled:opacity-40" onclick="nextStep()" disabled>下一步</button>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step" data-step="4">
+      <div class="card-glass rounded-2xl p-6 mb-4">
+        <div class="text-fin-gold text-xs tracking-widest mb-2">STEP 04</div>
+        <h2 class="text-xl font-bold mb-1">投资偏好</h2>
+        <p class="text-fin-text2 text-sm mb-6">决定储蓄与投资类资产的比例建议。</p>
+
+        <div class="space-y-3">
+          <div class="option-card flex items-center p-4 rounded-xl border border-fin-border bg-fin-surface2/50 cursor-pointer" data-value="conservative" onclick="toggleSingle(this, 'style')">
+            <div class="w-10 h-10 rounded-lg bg-fin-surface3 flex items-center justify-center text-lg mr-4">🛡️</div>
+            <div class="flex-1">
+              <div class="font-medium">稳健型</div>
+              <div class="text-xs text-fin-text3">厌恶亏损，重视本金安全与稳定现金流</div>
+            </div>
+            <div class="check-ring w-6 h-6 rounded-full border-2 border-fin-border flex items-center justify-center"></div>
+          </div>
+          <div class="option-card flex items-center p-4 rounded-xl border border-fin-border bg-fin-surface2/50 cursor-pointer" data-value="balanced" onclick="toggleSingle(this, 'style')">
+            <div class="w-10 h-10 rounded-lg bg-fin-surface3 flex items-center justify-center text-lg mr-4">⚖️</div>
+            <div class="flex-1">
+              <div class="font-medium">平衡型</div>
+              <div class="text-xs text-fin-text3">接受一定波动，希望稳健增值</div>
+            </div>
+            <div class="check-ring w-6 h-6 rounded-full border-2 border-fin-border flex items-center justify-center"></div>
+          </div>
+          <div class="option-card flex items-center p-4 rounded-xl border border-fin-border bg-fin-surface2/50 cursor-pointer" data-value="aggressive" onclick="toggleSingle(this, 'style')">
+            <div class="w-10 h-10 rounded-lg bg-fin-surface3 flex items-center justify-center text-lg mr-4">🚀</div>
+            <div class="flex-1">
+              <div class="font-medium">进取型</div>
+              <div class="text-xs text-fin-text3">追求较高收益，能承受较大波动</div>
+            </div>
+            <div class="check-ring w-6 h-6 rounded-full border-2 border-fin-border flex items-center justify-center"></div>
+          </div>
+        </div>
+      </div>
+      <button id="btnStep4" class="w-full py-4 rounded-xl bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg font-bold shadow-lg shadow-fin-gold/20 transition-all disabled:opacity-40 disabled:shadow-none" onclick="generateResult()" disabled>生成专属方案</button>
+    </div>
+
+    <!-- Result -->
+    <div class="result-section hidden" id="resultSection">
+      <div class="card-glass rounded-2xl p-8 text-center mb-5 gold-glow relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-fin-gold/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div class="relative">
+          <div class="text-fin-gold text-xs tracking-widest mb-3">你的家庭风险评分</div>
+          <div class="text-6xl font-serif font-bold number-roll mb-2" id="scoreValue">--</div>
+          <div class="text-lg font-bold mb-1" id="scoreTitle">--</div>
+          <div class="text-sm text-fin-text2" id="scoreDesc">--</div>
+        </div>
+      </div>
+
+      <div class="card-glass rounded-2xl p-6 mb-5">
+        <h3 class="text-lg font-bold mb-5 flex items-center gap-2">
+          <span class="w-1 h-5 bg-fin-gold rounded-full"></span>风险暴露分析
+        </h3>
+        <div id="riskBars" class="space-y-5"></div>
+      </div>
+
+      <div class="card-glass rounded-2xl p-6 mb-5">
+        <h3 class="text-lg font-bold mb-5 flex items-center gap-2">
+          <span class="w-1 h-5 bg-fin-gold rounded-full"></span>建议资产配置
+        </h3>
+        <div class="grid grid-cols-2 gap-3" id="allocationGrid"></div>
+      </div>
+
+      <div class="card-glass rounded-2xl p-6 mb-5">
+        <h3 class="text-lg font-bold mb-5 flex items-center gap-2">
+          <span class="w-1 h-5 bg-fin-gold rounded-full"></span>保障缺口与保险建议
+        </h3>
+        <div id="recommendList" class="space-y-4"></div>
+      </div>
+
+      <div class="rounded-2xl p-6 mb-5 border border-fin-gold/30 bg-gradient-to-br from-fin-gold/10 to-transparent">
+        <h3 class="text-lg font-bold mb-2 font-serif">预约一对一方案解读</h3>
+        <p class="text-sm text-fin-text2 mb-5">留下联系方式，获取专属香港保险配置方案与赴港投保指引。</p>
+        <div class="space-y-3">
+          <input type="text" id="leadName" placeholder="你的称呼" class="w-full bg-fin-surface2 border border-fin-border rounded-xl px-4 py-3.5 text-fin-text focus:border-fin-gold focus:outline-none">
+          <input type="tel" id="leadPhone" placeholder="手机号码" class="w-full bg-fin-surface2 border border-fin-border rounded-xl px-4 py-3.5 text-fin-text focus:border-fin-gold focus:outline-none">
+          <input type="text" id="leadWechat" placeholder="微信号（选填）" class="w-full bg-fin-surface2 border border-fin-border rounded-xl px-4 py-3.5 text-fin-text focus:border-fin-gold focus:outline-none">
+          <button class="w-full py-4 rounded-xl bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg font-bold shadow-lg shadow-fin-gold/20 active:scale-[0.98] transition-transform" onclick="submitLead()">提交，获取专属方案</button>
+        </div>
+        <div class="text-xs text-fin-text3 text-center mt-3">信息严格保密，仅用于保险咨询</div>
+      </div>
+
+      <div class="rounded-2xl p-5 border border-fin-border bg-fin-surface2/50 mb-5">
+        <div class="text-sm font-bold mb-2">分享给关心家庭保障的朋友</div>
+        <div class="text-xs text-fin-text3">让更多人看清自己的风险缺口，提前做好财富保护。</div>
+      </div>
+
+      <button class="w-full py-4 rounded-xl border border-fin-border bg-fin-surface2 text-fin-text2 font-bold hover:border-fin-gold/50 transition-colors" onclick="resetAssessment()">重新测评</button>
+    </div>
+
+    <!-- Admin link -->
+    <div class="text-center mt-8 text-xs text-fin-text3">
+      <a href="/insurance-admin.html" class="hover:text-fin-gold transition-colors">顾问登录</a>
+    </div>
+  </div>
+
+  <script>
+    const totalSteps = 5;
+    let currentStep = 0;
+    let calcResult = null;
+    const answers = { age:'', marriage:'', hasLoan:'', annualIncome:0, investableAssets:0, monthlyExpense:0, risks:[], style:'' };
+
+    function updateProgress() {
+      const pct = Math.round((currentStep / (totalSteps - 1)) * 100);
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressText').textContent = pct + '%';
+    }
+    function nextStep() {
+      document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+      currentStep++;
+      document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+      updateProgress();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function validateStep1() {
+      answers.age = document.getElementById('age').value;
+      answers.marriage = document.getElementById('marriage').value;
+      answers.hasLoan = document.getElementById('hasLoan').value;
+      document.getElementById('btnStep1').disabled = !(answers.age && answers.marriage && answers.hasLoan);
+      document.getElementById('btnStep1').className = document.getElementById('btnStep1').disabled
+        ? "w-full py-4 rounded-xl bg-fin-surface3 text-fin-text3 font-bold transition-all disabled:opacity-40"
+        : "w-full py-4 rounded-xl bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg font-bold shadow-lg shadow-fin-gold/20 active:scale-[0.98] transition-transform";
+    }
+    function validateStep2() {
+      const income = parseFloat(document.getElementById('annualIncome').value) || 0;
+      const expense = parseFloat(document.getElementById('monthlyExpense').value) || 0;
+      answers.annualIncome = income;
+      answers.investableAssets = parseFloat(document.getElementById('investableAssets').value) || 0;
+      answers.monthlyExpense = expense;
+      const btn = document.getElementById('btnStep2');
+      btn.disabled = !(income > 0 && expense > 0);
+      btn.className = btn.disabled
+        ? "w-full py-4 rounded-xl bg-fin-surface3 text-fin-text3 font-bold transition-all disabled:opacity-40"
+        : "w-full py-4 rounded-xl bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg font-bold shadow-lg shadow-fin-gold/20 active:scale-[0.98] transition-transform";
+    }
+    function toggleMulti(el, key) {
+      el.classList.toggle('selected');
+      const val = el.dataset.value;
+      const idx = answers[key].indexOf(val);
+      if (idx > -1) answers[key].splice(idx, 1); else answers[key].push(val);
+      const btn = document.getElementById('btnStep3');
+      btn.disabled = answers[key].length === 0;
+      btn.className = btn.disabled
+        ? "w-full py-4 rounded-xl bg-fin-surface3 text-fin-text3 font-bold transition-all disabled:opacity-40"
+        : "w-full py-4 rounded-xl bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg font-bold shadow-lg shadow-fin-gold/20 active:scale-[0.98] transition-transform";
+    }
+    function toggleSingle(el, key) {
+      el.parentElement.querySelectorAll('.option-card').forEach(s => s.classList.remove('selected'));
+      el.classList.add('selected');
+      answers[key] = el.dataset.value;
+      const btn = document.getElementById('btnStep4');
+      btn.disabled = false;
+    }
+
+    function calculate() {
+      const { age, marriage, hasLoan, annualIncome, investableAssets, monthlyExpense, risks, style } = answers;
+      const riskScores = { health:0, life:0, retirement:0, education:0, wealth:0, asset:0 };
+
+      if (risks.includes('critical_illness')) riskScores.health += 40;
+      if (age >= 40) riskScores.health += 20;
+      if (['married_with_child','divorced'].includes(marriage)) riskScores.health += 15;
+      riskScores.health = Math.min(100, riskScores.health + 25);
+
+      if (risks.includes('accident')) riskScores.life += 35;
+      if (hasLoan !== 'no') riskScores.life += 25;
+      if (marriage === 'married_with_child') riskScores.life += 20;
+      if (annualIncome >= 50) riskScores.life += 10;
+      riskScores.life = Math.min(100, riskScores.life + 20);
+
+      if (risks.includes('retirement')) riskScores.retirement += 40;
+      if (age >= 45) riskScores.retirement += 25;
+      if (style === 'conservative') riskScores.retirement += 15;
+      riskScores.retirement = Math.min(100, riskScores.retirement + 20);
+
+      if (risks.includes('education')) riskScores.education += 50;
+      if (marriage === 'married_with_child') riskScores.education += 25;
+      riskScores.education = Math.min(100, riskScores.education + 10);
+
+      if (risks.includes('wealth_depreciation')) riskScores.wealth += 40;
+      if (risks.includes('asset_protection')) riskScores.wealth += 30;
+      if (risks.includes('inheritance')) riskScores.wealth += 25;
+      if (annualIncome >= 80 || investableAssets >= 300) riskScores.wealth += 15;
+      riskScores.wealth = Math.min(100, riskScores.wealth + 15);
+
+      if (risks.includes('asset_protection')) riskScores.asset += 45;
+      if (risks.includes('inheritance')) riskScores.asset += 30;
+      if (annualIncome >= 100) riskScores.asset += 15;
+      riskScores.asset = Math.min(100, riskScores.asset + 15);
+
+      const avgScore = Math.round(Object.values(riskScores).reduce((a,b)=>a+b,0)/6);
+
+      let emergencyPct = Math.min(20, Math.round((monthlyExpense*6)/Math.max(investableAssets, annualIncome)*100));
+      if (emergencyPct < 5) emergencyPct = 5;
+      let insurancePct = 10;
+      if (risks.includes('critical_illness') || risks.includes('accident')) insurancePct += 5;
+      if (age >= 40) insurancePct += 3;
+      if (insurancePct > 20) insurancePct = 20;
+      let savingsPct = 15;
+      if (risks.includes('retirement')) savingsPct += 10;
+      if (risks.includes('education')) savingsPct += 8;
+      if (risks.includes('wealth_depreciation')) savingsPct += 7;
+      if (style === 'conservative') savingsPct += 10;
+      if (style === 'aggressive') savingsPct -= 8;
+      if (age >= 45) savingsPct += 8;
+      savingsPct = Math.max(10, Math.min(45, savingsPct));
+      let equityPct = 100 - emergencyPct - insurancePct - savingsPct;
+      if (style === 'conservative') equityPct = Math.max(15, equityPct - 10);
+      if (style === 'aggressive') equityPct = Math.min(60, equityPct + 10);
+      const total = emergencyPct + insurancePct + savingsPct + equityPct;
+      emergencyPct = Math.round((emergencyPct/total)*100);
+      insurancePct = Math.round((insurancePct/total)*100);
+      savingsPct = Math.round((savingsPct/total)*100);
+      equityPct = 100 - emergencyPct - insurancePct - savingsPct;
+
+      const recommendations = [];
+      if (risks.includes('critical_illness') || riskScores.health >= 60) {
+        const ci = Math.round(annualIncome*3);
+        recommendations.push({ icon:'🏥', title:'重大疾病保障', desc:`建议保额：年收入3-5倍，约 ${ci}-${Math.round(ci*1.67)} 万元。香港重疾险保额递增、多次赔付、含早期危疾。`, tag:'高优先级' });
+      }
+      if (risks.includes('accident') || riskScores.life >= 60) {
+        const life = Math.round(annualIncome*10);
+        recommendations.push({ icon:'🛡️', title:'人寿/意外保障', desc:`建议保额：年收入10倍以上，约 ${life} 万元起。有房贷者应叠加贷款余额。`, tag:'高优先级' });
+      }
+      if (risks.includes('retirement') || age >= 40) {
+        recommendations.push({ icon:'🏖️', title:'养老/年金储蓄', desc:'用美元/港币储蓄分红险做长期养老储备，利用复利滚存，退休后稳定提领。', tag:'中长期规划' });
+      }
+      if (risks.includes('education')) {
+        recommendations.push({ icon:'🎓', title:'子女教育金储备', desc:'通过香港储蓄险做5-10年定投，孩子18岁时可灵活提取用于留学或升学。', tag:'教育专项' });
+      }
+      if (risks.includes('wealth_depreciation') || investableAssets >= 300) {
+        recommendations.push({ icon:'💰', title:'多元货币储蓄配置', desc:'将部分人民币资产转换为美元/港币保单，分散单一货币风险，享受长期分红。', tag:'资产配置' });
+      }
+      if (risks.includes('asset_protection') || risks.includes('inheritance')) {
+        recommendations.push({ icon:'📜', title:'资产隔离与财富传承', desc:'通过保单架构设计实现债务隔离、税务优化和定向传承。', tag:'高净值方案' });
+      }
+      if (recommendations.length === 0) {
+        recommendations.push({ icon:'✅', title:'基础保障建议', desc:'即使目前没有明确担忧，也建议配置医疗险+重疾险+意外险作为家庭安全垫。', tag:'基础配置' });
+      }
+
+      let scoreTitle, scoreDesc;
+      if (avgScore >= 75) { scoreTitle='风险暴露较高'; scoreDesc='你的家庭保障存在明显缺口，建议尽快补齐核心保障并优化资产配置。'; }
+      else if (avgScore >= 55) { scoreTitle='风险中等，需查漏补缺'; scoreDesc='部分风险已有覆盖，但在某些关键领域仍需加强。'; }
+      else { scoreTitle='风险可控，重在优化'; scoreDesc='整体风险意识较好，建议进一步做长期资产规划和增值配置。'; }
+
+      return { score:avgScore, scoreTitle, scoreDesc, riskScores, allocation:{emergency:emergencyPct,insurance:insurancePct,savings:savingsPct,equity:equityPct}, recommendations };
+    }
+
+    function generateResult() {
+      calcResult = calculate();
+      document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+      document.getElementById('progressWrap').style.display = 'none';
+      document.getElementById('resultSection').classList.remove('hidden');
+
+      document.getElementById('scoreValue').textContent = calcResult.score;
+      document.getElementById('scoreTitle').textContent = calcResult.scoreTitle;
+      document.getElementById('scoreDesc').textContent = calcResult.scoreDesc;
+
+      const riskLabels = { health:'健康/重疾风险', life:'身故/意外风险', retirement:'养老储备风险', education:'教育金缺口风险', wealth:'资产贬值/传承风险', asset:'资产隔离风险' };
+      const riskColors = { health:'#ef4444', life:'#f59e0b', retirement:'#3b82f6', education:'#22c55e', wealth:'#c9a96e', asset:'#8b5cf6' };
+      document.getElementById('riskBars').innerHTML = Object.entries(calcResult.riskScores).map(([k,s])=>`
+        <div>
+          <div class="flex justify-between text-sm mb-2"><span class="text-fin-text">${riskLabels[k]}</span><span class="text-fin-gold font-medium">${s}%</span></div>
+          <div class="h-2 bg-fin-surface3 rounded-full overflow-hidden">
+            <div class="bar-fill h-full rounded-full" style="background:${riskColors[k]}" data-width="${s}"></div>
+          </div>
+        </div>
+      `).join('');
+
+      const allocLabels = { emergency:'应急现金', insurance:'保障类保险', savings:'稳健储蓄/年金', equity:'权益/基金投资' };
+      const allocDesc = { emergency:'3-6个月生活费', insurance:'重疾/医疗/寿险', savings:'港险储蓄/年金', equity:'股票/基金/其他' };
+      document.getElementById('allocationGrid').innerHTML = Object.entries(calcResult.allocation).map(([k,p])=>`
+        <div class="rounded-xl p-4 border border-fin-border bg-fin-surface2/50 text-center">
+          <div class="text-2xl font-bold text-fin-gold number-roll">${p}%</div>
+          <div class="text-sm font-medium mt-1">${allocLabels[k]}</div>
+          <div class="text-xs text-fin-text3 mt-0.5">${allocDesc[k]}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('recommendList').innerHTML = calcResult.recommendations.map(item=>`
+        <div class="flex gap-4 p-4 rounded-xl border border-fin-border bg-fin-surface2/50">
+          <div class="w-12 h-12 rounded-xl bg-fin-gold/10 border border-fin-gold/20 flex items-center justify-center text-2xl flex-shrink-0">${item.icon}</div>
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <div class="font-bold">${item.title}</div>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-fin-success/10 text-fin-success border border-fin-success/20">${item.tag}</span>
+            </div>
+            <div class="text-sm text-fin-text2 leading-relaxed">${item.desc}</div>
+          </div>
+        </div>
+      `).join('');
+
+      setTimeout(()=>{ document.querySelectorAll('.bar-fill').forEach(b=>b.style.width=b.dataset.width+'%'); }, 200);
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+
+    async function submitLead() {
+      const name = document.getElementById('leadName').value.trim();
+      const phone = document.getElementById('leadPhone').value.trim();
+      const wechat = document.getElementById('leadWechat').value.trim();
+      if (!name || !phone) { alert('请填写称呼和手机号码'); return; }
+      if (!/^1[3-9]\d{9}$/.test(phone)) { alert('请输入正确的手机号码'); return; }
+
+      const payload = {
+        name, phone, wechat,
+        source: 'insurance-assessment',
+        referrer: new URLSearchParams(location.search).get('ref') || '',
+        age: answers.age, marriage: answers.marriage, hasLoan: answers.hasLoan,
+        annualIncome: answers.annualIncome, investableAssets: answers.investableAssets, monthlyExpense: answers.monthlyExpense,
+        risks: answers.risks, riskScore: calcResult.score, investmentStyle: answers.style,
+        allocation: calcResult.allocation, recommendations: calcResult.recommendations
+      };
+
+      try {
+        const res = await fetch('/api/insurance/leads', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || '提交失败');
+        alert('提交成功！专属顾问会尽快联系你。');
+      } catch (e) {
+        alert('网络异常，请稍后重试。错误：' + e.message);
+      }
+    }
+
+    function resetAssessment() {
+      currentStep = 0; calcResult = null;
+      Object.assign(answers, { age:'', marriage:'', hasLoan:'', annualIncome:0, investableAssets:0, monthlyExpense:0, risks:[], style:'' });
+      document.querySelectorAll('.option-card').forEach(el=>el.classList.remove('selected'));
+      document.querySelectorAll('input, select').forEach(el=>el.value='');
+      document.getElementById('resultSection').classList.add('hidden');
+      document.querySelector('.step[data-step="0"]').classList.add('active');
+      document.getElementById('progressWrap').style.display = 'block';
+      ['btnStep1','btnStep2','btnStep3','btnStep4'].forEach(id=>{
+        const btn = document.getElementById(id);
+        btn.disabled = true;
+        btn.className = "w-full py-4 rounded-xl bg-fin-surface3 text-fin-text3 font-bold transition-all disabled:opacity-40";
+      });
+      updateProgress();
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+
+    updateProgress();
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>家庭风险自检 · 资产配置建议</title>
+  <meta name="description" content="3分钟测出你的家庭保障缺口，获取专属资产配置建议">
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-light: #3b82f6;
+      --accent: #c9a96e;
+      --accent-light: #f3e9d2;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --text-secondary: #64748b;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 4px 20px rgba(30, 64, 175, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 0 20px 40px;
+      position: relative;
+    }
+    .header {
+      padding: 24px 0 16px;
+      text-align: center;
+    }
+    .header .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--accent-light), #fff);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(201, 169, 110, 0.3);
+    }
+    .header h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .header p { color: var(--text-secondary); font-size: 14px; }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      margin: 0 0 28px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      border-radius: 3px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    .step { display: none; animation: fadeIn 0.35s ease; }
+    .step.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    .question-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .question-sub {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .option {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #fff;
+    }
+    .option:hover { border-color: var(--primary-light); }
+    .option.selected {
+      border-color: var(--primary);
+      background: rgba(30, 64, 175, 0.04);
+    }
+    .option-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-right: 14px;
+      flex-shrink: 0;
+    }
+    .option.selected .option-icon { background: var(--primary); color: #fff; }
+    .option-text { flex: 1; }
+    .option-text strong { display: block; font-size: 15px; margin-bottom: 2px; }
+    .option-text span { font-size: 13px; color: var(--text-secondary); }
+    .option-check {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .option.selected .option-check {
+      border-color: var(--primary);
+      background: var(--primary);
+    }
+    .option-check::after {
+      content: "";
+      width: 6px;
+      height: 10px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) translate(-1px, -1px);
+      display: none;
+    }
+    .option.selected .option-check::after { display: block; }
+
+    .input-group { margin-bottom: 18px; }
+    .input-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .input-group input, .input-group select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+      background: #fff;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .input-group input:focus, .input-group select:focus {
+      outline: none;
+      border-color: var(--primary-light);
+    }
+    .input-hint { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(30, 64, 175, 0.25);
+    }
+    .btn-primary:active { transform: translateY(2px); }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-secondary {
+      background: #fff;
+      color: var(--text);
+      border: 2px solid var(--border);
+      margin-top: 12px;
+    }
+
+    .result-section { display: none; }
+    .result-section.active { display: block; }
+
+    .score-card {
+      background: linear-gradient(135deg, var(--primary), #1e3a8a);
+      color: #fff;
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .score-card::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      right: -30%;
+      width: 200px;
+      height: 200px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50%;
+    }
+    .score-label { font-size: 13px; opacity: 0.9; margin-bottom: 4px; }
+    .score-value { font-size: 52px; font-weight: 800; line-height: 1; margin-bottom: 8px; }
+    .score-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+    .score-desc { font-size: 13px; opacity: 0.85; }
+
+    .risk-bars { margin-bottom: 20px; }
+    .risk-bar-item { margin-bottom: 16px; }
+    .risk-bar-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+    .risk-bar-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .risk-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin: 28px 0 14px;
+      padding-left: 12px;
+      border-left: 4px solid var(--accent);
+    }
+
+    .allocation-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .allocation-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 18px 14px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .allocation-card .pct {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+    .allocation-card .label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .allocation-card .desc { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+    .recommend-list { margin-bottom: 20px; }
+    .recommend-item {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .recommend-item .ri-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--accent-light);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .recommend-item .ri-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .recommend-item .ri-desc { font-size: 13px; color: var(--text-secondary); }
+    .recommend-item .ri-tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    .cta-card {
+      background: linear-gradient(135deg, #fff, var(--accent-light));
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      border: 1px solid rgba(201, 169, 110, 0.3);
+      margin-bottom: 20px;
+    }
+    .cta-card h3 { font-size: 18px; margin-bottom: 8px; }
+    .cta-card p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+    .lead-form { text-align: left; }
+    .lead-form input {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 12px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+    }
+    .privacy-note { font-size: 11px; color: var(--text-secondary); text-align: center; margin-top: 8px; }
+
+    .share-tips {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .share-tips strong { color: var(--text); display: block; margin-bottom: 6px; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 360px) {
+      .allocation-grid { grid-template-columns: 1fr; }
+      .header h1 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="badge">3分钟自测</span>
+      <h1>家庭风险自检 · 资产配置建议</h1>
+      <p>根据你的收入、担忧和目标，生成专属保障方案</p>
+    </div>
+
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <!-- Step 0: Welcome -->
+    <div class="step active" data-step="0">
+      <div class="card" style="text-align:center; padding: 36px 24px;">
+        <div style="font-size: 64px; margin-bottom: 16px;">🛡️</div>
+        <h2 style="font-size: 20px; margin-bottom: 12px;">你家庭的保障缺口，到底有多大？</h2>
+        <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 24px;">
+          很多家庭的资产配置，不是买多了就是买错了。通过这个工具，你可以快速识别：<br><br>
+          ✅ 哪些风险正在暴露<br>
+          ✅ 需要多少保额才够<br>
+          ✅ 钱该怎么分配
+        </p>
+        <button class="btn btn-primary" onclick="nextStep()">开始测评</button>
+      </div>
+    </div>
+
+    <!-- Step 1: Basic Info -->
+    <div class="step" data-step="1">
+      <div class="card">
+        <div class="question-title">先了解一下你的家庭结构</div>
+        <div class="question-sub">这会帮助我们判断你最需要的保障类型。</div>
+
+        <div class="input-group">
+          <label>你的年龄</label>
+          <select id="age" onchange="validateStep1()">
+            <option value="">请选择</option>
+            <option value="25">25岁以下</option>
+            <option value="30">25-30岁</option>
+            <option value="35">31-35岁</option>
+            <option value="40">36-40岁</option>
+            <option value="45">41-45岁</option>
+            <option value="50">46-50岁</option>
+            <option value="55">50岁以上</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>婚姻状况</label>
+          <select id="marriage" onchange="validateStep1()">
+            <option value="">请选择</option>
+            <option value="single">未婚</option>
+            <option value="married_no_child">已婚未育</option>
+            <option value="married_with_child">已婚有子女</option>
+            <option value="divorced">离异/单亲</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>是否有房贷/车贷？</label>
+          <select id="hasLoan" onchange="validateStep1()">
+            <option value="">请选择</option>
+            <option value="no">无</option>
+            <option value="mortgage">有房贷</option>
+            <option value="car">有车贷</option>
+            <option value="both">房贷+车贷</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" id="btnStep1" onclick="nextStep()" disabled>下一步</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Finance -->
+    <div class="step" data-step="2">
+      <div class="card">
+        <div class="question-title">你的财务状况</div>
+        <div class="question-sub">数据仅用于生成建议，不会上传或保存。</div>
+
+        <div class="input-group">
+          <label>家庭年收入（税前，万元）</label>
+          <input type="number" id="annualIncome" placeholder="例如：50" min="0" step="1" oninput="validateStep2()">
+          <div class="input-hint">填写你或家庭主要收入来源的年收入总和</div>
+        </div>
+
+        <div class="input-group">
+          <label>可投资资产（万元）</label>
+          <input type="number" id="investableAssets" placeholder="例如：100" min="0" step="1" oninput="validateStep2()">
+          <div class="input-hint">存款、股票、基金、理财产品等可灵活支配的资产</div>
+        </div>
+
+        <div class="input-group">
+          <label>每月固定支出（万元）</label>
+          <input type="number" id="monthlyExpense" placeholder="例如：2" min="0" step="0.1" oninput="validateStep2()">
+          <div class="input-hint">房贷、生活、教育、父母赡养等固定开销</div>
+        </div>
+
+        <button class="btn btn-primary" id="btnStep2" onclick="nextStep()" disabled>下一步</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Risk Concerns -->
+    <div class="step" data-step="3">
+      <div class="card">
+        <div class="question-title">你最担心的风险有哪些？</div>
+        <div class="question-sub">可多选，我们会根据你的选择计算保障优先级。</div>
+
+        <div class="option" data-value="critical_illness" onclick="toggleMulti(this, 'risks')">
+          <div class="option-icon">🏥</div>
+          <div class="option-text">
+            <strong>重大疾病</strong>
+            <span>担心患癌、心梗等大病，医疗费用和收入中断</span>
+          </div>
+          <div class="option-check"></div>
+        </div>
+
+        <div class="option" data-value="accident" onclick="toggleMulti(this, 'risks')">
+          <div class="option-icon">🚗</div>
+          <div class="option-text">
+            <strong>意外身故/伤残</strong>
+            <span>担心意外导致家庭失去经济支柱</span>
+          </div>
+          <div class="option-check"></div>
+        </div>
+
+        <div class="option" data-value="retirement" onclick="toggleMulti(this, 'risks')">
+          <div class="option-icon">🏖️</div>
+          <div class="option-text">
+            <strong>养老储备不足</strong>
+            <span>担心社保养老金不够，想提前规划</span>
+          </div>
+          <div class="option-check"></div>
+        </div>
+
+        <div class="option" data-value="education" onclick="toggleMulti(this, 'risks')">
+          <div class="option-icon">🎓</div>
+          <div class="option-text">
+            <strong>子女教育金</strong>
+            <span>想为孩子留学或升学提前储备资金</span>
+          </div>
+          <div class="option-check"></div>
+        </div>
+
+        <div class="option" data-value="wealth_depreciation" onclick="toggleMulti(this, 'risks')">
+          <div class="option-icon">📉</div>
+          <div class="option-text">
+            <strong>资产贬值/汇率风险</strong>
+            <span>担心人民币购买力下降，想做美元/多元配置</span>
+          </div>
+          <div class="option-check"></div>
+        </div>
+
+        <div class="option" data-value="asset_protection" onclick="toggleMulti(this, 'risks')">
+          <div class="option-icon">🏛️</div>
+          <div class="option-text">
+            <strong>资产隔离/债务风险</strong>
+            <span>企业主或创业者，担心经营风险影响家庭资产</span>
+          </div>
+          <div class="option-check"></div>
+        </div>
+
+        <div class="option" data-value="inheritance" onclick="toggleMulti(this, 'risks')">
+          <div class="option-icon">📜</div>
+          <div class="option-text">
+            <strong>财富传承</strong>
+            <span>想把资产定向、私密、低损耗地传给下一代</span>
+          </div>
+          <div class="option-check"></div>
+        </div>
+
+        <div class="option" data-value="income_loss" onclick="toggleMulti(this, 'risks')">
+          <div class="option-icon">💼</div>
+          <div class="option-text">
+            <strong>失业/收入中断</strong>
+            <span>担心中年失业、行业下行导致现金流断裂</span>
+          </div>
+          <div class="option-check"></div>
+        </div>
+
+        <button class="btn btn-primary" id="btnStep3" onclick="nextStep()" disabled>下一步</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Investment Style -->
+    <div class="step" data-step="4">
+      <div class="card">
+        <div class="question-title">你的投资偏好是？</div>
+        <div class="question-sub">这决定了储蓄/投资类资产的比例建议。</div>
+
+        <div class="option" data-value="conservative" onclick="toggleSingle(this, 'style')">
+          <div class="option-icon">🛡️</div>
+          <div class="option-text">
+            <strong>稳健型</strong>
+            <span>厌恶亏损，更看重本金安全和稳定现金流</span>
+          </div>
+          <div class="option-check"></div>
+        </div>
+
+        <div class="option" data-value="balanced" onclick="toggleSingle(this, 'style')">
+          <div class="option-icon">⚖️</div>
+          <div class="option-text">
+            <strong>平衡型</strong>
+            <span>能接受一定波动，希望稳健增值</span>
+          </div>
+          <div class="option-check"></div>
+        </div>
+
+        <div class="option" data-value="aggressive" onclick="toggleSingle(this, 'style')">
+          <div class="option-icon">🚀</div>
+          <div class="option-text">
+            <strong>进取型</strong>
+            <span>追求较高收益，能承受较大波动</span>
+          </div>
+          <div class="option-check"></div>
+        </div>
+
+        <button class="btn btn-primary" id="btnStep4" onclick="generateResult()" disabled>生成我的专属方案</button>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-section" id="resultSection">
+      <div class="score-card">
+        <div class="score-label">你的家庭风险评分</div>
+        <div class="score-value" id="scoreValue">--</div>
+        <div class="score-title" id="scoreTitle">--</div>
+        <div class="score-desc" id="scoreDesc">--</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">风险暴露度分析</div>
+        <div class="risk-bars" id="riskBars"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">建议资产配置比例</div>
+        <div class="allocation-grid" id="allocationGrid"></div>
+        <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+          * 以上配置建议基于你的年龄、收入、风险偏好生成，仅供参考，具体方案需结合实际情况调整。
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="section-title">你的保障缺口与保险建议</div>
+        <div class="recommend-list" id="recommendList"></div>
+      </div>
+
+      <div class="cta-card">
+        <h3>获取你的专属方案</h3>
+        <p>留下联系方式，我会为你一对一解读测评结果，并推荐适合你的香港保险方案。</p>
+        <div class="lead-form">
+          <input type="text" id="leadName" placeholder="你的称呼">
+          <input type="tel" id="leadPhone" placeholder="手机号码">
+          <input type="text" id="leadWechat" placeholder="微信号（选填）">
+          <button class="btn btn-primary" onclick="submitLead()">预约1对1咨询</button>
+        </div>
+        <div class="privacy-note">信息仅用于保险咨询，严格保密</div>
+      </div>
+
+      <div class="share-tips">
+        <strong>分享给朋友</strong>
+        把这个测评转发给同样关心家庭保障的朋友，一起看清风险缺口。
+      </div>
+
+      <button class="btn btn-secondary" onclick="resetAssessment()" style="margin-top: 20px;">重新测评</button>
+    </div>
+  </div>
+
+  <script>
+    const totalSteps = 5;
+    let currentStep = 0;
+    const answers = {
+      age: '',
+      marriage: '',
+      hasLoan: '',
+      annualIncome: 0,
+      investableAssets: 0,
+      monthlyExpense: 0,
+      risks: [],
+      style: ''
+    };
+
+    function updateProgress() {
+      const pct = ((currentStep) / (totalSteps - 1)) * 100;
+      document.getElementById('progressFill').style.width = pct + '%';
+    }
+
+    function nextStep() {
+      document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+      currentStep++;
+      document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+      updateProgress();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function validateStep1() {
+      answers.age = document.getElementById('age').value;
+      answers.marriage = document.getElementById('marriage').value;
+      answers.hasLoan = document.getElementById('hasLoan').value;
+      document.getElementById('btnStep1').disabled = !(answers.age && answers.marriage && answers.hasLoan);
+    }
+
+    function validateStep2() {
+      const income = parseFloat(document.getElementById('annualIncome').value) || 0;
+      const assets = parseFloat(document.getElementById('investableAssets').value) || 0;
+      const expense = parseFloat(document.getElementById('monthlyExpense').value) || 0;
+      answers.annualIncome = income;
+      answers.investableAssets = assets;
+      answers.monthlyExpense = expense;
+      document.getElementById('btnStep2').disabled = !(income > 0 && expense > 0);
+    }
+
+    function toggleMulti(el, key) {
+      el.classList.toggle('selected');
+      const value = el.dataset.value;
+      const idx = answers[key].indexOf(value);
+      if (idx > -1) answers[key].splice(idx, 1);
+      else answers[key].push(value);
+      document.getElementById('btnStep3').disabled = answers[key].length === 0;
+    }
+
+    function toggleSingle(el, key) {
+      const siblings = el.parentElement.querySelectorAll('.option');
+      siblings.forEach(s => s.classList.remove('selected'));
+      el.classList.add('selected');
+      answers[key] = el.dataset.value;
+      document.getElementById('btnStep4').disabled = false;
+    }
+
+    function calculate() {
+      const { age, marriage, hasLoan, annualIncome, investableAssets, monthlyExpense, risks, style } = answers;
+      const income = annualIncome * 10000;
+      const expense = monthlyExpense * 10000;
+      const assets = investableAssets * 10000;
+
+      // Risk scores 0-100
+      const riskScores = {
+        health: 0,
+        life: 0,
+        retirement: 0,
+        education: 0,
+        wealth: 0,
+        asset: 0
+      };
+
+      // Health risk
+      if (risks.includes('critical_illness')) riskScores.health += 40;
+      if (age >= 40) riskScores.health += 20;
+      if (marriage === 'married_with_child' || marriage === 'divorced') riskScores.health += 15;
+      riskScores.health = Math.min(100, riskScores.health + 25);
+
+      // Life risk
+      if (risks.includes('accident')) riskScores.life += 35;
+      if (hasLoan !== 'no') riskScores.life += 25;
+      if (marriage === 'married_with_child') riskScores.life += 20;
+      if (annualIncome >= 50) riskScores.life += 10;
+      riskScores.life = Math.min(100, riskScores.life + 20);
+
+      // Retirement risk
+      if (risks.includes('retirement')) riskScores.retirement += 40;
+      if (age >= 45) riskScores.retirement += 25;
+      if (style === 'conservative') riskScores.retirement += 15;
+      riskScores.retirement = Math.min(100, riskScores.retirement + 20);
+
+      // Education risk
+      if (risks.includes('education')) riskScores.education += 50;
+      if (marriage === 'married_with_child') riskScores.education += 25;
+      riskScores.education = Math.min(100, riskScores.education + 10);
+
+      // Wealth risk
+      if (risks.includes('wealth_depreciation')) riskScores.wealth += 40;
+      if (risks.includes('asset_protection')) riskScores.wealth += 30;
+      if (risks.includes('inheritance')) riskScores.wealth += 25;
+      if (annualIncome >= 80 || investableAssets >= 300) riskScores.wealth += 15;
+      riskScores.wealth = Math.min(100, riskScores.wealth + 15);
+
+      // Asset protection risk
+      if (risks.includes('asset_protection')) riskScores.asset += 45;
+      if (risks.includes('inheritance')) riskScores.asset += 30;
+      if (annualIncome >= 100) riskScores.asset += 15;
+      riskScores.asset = Math.min(100, riskScores.asset + 15);
+
+      // Overall score
+      const avgScore = Math.round(
+        (riskScores.health + riskScores.life + riskScores.retirement + riskScores.education + riskScores.wealth + riskScores.asset) / 6
+      );
+
+      // Asset allocation
+      let emergencyPct = Math.min(20, Math.round((expense * 6) / Math.max(assets, income) * 100));
+      if (emergencyPct < 5) emergencyPct = 5;
+
+      let insurancePct = 10;
+      if (risks.includes('critical_illness') || risks.includes('accident')) insurancePct += 5;
+      if (age >= 40) insurancePct += 3;
+      if (insurancePct > 20) insurancePct = 20;
+
+      let savingsPct = 15;
+      if (risks.includes('retirement')) savingsPct += 10;
+      if (risks.includes('education')) savingsPct += 8;
+      if (risks.includes('wealth_depreciation')) savingsPct += 7;
+      if (style === 'conservative') savingsPct += 10;
+      if (style === 'aggressive') savingsPct -= 8;
+      if (age >= 45) savingsPct += 8;
+      savingsPct = Math.max(10, Math.min(45, savingsPct));
+
+      let equityPct = 100 - emergencyPct - insurancePct - savingsPct;
+      if (style === 'conservative') equityPct = Math.max(15, equityPct - 10);
+      if (style === 'aggressive') equityPct = Math.min(60, equityPct + 10);
+
+      // Normalize
+      const total = emergencyPct + insurancePct + savingsPct + equityPct;
+      emergencyPct = Math.round((emergencyPct / total) * 100);
+      insurancePct = Math.round((insurancePct / total) * 100);
+      savingsPct = Math.round((savingsPct / total) * 100);
+      equityPct = 100 - emergencyPct - insurancePct - savingsPct;
+
+      // Insurance recommendations
+      const recommendations = [];
+
+      if (risks.includes('critical_illness') || riskScores.health >= 60) {
+        const ciAmount = Math.round(annualIncome * 3);
+        recommendations.push({
+          icon: '🏥',
+          title: '重大疾病保障',
+          desc: `建议保额：年收入3-5倍，约 ${ciAmount}-${Math.round(ciAmount * 1.67)} 万元。香港重疾险保额递增、多次赔付、含早期危疾，适合作为核心保障。`,
+          tag: '高优先级'
+        });
+      }
+
+      if (risks.includes('accident') || riskScores.life >= 60) {
+        const lifeAmount = Math.round(annualIncome * 10);
+        recommendations.push({
+          icon: '🛡️',
+          title: '人寿/意外保障',
+          desc: `建议保额：年收入10倍以上，约 ${lifeAmount} 万元起。若负担房贷，应叠加贷款余额，确保家庭支柱倒下后家人生活不受影响。`,
+          tag: '高优先级'
+        });
+      }
+
+      if (risks.includes('retirement') || age >= 40) {
+        recommendations.push({
+          icon: '🏖️',
+          title: '养老/年金储蓄',
+          desc: '建议用美元/港币储蓄分红险做长期养老储备，利用复利滚存，退休后稳定提领，对冲长寿风险和汇率风险。',
+          tag: '中长期规划'
+        });
+      }
+
+      if (risks.includes('education')) {
+        recommendations.push({
+          icon: '🎓',
+          title: '子女教育金储备',
+          desc: '通过香港储蓄险做5-10年定投，锁定长期收益，孩子18岁时可灵活提取用于留学或升学。',
+          tag: '教育专项'
+        });
+      }
+
+      if (risks.includes('wealth_depreciation') || investableAssets >= 300) {
+        recommendations.push({
+          icon: '💰',
+          title: '多元货币储蓄配置',
+          desc: '将部分人民币资产转换为美元/港币保单，分散单一货币风险，享受海外保险公司长期分红。',
+          tag: '资产配置'
+        });
+      }
+
+      if (risks.includes('asset_protection') || risks.includes('inheritance')) {
+        recommendations.push({
+          icon: '📜',
+          title: '资产隔离与财富传承',
+          desc: '通过保单架构设计（如信托+保单、更改受保人），实现债务隔离、税务优化和定向传承。',
+          tag: '高净值方案'
+        });
+      }
+
+      if (recommendations.length === 0) {
+        recommendations.push({
+          icon: '✅',
+          title: '基础保障建议',
+          desc: '即使目前没有明确担忧，也建议配置医疗险+重疾险+意外险作为家庭安全垫，再逐步增加储蓄型保险。',
+          tag: '基础配置'
+        });
+      }
+
+      // Score title
+      let scoreTitle, scoreDesc;
+      if (avgScore >= 75) {
+        scoreTitle = '风险暴露较高';
+        scoreDesc = '你的家庭保障存在明显缺口，建议尽快补齐核心保障并优化资产配置。';
+      } else if (avgScore >= 55) {
+        scoreTitle = '风险中等，需查漏补缺';
+        scoreDesc = '部分风险已有覆盖，但在某些关键领域仍需加强。';
+      } else {
+        scoreTitle = '风险可控，重在优化';
+        scoreDesc = '整体风险意识较好，建议进一步做长期资产规划和增值配置。';
+      }
+
+      return {
+        score: avgScore,
+        scoreTitle,
+        scoreDesc,
+        riskScores,
+        allocation: {
+          emergency: emergencyPct,
+          insurance: insurancePct,
+          savings: savingsPct,
+          equity: equityPct
+        },
+        recommendations
+      };
+    }
+
+    function generateResult() {
+      const result = calculate();
+      document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+      document.getElementById('progressBar').style.display = 'none';
+      document.querySelector('.header').style.display = 'none';
+      document.getElementById('resultSection').classList.add('active');
+
+      document.getElementById('scoreValue').textContent = result.score;
+      document.getElementById('scoreTitle').textContent = result.scoreTitle;
+      document.getElementById('scoreDesc').textContent = result.scoreDesc;
+
+      // Risk bars
+      const riskLabels = {
+        health: '健康/重疾风险',
+        life: '身故/意外风险',
+        retirement: '养老储备风险',
+        education: '教育金缺口风险',
+        wealth: '资产贬值/传承风险',
+        asset: '资产隔离风险'
+      };
+      const riskColors = {
+        health: 'var(--danger)',
+        life: 'var(--warning)',
+        retirement: 'var(--primary-light)',
+        education: 'var(--success)',
+        wealth: 'var(--accent)',
+        asset: '#8b5cf6'
+      };
+      const barsHtml = Object.entries(result.riskScores).map(([key, score]) => `
+        <div class="risk-bar-item">
+          <div class="risk-bar-header">
+            <span>${riskLabels[key]}</span>
+            <span>${score}%</span>
+          </div>
+          <div class="risk-bar-track">
+            <div class="risk-bar-fill" style="width: 0%; background: ${riskColors[key]}" data-width="${score}"></div>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('riskBars').innerHTML = barsHtml;
+
+      // Allocation
+      const allocationLabels = {
+        emergency: '应急现金',
+        insurance: '保障类保险',
+        savings: '稳健储蓄/年金',
+        equity: '权益/基金投资'
+      };
+      const allocationDesc = {
+        emergency: '3-6个月生活费',
+        insurance: '重疾/医疗/寿险',
+        savings: '港险储蓄/年金',
+        equity: '股票/基金/其他'
+      };
+      document.getElementById('allocationGrid').innerHTML = Object.entries(result.allocation).map(([key, pct]) => `
+        <div class="allocation-card">
+          <div class="pct">${pct}%</div>
+          <div class="label">${allocationLabels[key]}</div>
+          <div class="desc">${allocationDesc[key]}</div>
+        </div>
+      `).join('');
+
+      // Recommendations
+      document.getElementById('recommendList').innerHTML = result.recommendations.map(item => `
+        <div class="recommend-item">
+          <div class="ri-icon">${item.icon}</div>
+          <div>
+            <div class="ri-title">${item.title}</div>
+            <div class="ri-desc">${item.desc}</div>
+            <span class="ri-tag">${item.tag}</span>
+          </div>
+        </div>
+      `).join('');
+
+      // Animate bars
+      setTimeout(() => {
+        document.querySelectorAll('.risk-bar-fill').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+      }, 200);
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function submitLead() {
+      const name = document.getElementById('leadName').value.trim();
+      const phone = document.getElementById('leadPhone').value.trim();
+      const wechat = document.getElementById('leadWechat').value.trim();
+
+      if (!name || !phone) {
+        alert('请填写称呼和手机号码');
+        return;
+      }
+      if (!/^1[3-9]\d{9}$/.test(phone)) {
+        alert('请输入正确的手机号码');
+        return;
+      }
+
+      // Here you can send data to your backend or serverless function
+      const payload = {
+        name,
+        phone,
+        wechat,
+        source: 'insurance-assessment',
+        answers,
+        resultScore: document.getElementById('scoreValue').textContent,
+        createdAt: new Date().toISOString()
+      };
+
+      console.log('Lead submitted:', payload);
+
+      // Optional: send to backend
+      // fetch('/api/leads', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+
+      alert('提交成功！我会尽快联系你，为你定制专属方案。');
+    }
+
+    function resetAssessment() {
+      currentStep = 0;
+      Object.assign(answers, {
+        age: '', marriage: '', hasLoan: '',
+        annualIncome: 0, investableAssets: 0, monthlyExpense: 0,
+        risks: [], style: ''
+      });
+      document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
+      document.querySelectorAll('input, select').forEach(el => el.value = '');
+      document.getElementById('resultSection').classList.remove('active');
+      document.querySelector('.step[data-step="0"]').classList.add('active');
+      document.getElementById('progressBar').style.display = 'block';
+      document.querySelector('.header').style.display = 'block';
+      document.getElementById('btnStep1').disabled = true;
+      document.getElementById('btnStep2').disabled = true;
+      document.getElementById('btnStep3').disabled = true;
+      document.getElementById('btnStep4').disabled = true;
+      updateProgress();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    updateProgress();
+  </script>
+</body>
+</html>

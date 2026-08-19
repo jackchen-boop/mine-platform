@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>保险业务管理后台</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            fin: { bg:'#0a0a0f', surface:'#12121a', surface2:'#1a1a26', surface3:'#222230', gold:'#c9a96e', goldLight:'#e0c88a', goldDark:'#9a7d4a', text:'#e2e8f0', text2:'#94a3b8', text3:'#64748b', border:'#2a2a3a', success:'#22c55e', warning:'#f59e0b', danger:'#ef4444' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Noto Sans SC', sans-serif; background: #0a0a0f; color: #e2e8f0; }
+    .gold-gradient { background: linear-gradient(135deg, #c9a96e, #e0c88a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .card { background: rgba(26,26,38,0.8); border: 1px solid rgba(201,169,110,0.12); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
+    .tab-active { color: #c9a96e; border-bottom: 2px solid #c9a96e; }
+    .tab-inactive { color: #94a3b8; border-bottom: 2px solid transparent; }
+    .status-badge { font-size: 0.75rem; line-height: 1rem; padding: 0.125rem 0.5rem; border-radius: 9999px; border-width: 1px; }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div id="app">
+    <!-- Login -->
+    <div id="loginView" class="min-h-screen flex items-center justify-center p-4">
+      <div class="card w-full max-w-md rounded-2xl p-8">
+        <h1 class="text-2xl font-bold text-center mb-2 gold-gradient">保险业务管理后台</h1>
+        <p class="text-fin-text2 text-center text-sm mb-8">仅授权顾问可访问</p>
+        <input id="loginEmail" type="email" placeholder="邮箱" class="w-full bg-fin-surface2 border border-fin-border rounded-xl px-4 py-3 mb-3 text-fin-text focus:border-fin-gold focus:outline-none">
+        <input id="loginPassword" type="password" placeholder="密码" class="w-full bg-fin-surface2 border border-fin-border rounded-xl px-4 py-3 mb-6 text-fin-text focus:border-fin-gold focus:outline-none">
+        <button onclick="login()" class="w-full py-3 rounded-xl bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg font-bold">登录</button>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboardView" class="hidden">
+      <header class="bg-fin-surface border-b border-fin-border sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div class="font-bold text-lg gold-gradient">保险业务管理后台</div>
+          <div class="flex items-center gap-4">
+            <span id="adminName" class="text-sm text-fin-text2"></span>
+            <button onclick="logout()" class="text-sm text-fin-text3 hover:text-fin-gold">退出</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="card rounded-xl p-5">
+            <div class="text-xs text-fin-text3 mb-1">总线索</div>
+            <div class="text-2xl font-bold text-fin-gold" id="statTotalLeads">-</div>
+          </div>
+          <div class="card rounded-xl p-5">
+            <div class="text-xs text-fin-text3 mb-1">今日新增</div>
+            <div class="text-2xl font-bold text-fin-gold" id="statTodayLeads">-</div>
+          </div>
+          <div class="card rounded-xl p-5">
+            <div class="text-xs text-fin-text3 mb-1">总订单</div>
+            <div class="text-2xl font-bold text-fin-gold" id="statTotalOrders">-</div>
+          </div>
+          <div class="card rounded-xl p-5">
+            <div class="text-xs text-fin-text3 mb-1">总保费(USD)</div>
+            <div class="text-2xl font-bold text-fin-gold" id="statTotalPremium">-</div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-6 border-b border-fin-border mb-6">
+          <button onclick="switchTab('leads')" id="tabLeads" class="tab-active pb-3 text-sm font-medium">咨询线索</button>
+          <button onclick="switchTab('orders')" id="tabOrders" class="tab-inactive pb-3 text-sm font-medium">保单订单</button>
+        </div>
+
+        <!-- Leads -->
+        <div id="leadsPanel">
+          <div class="card rounded-xl p-4 mb-4 flex flex-wrap gap-3">
+            <input id="leadKeyword" placeholder="搜索姓名/手机/微信" class="bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text focus:border-fin-gold focus:outline-none">
+            <select id="leadStatus" class="bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+              <option value="">全部状态</option>
+              <option value="new">新线索</option>
+              <option value="contacted">已联系</option>
+              <option value="qualified">已确认</option>
+              <option value="quoted">已报价</option>
+              <option value="ordered">已成交</option>
+              <option value="closed">已关闭</option>
+            </select>
+            <input id="leadStart" type="date" class="bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+            <input id="leadEnd" type="date" class="bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+            <button onclick="loadLeads()" class="px-4 py-2 rounded-lg bg-fin-gold/10 text-fin-gold border border-fin-gold/30 text-sm font-medium hover:bg-fin-gold/20">查询</button>
+          </div>
+          <div class="card rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-fin-surface2 text-fin-text2">
+                  <tr><th class="text-left px-4 py-3">ID</th><th class="text-left px-4 py-3">客户</th><th class="text-left px-4 py-3">风险评分</th><th class="text-left px-4 py-3">状态</th><th class="text-left px-4 py-3">来源</th><th class="text-left px-4 py-3">提交时间</th><th class="text-left px-4 py-3">操作</th></tr>
+                </thead>
+                <tbody id="leadsTable" class="divide-y divide-fin-border"></tbody>
+              </table>
+            </div>
+            <div class="p-4 flex justify-between items-center border-t border-fin-border">
+              <span id="leadsPagination" class="text-sm text-fin-text2"></span>
+              <div class="flex gap-2">
+                <button onclick="changePage('leads', -1)" class="px-3 py-1 rounded-lg bg-fin-surface2 text-fin-text2 hover:text-fin-gold">上一页</button>
+                <button onclick="changePage('leads', 1)" class="px-3 py-1 rounded-lg bg-fin-surface2 text-fin-text2 hover:text-fin-gold">下一页</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Orders -->
+        <div id="ordersPanel" class="hidden">
+          <div class="card rounded-xl p-4 mb-4 flex flex-wrap gap-3">
+            <input id="orderKeyword" placeholder="搜索订单号/客户/产品" class="bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+            <select id="orderStatus" class="bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+              <option value="">全部状态</option>
+              <option value="pending">待确认</option>
+              <option value="confirmed">已确认</option>
+              <option value="paid">已缴费</option>
+              <option value="issued">已承保</option>
+              <option value="cancelled">已取消</option>
+            </select>
+            <button onclick="loadOrders()" class="px-4 py-2 rounded-lg bg-fin-gold/10 text-fin-gold border border-fin-gold/30 text-sm font-medium hover:bg-fin-gold/20">查询</button>
+          </div>
+          <div class="card rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-fin-surface2 text-fin-text2">
+                  <tr><th class="text-left px-4 py-3">订单号</th><th class="text-left px-4 py-3">客户</th><th class="text-left px-4 py-3">产品</th><th class="text-left px-4 py-3">保费</th><th class="text-left px-4 py-3">佣金</th><th class="text-left px-4 py-3">状态</th><th class="text-left px-4 py-3">创建时间</th><th class="text-left px-4 py-3">操作</th></tr>
+                </thead>
+                <tbody id="ordersTable" class="divide-y divide-fin-border"></tbody>
+              </table>
+            </div>
+            <div class="p-4 flex justify-between items-center border-t border-fin-border">
+              <span id="ordersPagination" class="text-sm text-fin-text2"></span>
+              <div class="flex gap-2">
+                <button onclick="changePage('orders', -1)" class="px-3 py-1 rounded-lg bg-fin-surface2 text-fin-text2 hover:text-fin-gold">上一页</button>
+                <button onclick="changePage('orders', 1)" class="px-3 py-1 rounded-lg bg-fin-surface2 text-fin-text2 hover:text-fin-gold">下一页</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Lead Modal -->
+  <div id="leadModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm overflow-y-auto">
+    <div class="min-h-screen px-4 py-8 flex justify-center items-start">
+      <div class="card w-full max-w-3xl rounded-2xl p-6 relative">
+        <button onclick="closeModal('leadModal')" class="absolute top-4 right-4 text-fin-text3 hover:text-fin-gold text-2xl">&times;</button>
+        <h2 class="text-xl font-bold mb-4 gold-gradient">线索详情</h2>
+        <div id="leadDetail" class="space-y-4 text-sm"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Modal -->
+  <div id="orderModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm overflow-y-auto">
+    <div class="min-h-screen px-4 py-8 flex justify-center items-start">
+      <div class="card w-full max-w-xl rounded-2xl p-6 relative">
+        <button onclick="closeModal('orderModal')" class="absolute top-4 right-4 text-fin-text3 hover:text-fin-gold text-2xl">&times;</button>
+        <h2 class="text-xl font-bold mb-4 gold-gradient" id="orderModalTitle">新建订单</h2>
+        <div id="orderForm" class="space-y-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let token = localStorage.getItem('insurance_admin_token') || '';
+    let currentUser = null;
+    const state = { leads: { page:1, pageSize:20, total:0, data:[] }, orders: { page:1, pageSize:20, total:0, data:[] } };
+
+    if (token) { checkAuth(); }
+
+    async function api(url, opts={}) {
+      const res = await fetch(url, {
+        ...opts,
+        headers: { 'Content-Type':'application/json', 'Authorization': 'Bearer ' + token, ...(opts.headers||{}) }
+      });
+      if (res.status === 401) { logout(); throw new Error('登录已过期'); }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '请求失败');
+      return data;
+    }
+
+    async function login() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      try {
+        const res = await fetch('/api/auth/login', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ account: email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || '登录失败');
+        token = data.token; localStorage.setItem('insurance_admin_token', token);
+        currentUser = data.user;
+        showDashboard();
+      } catch(e) { alert(e.message); }
+    }
+
+    async function checkAuth() {
+      try {
+        const data = await api('/api/auth/me');
+        currentUser = data.user;
+        showDashboard();
+      } catch(e) { logout(); }
+    }
+
+    function logout() {
+      token = ''; currentUser = null; localStorage.removeItem('insurance_admin_token');
+      document.getElementById('loginView').classList.remove('hidden');
+      document.getElementById('dashboardView').classList.add('hidden');
+    }
+
+    function showDashboard() {
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('dashboardView').classList.remove('hidden');
+      document.getElementById('adminName').textContent = currentUser?.name || '';
+      loadStats(); loadLeads();
+    }
+
+    function switchTab(tab) {
+      document.getElementById('leadsPanel').classList.toggle('hidden', tab !== 'leads');
+      document.getElementById('ordersPanel').classList.toggle('hidden', tab !== 'orders');
+      document.getElementById('tabLeads').className = tab === 'leads' ? 'tab-active pb-3 text-sm font-medium' : 'tab-inactive pb-3 text-sm font-medium';
+      document.getElementById('tabOrders').className = tab === 'orders' ? 'tab-active pb-3 text-sm font-medium' : 'tab-inactive pb-3 text-sm font-medium';
+      if (tab === 'orders' && state.orders.data.length === 0) loadOrders();
+    }
+
+    async function loadStats() {
+      try {
+        const data = await api('/api/insurance/stats');
+        document.getElementById('statTotalLeads').textContent = data.leads.total;
+        document.getElementById('statTodayLeads').textContent = data.leads.today;
+        document.getElementById('statTotalOrders').textContent = data.orders.total;
+        document.getElementById('statTotalPremium').textContent = '$' + (data.orders.totalPremium || 0).toLocaleString();
+      } catch(e) { console.error(e); }
+    }
+
+    async function loadLeads() {
+      const params = new URLSearchParams();
+      params.set('page', state.leads.page); params.set('pageSize', state.leads.pageSize);
+      const kw = document.getElementById('leadKeyword').value; if (kw) params.set('keyword', kw);
+      const status = document.getElementById('leadStatus').value; if (status) params.set('status', status);
+      const start = document.getElementById('leadStart').value; if (start) params.set('startDate', start);
+      const end = document.getElementById('leadEnd').value; if (end) params.set('endDate', end);
+      const data = await api('/api/insurance/leads?' + params.toString());
+      state.leads.data = data.leads; state.leads.total = data.total;
+      renderLeads();
+    }
+
+    function renderLeads() {
+      const tbody = document.getElementById('leadsTable');
+      tbody.innerHTML = state.leads.data.map(l => `
+        <tr class="hover:bg-fin-surface2/50 transition-colors">
+          <td class="px-4 py-3 text-fin-text3">#${l.id}</td>
+          <td class="px-4 py-3">
+            <div class="font-medium">${l.name}</div>
+            <div class="text-xs text-fin-text3">${l.phone}</div>
+          </td>
+          <td class="px-4 py-3"><span class="text-fin-gold font-bold">${l.risk_score}</span></td>
+          <td class="px-4 py-3">${statusBadge(l.status)}</td>
+          <td class="px-4 py-3 text-fin-text3">${l.source || '-'}</td>
+          <td class="px-4 py-3 text-fin-text3 text-xs">${formatDate(l.created_at)}</td>
+          <td class="px-4 py-3">
+            <button onclick="openLead(${l.id})" class="text-fin-gold hover:underline text-xs">详情</button>
+          </td>
+        </tr>
+      `).join('');
+      const totalPages = Math.ceil(state.leads.total / state.leads.pageSize) || 1;
+      document.getElementById('leadsPagination').textContent = `第 ${state.leads.page} / ${totalPages} 页，共 ${state.leads.total} 条`;
+    }
+
+    async function openLead(id) {
+      const data = await api('/api/insurance/leads/' + id);
+      const l = data.lead;
+      const risks = (l.risks || []).map(r => riskLabel(r)).join('、');
+      const alloc = l.allocation || {};
+      const recs = (l.recommendations || []).map(r => `<div class="text-fin-text2">• ${r.title}</div>`).join('');
+      document.getElementById('leadDetail').innerHTML = `
+        <div class="grid grid-cols-2 gap-4">
+          <div class="card p-3 rounded-lg"><div class="text-xs text-fin-text3">客户</div><div class="font-medium">${l.name}</div></div>
+          <div class="card p-3 rounded-lg"><div class="text-xs text-fin-text3">手机</div><div class="font-medium">${l.phone}</div></div>
+          <div class="card p-3 rounded-lg"><div class="text-xs text-fin-text3">微信</div><div class="font-medium">${l.wechat || '-'}</div></div>
+          <div class="card p-3 rounded-lg"><div class="text-xs text-fin-text3">来源</div><div class="font-medium">${l.source || '-'} ${l.referrer ? '('+l.referrer+')' : ''}</div></div>
+        </div>
+        <div class="card p-4 rounded-lg">
+          <div class="text-xs text-fin-text3 mb-2">测评信息</div>
+          <div class="grid grid-cols-2 gap-y-2 text-sm text-fin-text2">
+            <div>年龄：${l.age || '-'}</div><div>婚姻：${marriageLabel(l.marriage)}</div>
+            <div>年收入：${l.annual_income ? l.annual_income + '万' : '-'}</div><div>可投资资产：${l.investable_assets ? l.investable_assets + '万' : '-'}</div>
+            <div>月支出：${l.monthly_expense ? l.monthly_expense + '万' : '-'}</div><div>负债：${loanLabel(l.has_loan)}</div>
+          </div>
+          <div class="mt-3 text-sm text-fin-text2">担忧风险：${risks || '无'}</div>
+          <div class="mt-2 text-sm text-fin-text2">风险评分：<span class="text-fin-gold font-bold">${l.risk_score}</span></div>
+          <div class="mt-2 text-sm text-fin-text2">配置建议：应急${alloc.emergency || 0}% / 保障${alloc.insurance || 0}% / 储蓄${alloc.savings || 0}% / 权益${alloc.equity || 0}%</div>
+          <div class="mt-3">${recs}</div>
+        </div>
+        <div class="card p-4 rounded-lg">
+          <div class="text-xs text-fin-text3 mb-3">状态管理</div>
+          <div class="flex flex-wrap gap-2 mb-3">
+            ${['new','contacted','qualified','quoted','ordered','closed'].map(s=>`<button onclick="updateLeadStatus(${l.id},'${s}')" class="px-3 py-1 rounded-lg border ${l.status===s?'bg-fin-gold text-fin-bg border-fin-gold':'border-fin-border text-fin-text2 hover:border-fin-gold'} text-xs">${statusText(s)}</button>`).join('')}
+          </div>
+          <textarea id="leadNoteInput" placeholder="添加跟进备注..." class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text focus:border-fin-gold focus:outline-none mb-2"></textarea>
+          <div class="flex gap-2">
+            <button onclick="addLeadNote(${l.id})" class="px-4 py-2 rounded-lg bg-fin-gold/10 text-fin-gold border border-fin-gold/30 text-sm">保存备注</button>
+            <button onclick="openOrderForm(${l.id},'${l.name}','${l.phone}')" class="px-4 py-2 rounded-lg bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg text-sm font-bold">创建订单</button>
+          </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+          <div class="text-xs text-fin-text3 mb-2">跟进记录</div>
+          <div class="space-y-2 max-h-48 overflow-y-auto">
+            ${data.logs.length ? data.logs.map(log=>`
+              <div class="text-sm border-l-2 border-fin-gold/30 pl-3">
+                <div class="text-fin-text2"><span class="text-fin-gold">${log.operator_name || '系统'}</span> ${log.action === 'status_change' ? '更新状态' : log.action === 'note' ? '添加备注' : log.action === 'order_created' ? '创建订单' : log.action}</div>
+                <div class="text-fin-text3 text-xs">${formatDate(log.created_at)}</div>
+                ${log.note ? `<div class="text-fin-text2 mt-1">${log.note}</div>` : ''}
+              </div>
+            `).join('') : '<div class="text-fin-text3 text-sm">暂无记录</div>'}
+          </div>
+        </div>
+      `;
+      document.getElementById('leadModal').classList.remove('hidden');
+    }
+
+    async function updateLeadStatus(id, status) {
+      await api(`/api/insurance/leads/${id}/status`, { method:'PUT', body: JSON.stringify({ status }) });
+      loadLeads(); openLead(id);
+    }
+
+    async function addLeadNote(id) {
+      const note = document.getElementById('leadNoteInput').value;
+      if (!note.trim()) return;
+      await api(`/api/insurance/leads/${id}/notes`, { method:'POST', body: JSON.stringify({ note }) });
+      document.getElementById('leadNoteInput').value = '';
+      openLead(id);
+    }
+
+    async function loadOrders() {
+      const params = new URLSearchParams();
+      params.set('page', state.orders.page); params.set('pageSize', state.orders.pageSize);
+      const kw = document.getElementById('orderKeyword').value; if (kw) params.set('keyword', kw);
+      const status = document.getElementById('orderStatus').value; if (status) params.set('status', status);
+      const data = await api('/api/insurance/orders?' + params.toString());
+      state.orders.data = data.orders; state.orders.total = data.total;
+      renderOrders();
+    }
+
+    function renderOrders() {
+      const tbody = document.getElementById('ordersTable');
+      tbody.innerHTML = state.orders.data.map(o => `
+        <tr class="hover:bg-fin-surface2/50 transition-colors">
+          <td class="px-4 py-3 text-fin-gold font-medium">${o.order_no}</td>
+          <td class="px-4 py-3">${o.customer_name}<div class="text-xs text-fin-text3">${o.customer_phone}</div></td>
+          <td class="px-4 py-3">${productLabel(o.product_type)}<div class="text-xs text-fin-text3">${o.product_name || ''}</div></td>
+          <td class="px-4 py-3">$${(o.premium_amount||0).toLocaleString()}</td>
+          <td class="px-4 py-3">$${(o.commission_amount||0).toLocaleString()}</td>
+          <td class="px-4 py-3">${statusBadge(o.status)}</td>
+          <td class="px-4 py-3 text-fin-text3 text-xs">${formatDate(o.created_at)}</td>
+          <td class="px-4 py-3"><button onclick="editOrder(${o.id})" class="text-fin-gold hover:underline text-xs">编辑</button></td>
+        </tr>
+      `).join('');
+      const totalPages = Math.ceil(state.orders.total / state.orders.pageSize) || 1;
+      document.getElementById('ordersPagination').textContent = `第 ${state.orders.page} / ${totalPages} 页，共 ${state.orders.total} 条`;
+    }
+
+    function openOrderForm(leadId, name, phone) {
+      document.getElementById('orderModalTitle').textContent = '新建订单';
+      document.getElementById('orderForm').innerHTML = orderFormHtml({ lead_id: leadId, customer_name: name, customer_phone: phone });
+      document.getElementById('orderModal').classList.remove('hidden');
+    }
+
+    async function editOrder(id) {
+      const data = await api('/api/insurance/orders/' + id);
+      document.getElementById('orderModalTitle').textContent = '编辑订单 ' + data.order.order_no;
+      document.getElementById('orderForm').innerHTML = orderFormHtml(data.order, true);
+      document.getElementById('orderModal').classList.remove('hidden');
+    }
+
+    function orderFormHtml(o={}, isEdit=false) {
+      return `
+        <input type="hidden" id="orderLeadId" value="${o.lead_id || ''}">
+        <input type="hidden" id="orderId" value="${o.id || ''}">
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs text-fin-text3">客户姓名</label><input id="orderCustomerName" value="${o.customer_name || ''}" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text"></div>
+          <div><label class="text-xs text-fin-text3">客户手机</label><input id="orderCustomerPhone" value="${o.customer_phone || ''}" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text"></div>
+        </div>
+        <div><label class="text-xs text-fin-text3">产品类型</label>
+          <select id="orderProductType" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+            ${['critical_illness','life','savings','annuity','medical','multi_currency','inheritance','combo'].map(t=>`<option value="${t}" ${o.product_type===t?'selected':''}>${productLabel(t)}</option>`).join('')}
+          </select>
+        </div>
+        <div><label class="text-xs text-fin-text3">产品名称</label><input id="orderProductName" value="${o.product_name || ''}" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs text-fin-text3">保费金额</label><input type="number" id="orderPremium" value="${o.premium_amount || ''}" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text"></div>
+          <div><label class="text-xs text-fin-text3">币种</label>
+            <select id="orderCurrency" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+              <option value="USD" ${o.premium_currency==='USD'?'selected':''}>USD</option>
+              <option value="HKD" ${o.premium_currency==='HKD'?'selected':''}>HKD</option>
+              <option value="CNY" ${o.premium_currency==='CNY'?'selected':''}>CNY</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs text-fin-text3">缴费期</label><input id="orderTerm" value="${o.payment_term || ''}" placeholder="例如：5年/10年" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text"></div>
+          <div><label class="text-xs text-fin-text3">保额</label><input type="number" id="orderSumAssured" value="${o.sum_assured || ''}" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs text-fin-text3">佣金金额</label><input type="number" id="orderCommission" value="${o.commission_amount || ''}" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text"></div>
+          <div><label class="text-xs text-fin-text3">佣金比例(%)</label><input type="number" step="0.01" id="orderCommissionRate" value="${o.commission_rate || ''}" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text"></div>
+        </div>
+        <div><label class="text-xs text-fin-text3">状态</label>
+          <select id="orderStatusInput" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+            ${['pending','confirmed','paid','issued','cancelled'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${orderStatusText(s)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs text-fin-text3">签单日期</label><input type="date" id="orderSignedAt" value="${o.signed_at || ''}" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text"></div>
+          <div><label class="text-xs text-fin-text3">承保日期</label><input type="date" id="orderIssuedAt" value="${o.issued_at || ''}" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text"></div>
+        </div>
+        <div><label class="text-xs text-fin-text3">备注</label><textarea id="orderRemark" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">${o.remark || ''}</textarea></div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="closeModal('orderModal')" class="flex-1 py-2 rounded-lg border border-fin-border text-fin-text2 text-sm">取消</button>
+          <button onclick="${isEdit?'saveOrderEdit()':'saveOrderNew()'}" class="flex-1 py-2 rounded-lg bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg text-sm font-bold">保存</button>
+          ${isEdit ? `<button onclick="deleteOrder(${o.id})" class="px-4 py-2 rounded-lg bg-fin-danger/10 text-fin-danger border border-fin-danger/30 text-sm">删除</button>` : ''}
+        </div>
+      `;
+    }
+
+    async function saveOrderNew() {
+      const payload = getOrderPayload();
+      if (!payload.lead_id || !payload.customer_name || !payload.customer_phone || !payload.product_type) { alert('缺少必要字段'); return; }
+      await api('/api/insurance/orders', { method:'POST', body: JSON.stringify(payload) });
+      closeModal('orderModal'); loadStats(); loadOrders(); switchTab('orders');
+    }
+
+    async function saveOrderEdit() {
+      const id = document.getElementById('orderId').value;
+      const payload = getOrderPayload();
+      await api('/api/insurance/orders/' + id, { method:'PUT', body: JSON.stringify(payload) });
+      closeModal('orderModal'); loadStats(); loadOrders();
+    }
+
+    async function deleteOrder(id) {
+      if (!confirm('确定删除此订单？')) return;
+      await api('/api/insurance/orders/' + id, { method:'DELETE' });
+      closeModal('orderModal'); loadStats(); loadOrders();
+    }
+
+    function getOrderPayload() {
+      return {
+        leadId: parseInt(document.getElementById('orderLeadId').value),
+        customerName: document.getElementById('orderCustomerName').value,
+        customerPhone: document.getElementById('orderCustomerPhone').value,
+        productType: document.getElementById('orderProductType').value,
+        productName: document.getElementById('orderProductName').value,
+        premiumAmount: parseFloat(document.getElementById('orderPremium').value) || 0,
+        premiumCurrency: document.getElementById('orderCurrency').value,
+        paymentTerm: document.getElementById('orderTerm').value,
+        sumAssured: parseFloat(document.getElementById('orderSumAssured').value) || 0,
+        commissionAmount: parseFloat(document.getElementById('orderCommission').value) || 0,
+        commissionRate: parseFloat(document.getElementById('orderCommissionRate').value) || 0,
+        status: document.getElementById('orderStatusInput').value,
+        signedAt: document.getElementById('orderSignedAt').value || null,
+        issuedAt: document.getElementById('orderIssuedAt').value || null,
+        remark: document.getElementById('orderRemark').value
+      };
+    }
+
+    function changePage(type, delta) {
+      const s = state[type];
+      const totalPages = Math.ceil(s.total / s.pageSize) || 1;
+      s.page = Math.max(1, Math.min(totalPages, s.page + delta));
+      type === 'leads' ? loadLeads() : loadOrders();
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function statusBadge(s) {
+      const map = { new:['bg-fin-warning/10','text-fin-warning','border-fin-warning/20'], contacted:['bg-fin-gold/10','text-fin-gold','border-fin-gold/20'], qualified:['bg-blue-500/10','text-blue-400','border-blue-500/20'], quoted:['bg-purple-500/10','text-purple-400','border-purple-500/20'], ordered:['bg-fin-success/10','text-fin-success','border-fin-success/20'], closed:['bg-fin-text3/10','text-fin-text3','border-fin-text3/20'], pending:['bg-fin-warning/10','text-fin-warning','border-fin-warning/20'], confirmed:['bg-fin-gold/10','text-fin-gold','border-fin-gold/20'], paid:['bg-blue-500/10','text-blue-400','border-blue-500/20'], issued:['bg-fin-success/10','text-fin-success','border-fin-success/20'], cancelled:['bg-fin-danger/10','text-fin-danger','border-fin-danger/20'] };
+      const [bg, text, border] = map[s] || map.new;
+      return `<span class="text-xs px-2 py-0.5 rounded-full border ${bg} ${text} ${border}">${statusText(s)}</span>`;
+    }
+    function statusText(s) { return { new:'新线索', contacted:'已联系', qualified:'已确认', quoted:'已报价', ordered:'已成交', closed:'已关闭', pending:'待确认', confirmed:'已确认', paid:'已缴费', issued:'已承保', cancelled:'已取消' }[s] || s; }
+    function orderStatusText(s) { return { pending:'待确认', confirmed:'已确认', paid:'已缴费', issued:'已承保', cancelled:'已取消' }[s] || s; }
+    function productLabel(t) { return { critical_illness:'重疾险', life:'人寿/意外险', savings:'储蓄分红险', annuity:'年金险', medical:'医疗险', multi_currency:'多元货币储蓄', inheritance:'财富传承', combo:'组合方案' }[t] || t; }
+    function riskLabel(r) { return { critical_illness:'重疾', accident:'意外', retirement:'养老', education:'教育金', wealth_depreciation:'资产贬值', asset_protection:'资产隔离', inheritance:'传承', income_loss:'收入中断' }[r] || r; }
+    function marriageLabel(m) { return { single:'未婚', married_no_child:'已婚未育', married_with_child:'已婚有子女', divorced:'离异/单亲' }[m] || m; }
+    function loanLabel(l) { return { no:'无', mortgage:'房贷', car:'车贷', both:'房贷+车贷' }[l] || l; }
+    function formatDate(d) { if (!d) return '-'; return new Date(d).toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }); }
+  </script>
+</body>
+</html>
