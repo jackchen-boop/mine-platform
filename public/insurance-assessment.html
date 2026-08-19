@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>家庭财富风险管理 · 港险配置方案</title>
   <meta name="description" content="为高净值家庭定制的香港保险与资产配置诊断工具">
+  <!-- Open Graph for WeChat/Social sharing -->
+  <meta property="og:title" content="家庭财富风险管理 · 港险配置方案">
+  <meta property="og:description" content="3分钟测评，获取专属香港保险与资产配置建议，为高净值家庭保驾护航">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://minelab.top/insurance">
+  <meta property="og:image" content="https://minelab.top/insurance-share-cover.png">
+  <meta property="og:site_name" content="MinePulse">
+  <!-- WeChat specific -->
+  <meta name="weixin:title" content="家庭财富风险管理 · 港险配置方案">
+  <meta name="weixin:description" content="3分钟测评，获取专属香港保险与资产配置建议">
+  <meta name="weixin:image" content="https://minelab.top/insurance-share-cover.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -557,10 +568,15 @@
       if (!name || !phone) { alert('请填写称呼和手机号码'); return; }
       if (!/^1[3-9]\d{9}$/.test(phone)) { alert('请输入正确的手机号码'); return; }
 
+      const params = new URLSearchParams(location.search);
       const payload = {
         name, phone, wechat,
         source: 'insurance-assessment',
-        referrer: new URLSearchParams(location.search).get('ref') || '',
+        referrer: params.get('ref') || '',
+        utmSource: params.get('utm_source') || params.get('source') || '',
+        utmMedium: params.get('utm_medium') || '',
+        utmCampaign: params.get('utm_campaign') || '',
+        utmContent: params.get('utm_content') || '',
         age: answers.age, marriage: answers.marriage, hasLoan: answers.hasLoan,
         annualIncome: answers.annualIncome, investableAssets: answers.investableAssets, monthlyExpense: answers.monthlyExpense,
         risks: answers.risks, riskScore: calcResult.score, investmentStyle: answers.style,

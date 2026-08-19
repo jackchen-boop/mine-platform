@@ -6,6 +6,7 @@
   <title>保险业务管理后台</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -79,6 +80,7 @@
           <button onclick="switchTab('leads')" id="tabLeads" class="tab-active pb-3 text-sm font-medium">咨询线索</button>
           <button onclick="switchTab('orders')" id="tabOrders" class="tab-inactive pb-3 text-sm font-medium">保单订单</button>
           <button onclick="switchTab('users')" id="tabUsers" class="tab-inactive pb-3 text-sm font-medium">用户管理</button>
+          <button onclick="switchTab('channels')" id="tabChannels" class="tab-inactive pb-3 text-sm font-medium">渠道分析</button>
         </div>
 
         <!-- Leads -->
@@ -97,12 +99,13 @@
             <input id="leadStart" type="date" class="bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
             <input id="leadEnd" type="date" class="bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
             <button onclick="loadLeads()" class="px-4 py-2 rounded-lg bg-fin-gold/10 text-fin-gold border border-fin-gold/30 text-sm font-medium hover:bg-fin-gold/20">查询</button>
+            <button onclick="openBatchImport()" class="px-4 py-2 rounded-lg bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg text-sm font-bold ml-auto">＋ 批量导入</button>
           </div>
           <div class="card rounded-xl overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-sm">
                 <thead class="bg-fin-surface2 text-fin-text2">
-                  <tr><th class="text-left px-4 py-3">ID</th><th class="text-left px-4 py-3">客户</th><th class="text-left px-4 py-3">风险评分</th><th class="text-left px-4 py-3">状态</th><th class="text-left px-4 py-3">来源</th><th class="text-left px-4 py-3">提交时间</th><th class="text-left px-4 py-3">操作</th></tr>
+                  <tr><th class="text-left px-4 py-3">ID</th><th class="text-left px-4 py-3">客户</th><th class="text-left px-4 py-3">风险评分</th><th class="text-left px-4 py-3">状态</th><th class="text-left px-4 py-3">来源联系人</th><th class="text-left px-4 py-3">提交时间</th><th class="text-left px-4 py-3">操作</th></tr>
                 </thead>
                 <tbody id="leadsTable" class="divide-y divide-fin-border"></tbody>
               </table>
@@ -167,6 +170,96 @@
             </div>
           </div>
         </div>
+
+        <!-- Channels -->
+        <div id="channelsPanel" class="hidden">
+          <div class="card rounded-xl p-5 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+              <h2 class="text-lg font-bold gold-gradient">渠道链接生成器</h2>
+              <span class="text-xs text-fin-text3">生成带 UTM 参数的专属链接 / 二维码</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="text-xs text-fin-text3 block mb-1">渠道来源 (utm_source) *</label>
+                <select id="utmSource" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+                  <option value="wechat">微信朋友圈 / 公众号 (wechat)</option>
+                  <option value="xiaohongshu">小红书 (xiaohongshu)</option>
+                  <option value="douyin">抖音 (douyin)</option>
+                  <option value="weibo">微博 (weibo)</option>
+                  <option value="zhihu">知乎 (zhihu)</option>
+                  <option value="offline">线下物料 (offline)</option>
+                  <option value="custom">自定义</option>
+                </select>
+                <input id="customUtmSource" type="text" placeholder="自定义来源" class="hidden w-full mt-2 bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+              </div>
+              <div>
+                <label class="text-xs text-fin-text3 block mb-1">媒介 (utm_medium)</label>
+                <select id="utmMedium" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+                  <option value="social">社交媒体 (social)</option>
+                  <option value="post">帖子/笔记 (post)</option>
+                  <option value="ad">付费广告 (ad)</option>
+                  <option value="qrcode">二维码 (qrcode)</option>
+                  <option value="link">链接 (link)</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-fin-text3 block mb-1">活动/ campaign (utm_campaign)</label>
+                <input id="utmCampaign" type="text" placeholder="例如：2026q1-promo" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+              </div>
+              <div>
+                <label class="text-xs text-fin-text3 block mb-1">内容/素材 (utm_content)</label>
+                <input id="utmContent" type="text" placeholder="例如：note-01 / 顾问张三" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text">
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <button onclick="generateChannelLink()" class="px-5 py-2 rounded-lg bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg text-sm font-bold">生成链接与二维码</button>
+            </div>
+            <div id="channelResult" class="hidden mt-5 pt-5 border-t border-fin-border">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="text-xs text-fin-text3 block mb-1">专属链接</label>
+                  <div class="flex gap-2">
+                    <input id="generatedLink" readonly class="flex-1 bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text font-mono">
+                    <button onclick="copyLink()" class="px-3 py-2 rounded-lg bg-fin-gold/10 text-fin-gold border border-fin-gold/30 text-sm">复制</button>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div id="qrCodeContainer" class="bg-white p-2 rounded-lg"></div>
+                  <div class="text-xs text-fin-text3">
+                    <div>扫码后进入测评页</div>
+                    <div>提交后自动归属到该渠道</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="card rounded-xl p-5">
+              <h3 class="text-sm font-bold text-fin-text mb-4">按来源渠道</h3>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-fin-surface2 text-fin-text2"><tr><th class="text-left px-3 py-2">渠道</th><th class="text-right px-3 py-2">线索</th><th class="text-right px-3 py-2">成交</th><th class="text-right px-3 py-2">今日</th></tr></thead>
+                  <tbody id="channelSourceTable" class="divide-y divide-fin-border"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card rounded-xl p-5">
+              <h3 class="text-sm font-bold text-fin-text mb-4">按活动 Campaign</h3>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-fin-surface2 text-fin-text2"><tr><th class="text-left px-3 py-2">活动</th><th class="text-left px-3 py-2">来源</th><th class="text-right px-3 py-2">线索</th><th class="text-right px-3 py-2">成交</th></tr></thead>
+                  <tbody id="channelCampaignTable" class="divide-y divide-fin-border"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card rounded-xl p-5">
+            <h3 class="text-sm font-bold text-fin-text mb-4">30日趋势</h3>
+            <div id="channelTrendChart" class="h-48 flex items-end gap-1 overflow-x-auto"></div>
+          </div>
+        </div>
       </main>
     </div>
   </div>
@@ -178,6 +271,31 @@
         <button onclick="closeModal('leadModal')" class="absolute top-4 right-4 text-fin-text3 hover:text-fin-gold text-2xl">&times;</button>
         <h2 class="text-xl font-bold mb-4 gold-gradient">线索详情</h2>
         <div id="leadDetail" class="space-y-4 text-sm"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Batch Import Modal -->
+  <div id="batchModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm overflow-y-auto">
+    <div class="min-h-screen px-4 py-8 flex justify-center items-start">
+      <div class="card w-full max-w-2xl rounded-2xl p-6 relative">
+        <button onclick="closeModal('batchModal')" class="absolute top-4 right-4 text-fin-text3 hover:text-fin-gold text-2xl">&times;</button>
+        <h2 class="text-xl font-bold mb-4 gold-gradient">批量导入线索</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs text-fin-text3">导入人钉钉名称 *</label>
+            <input id="batchSourceContact" placeholder="例如：张三" class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text focus:border-fin-gold focus:outline-none mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-fin-text3">线索数据（每行一条，格式：姓名,手机,微信）</label>
+            <textarea id="batchData" rows="10" placeholder="张三,13800138000,wx_zhangsan&#10;李四,13900139000,wx_lisi&#10;王五,13700137000," class="w-full bg-fin-surface2 border border-fin-border rounded-lg px-3 py-2 text-sm text-fin-text font-mono focus:border-fin-gold focus:outline-none mt-1"></textarea>
+          </div>
+          <div class="text-xs text-fin-text3">提示：每行格式为「姓名,手机,微信」，微信可省略。将自动去重已存在的手机号。</div>
+          <div class="flex gap-3 pt-2">
+            <button onclick="closeModal('batchModal')" class="flex-1 py-2 rounded-lg border border-fin-border text-fin-text2 text-sm">取消</button>
+            <button onclick="submitBatchImport()" class="flex-1 py-2 rounded-lg bg-gradient-to-r from-fin-goldDark via-fin-gold to-fin-goldLight text-fin-bg text-sm font-bold">确认导入</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -280,11 +398,14 @@
       document.getElementById('leadsPanel').classList.toggle('hidden', tab !== 'leads');
       document.getElementById('ordersPanel').classList.toggle('hidden', tab !== 'orders');
       document.getElementById('usersPanel').classList.toggle('hidden', tab !== 'users');
+      document.getElementById('channelsPanel').classList.toggle('hidden', tab !== 'channels');
       document.getElementById('tabLeads').className = tab === 'leads' ? 'tab-active pb-3 text-sm font-medium' : 'tab-inactive pb-3 text-sm font-medium';
       document.getElementById('tabOrders').className = tab === 'orders' ? 'tab-active pb-3 text-sm font-medium' : 'tab-inactive pb-3 text-sm font-medium';
       document.getElementById('tabUsers').className = tab === 'users' ? 'tab-active pb-3 text-sm font-medium' : 'tab-inactive pb-3 text-sm font-medium';
+      document.getElementById('tabChannels').className = tab === 'channels' ? 'tab-active pb-3 text-sm font-medium' : 'tab-inactive pb-3 text-sm font-medium';
       if (tab === 'orders' && state.orders.data.length === 0) loadOrders();
       if (tab === 'users' && state.users.data.length === 0) loadUsers();
+      if (tab === 'channels' && !state.channels) loadChannelStats();
     }
 
     async function loadStats() {
@@ -320,7 +441,7 @@
           </td>
           <td class="px-4 py-3"><span class="text-fin-gold font-bold">${l.risk_score}</span></td>
           <td class="px-4 py-3">${statusBadge(l.status)}</td>
-          <td class="px-4 py-3 text-fin-text3">${l.source || '-'}</td>
+          <td class="px-4 py-3">${l.source_contact ? `<span class="text-fin-gold">${l.source_contact}</span>` : `<span class="text-fin-text3">${l.source || '-'}</span>`}</td>
           <td class="px-4 py-3 text-fin-text3 text-xs">${formatDate(l.created_at)}</td>
           <td class="px-4 py-3">
             <button onclick="openLead(${l.id})" class="text-fin-gold hover:underline text-xs">详情</button>
@@ -342,7 +463,7 @@
           <div class="card p-3 rounded-lg"><div class="text-xs text-fin-text3">客户</div><div class="font-medium">${l.name}</div></div>
           <div class="card p-3 rounded-lg"><div class="text-xs text-fin-text3">手机</div><div class="font-medium">${l.phone}</div></div>
           <div class="card p-3 rounded-lg"><div class="text-xs text-fin-text3">微信</div><div class="font-medium">${l.wechat || '-'}</div></div>
-          <div class="card p-3 rounded-lg"><div class="text-xs text-fin-text3">来源</div><div class="font-medium">${l.source || '-'} ${l.referrer ? '('+l.referrer+')' : ''}</div></div>
+          <div class="card p-3 rounded-lg"><div class="text-xs text-fin-text3">来源</div><div class="font-medium">${l.source_contact ? `<span class="text-fin-gold">${l.source_contact}</span> (批量导入)` : (l.source || '-')}${l.referrer ? ' · 推荐人: '+l.referrer : ''}</div></div>
         </div>
         <div class="card p-4 rounded-lg">
           <div class="text-xs text-fin-text3 mb-2">测评信息</div>
@@ -638,6 +759,139 @@
         await api('/api/admin/users/' + id, { method: 'DELETE' });
         loadUsers();
       } catch(e) { alert(e.message); }
+    }
+
+    // === Batch Import ===
+    function openBatchImport() {
+      document.getElementById('batchSourceContact').value = '';
+      document.getElementById('batchData').value = '';
+      document.getElementById('batchModal').classList.remove('hidden');
+    }
+
+    async function submitBatchImport() {
+      const sourceContact = document.getElementById('batchSourceContact').value.trim();
+      const raw = document.getElementById('batchData').value.trim();
+      if (!sourceContact) { alert('请填写导入人钉钉名称'); return; }
+      if (!raw) { alert('请填写线索数据'); return; }
+
+      const lines = raw.split('\n').filter(l => l.trim());
+      const leads = [];
+      const errors = [];
+      for (let i = 0; i < lines.length; i++) {
+        const parts = lines[i].split(/[,\uff0c\t]/).map(s => s.trim());
+        if (parts.length < 2 || !parts[0] || !parts[1]) {
+          errors.push(`第${i+1}行：格式不正确`);
+          continue;
+        }
+        if (!/^1[3-9]\d{9}$/.test(parts[1])) {
+          errors.push(`第${i+1}行：手机号格式错误 (${parts[1]})`);
+          continue;
+        }
+        leads.push({ name: parts[0], phone: parts[1], wechat: parts[2] || '' });
+      }
+
+      if (errors.length > 0) {
+        alert('数据有误：\n' + errors.join('\n'));
+        return;
+      }
+      if (leads.length === 0) { alert('没有有效数据'); return; }
+
+      try {
+        const data = await api('/api/insurance/leads/batch', {
+          method: 'POST',
+          body: JSON.stringify({ leads, sourceContact })
+        });
+        alert(data.message || `成功导入 ${data.count} 条线索`);
+        closeModal('batchModal');
+        loadLeads();
+        loadStats();
+      } catch(e) { alert('导入失败：' + e.message); }
+    }
+
+    // === Channel Analytics ===
+    document.getElementById('utmSource').addEventListener('change', function() {
+      const custom = document.getElementById('customUtmSource');
+      if (this.value === 'custom') { custom.classList.remove('hidden'); custom.focus(); }
+      else { custom.classList.add('hidden'); }
+    });
+
+    function generateChannelLink() {
+      const sourceSelect = document.getElementById('utmSource');
+      let source = sourceSelect.value;
+      if (source === 'custom') source = document.getElementById('customUtmSource').value.trim() || 'custom';
+      const medium = document.getElementById('utmMedium').value;
+      const campaign = document.getElementById('utmCampaign').value.trim();
+      const content = document.getElementById('utmContent').value.trim();
+
+      const url = new URL('https://minelab.top/insurance');
+      url.searchParams.set('utm_source', source);
+      url.searchParams.set('utm_medium', medium);
+      if (campaign) url.searchParams.set('utm_campaign', campaign);
+      if (content) url.searchParams.set('utm_content', content);
+
+      const link = url.toString();
+      document.getElementById('generatedLink').value = link;
+      document.getElementById('channelResult').classList.remove('hidden');
+
+      // 生成二维码
+      const container = document.getElementById('qrCodeContainer');
+      container.innerHTML = '';
+      new QRCode(container, { text: link, width: 128, height: 128, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    }
+
+    function copyLink() {
+      const input = document.getElementById('generatedLink');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => alert('链接已复制'));
+    }
+
+    async function loadChannelStats() {
+      try {
+        const data = await api('/api/insurance/channel-stats');
+        state.channels = data;
+        renderChannelStats(data);
+      } catch(e) { alert('加载渠道数据失败：' + e.message); }
+    }
+
+    function renderChannelStats(data) {
+      const sourceTable = document.getElementById('channelSourceTable');
+      sourceTable.innerHTML = (data.bySource || []).map(r => `
+        <tr class="hover:bg-fin-surface2/50 transition-colors">
+          <td class="px-3 py-2 font-medium">${r.source}</td>
+          <td class="px-3 py-2 text-right">${r.total}</td>
+          <td class="px-3 py-2 text-right text-fin-gold">${r.ordered}</td>
+          <td class="px-3 py-2 text-right">${r.today}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="4" class="px-3 py-4 text-center text-fin-text3">暂无数据</td></tr>';
+
+      const campaignTable = document.getElementById('channelCampaignTable');
+      campaignTable.innerHTML = (data.byCampaign || []).map(r => `
+        <tr class="hover:bg-fin-surface2/50 transition-colors">
+          <td class="px-3 py-2 font-medium">${r.campaign}</td>
+          <td class="px-3 py-2 text-fin-text3">${r.source}</td>
+          <td class="px-3 py-2 text-right">${r.total}</td>
+          <td class="px-3 py-2 text-right text-fin-gold">${r.ordered}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="4" class="px-3 py-4 text-center text-fin-text3">暂无数据</td></tr>';
+
+      // 趋势图
+      const chart = document.getElementById('channelTrendChart');
+      const trend = data.dailyTrend || [];
+      if (trend.length === 0) { chart.innerHTML = '<div class="w-full text-center text-fin-text3 py-16">暂无数据</div>'; return; }
+      const max = Math.max(...trend.map(d => d.total), 1);
+      chart.innerHTML = trend.map(d => {
+        const h = Math.round((d.total / max) * 100);
+        const ch = Math.round((d.with_channel / max) * 100);
+        return `
+          <div class="flex-1 min-w-[24px] flex flex-col items-center justify-end group relative">
+            <div class="w-full flex flex-col justify-end h-full gap-px rounded-t-sm overflow-hidden">
+              <div class="bg-fin-gold/80 w-full" style="height:${h}%"></div>
+            </div>
+            <div class="text-[10px] text-fin-text3 mt-1 rotate-45 origin-left translate-y-2">${d.date.slice(5)}</div>
+            <div class="absolute bottom-full mb-2 hidden group-hover:block bg-fin-surface2 border border-fin-border rounded px-2 py-1 text-xs text-fin-text whitespace-nowrap z-10">${d.date}<br/>线索: ${d.total} / 带渠道: ${d.with_channel}</div>
+          </div>
+        `;
+      }).join('');
     }
   </script>
 </body>

@@ -24,6 +24,7 @@ router.post('/leads', (req, res) => {
   try {
     const {
       name, phone, wechat, source, referrer,
+      utmSource, utmMedium, utmCampaign, utmContent,
       age, marriage, hasLoan, annualIncome, investableAssets, monthlyExpense,
       risks, riskScore, investmentStyle, allocation, recommendations
     } = req.body;
@@ -47,11 +48,13 @@ router.post('/leads', (req, res) => {
     const result = db.prepare(`
       INSERT INTO insurance_leads (
         name, phone, wechat, source, referrer,
+        utm_source, utm_medium, utm_campaign, utm_content,
         age, marriage, has_loan, annual_income, investable_assets, monthly_expense,
         risks, risk_score, investment_style, allocation, recommendations
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       name, phone, wechat || null, source || 'insurance-assessment', referrer || null,
+      utmSource || null, utmMedium || null, utmCampaign || null, utmContent || null,
       age || null, marriage || null, hasLoan || null,
       annualIncome || 0, investableAssets || 0, monthlyExpense || 0,
       JSON.stringify(risks || []), riskScore || 0, investmentStyle || null,
@@ -70,6 +73,48 @@ router.post('/leads', (req, res) => {
 
 // ===== 以下接口需要 admin 权限 =====
 router.use(requireRole('admin'));
+
+// 批量导入线索（source_contact 为导入者钉钉名称）
+router.post('/leads/batch', (req, res) => {
+  try {
+    const { leads: leadList, sourceContact } = req.body;
+    if (!Array.isArray(leadList) || leadList.length === 0) {
+      return res.status(400).json({ error: '请提供至少一条线索' });
+    }
+    if (!sourceContact || !sourceContact.trim()) {
+      return res.status(400).json({ error: '请提供导入人钉钉名称' });
+    }
+
+    const insert = db.prepare(`
+      INSERT INTO insurance_leads (
+        name, phone, wechat, source, referrer, source_contact,
+        age, marriage, has_loan, annual_income, investable_assets, monthly_expense,
+        risks, risk_score, investment_style, allocation, recommendations
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const insertedIds = [];
+    for (const l of leadList) {
+      const result = insert.run(
+        l.name, l.phone, l.wechat || null, 'batch-import', sourceContact.trim(),
+        l.age || null, l.marriage || null, l.hasLoan || null,
+        l.annualIncome || 0, l.investableAssets || 0, l.monthlyExpense || 0,
+        JSON.stringify(l.risks || []), l.riskScore || 0, l.investmentStyle || null,
+        JSON.stringify(l.allocation || {}), JSON.stringify(l.recommendations || [])
+      );
+      insertedIds.push(result.lastInsertRowid);
+    }
+
+    res.status(201).json({
+      message: `成功导入 ${insertedIds.length} 条线索`,
+      count: insertedIds.length,
+      leadIds: insertedIds
+    });
+  } catch (err) {
+    console.error('[insurance] batch import error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // 仪表盘统计
 router.get('/stats', (req, res) => {
@@ -96,6 +141,59 @@ router.get('/stats', (req, res) => {
       statusDist,
       orderStatusDist
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 渠道统计分析
+router.get('/channel-stats', (req, res) => {
+  try {
+    // 按来源渠道分组统计
+    const bySource = db.prepare(`
+      SELECT COALESCE(utm_source, 'direct') as source,
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'ordered' THEN 1 ELSE 0 END) as ordered,
+        SUM(CASE WHEN date(created_at) = date('now') THEN 1 ELSE 0 END) as today
+      FROM insurance_leads
+      GROUP BY utm_source
+      ORDER BY total DESC
+    `).all();
+
+    // 按活动分组统计
+    const byCampaign = db.prepare(`
+      SELECT COALESCE(utm_campaign, '-') as campaign,
+        COALESCE(utm_source, 'direct') as source,
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'ordered' THEN 1 ELSE 0 END) as ordered
+      FROM insurance_leads
+      WHERE utm_campaign IS NOT NULL AND utm_campaign != ''
+      GROUP BY utm_campaign, utm_source
+      ORDER BY total DESC
+    `).all();
+
+    // 按媒介分组
+    const byMedium = db.prepare(`
+      SELECT COALESCE(utm_medium, 'direct') as medium,
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'ordered' THEN 1 ELSE 0 END) as ordered
+      FROM insurance_leads
+      GROUP BY utm_medium
+      ORDER BY total DESC
+    `).all();
+
+    // 每日趋势（最近30天）
+    const dailyTrend = db.prepare(`
+      SELECT date(created_at) as date,
+        COUNT(*) as total,
+        SUM(CASE WHEN utm_source IS NOT NULL THEN 1 ELSE 0 END) as with_channel
+      FROM insurance_leads
+      WHERE created_at > datetime('now', '-30 days')
+      GROUP BY date(created_at)
+      ORDER BY date ASC
+    `).all();
+
+    res.json({ bySource, byCampaign, byMedium, dailyTrend });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
