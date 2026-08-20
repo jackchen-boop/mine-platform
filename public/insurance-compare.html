@@ -226,7 +226,7 @@
         type: '香港分红型终身危疾险',
         currency: 'usd',
         claimEase: 'low',
-        tags: ['多次赔付', '保额增长', '美元资产', '老年年金'],
+        tags: ['多次赔付', '保额增长', '首10年额外50%', '美元资产', '老年年金'],
         basePremiumFactor: 0.85,
         metrics: {
           criticalIllnessCount: '56种严重疾病 + 127种病况',
@@ -236,6 +236,7 @@
           cancerPayout: '癌症最高累计200%',
           heartStrokePayout: '心脏病/中风各最高累计200%',
           inflationProtection: '★★★★★ 非保证分红，保额随时间增长，可抵抗通胀',
+          first10Years: '首10年确诊重疾/身故额外赔付50%保额',
           elderlyCare: '确诊脑退化/柏金逊1年后，每年给付6%保额直至身故',
           minorPayout: '早期危疾按比例赔付',
           deathBenefit: '保额 + 累积分红（非保证）',
@@ -244,7 +245,7 @@
         },
         advantageScores: { coverage: 95, definition: 95, multiple: 98, inflation: 98, elderly: 95, claim: 55 },
         scenarios: {
-          firstCritical: '50万（基础保额）',
+          firstCritical: '50万（首10年额外25万，共75万）',
           year10: '保额随分红增长，约60-70万（非保证）',
           year20: '保额随分红增长，约75-90万（非保证）',
           cancerRecurrence: '首次50万 + 复发/转移最高再赔100万',
@@ -516,6 +517,10 @@
                   ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.metrics.inflationProtection}</td>`).join('')}
                 </tr>
                 <tr>
+                  <td class="font-medium text-fin-text">首10年额外保障</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.metrics.first10Years || '无'}</td>`).join('')}
+                </tr>
+                <tr>
                   <td class="font-medium text-fin-text">老年疾病护理</td>
                   ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.metrics.elderlyCare}</td>`).join('')}
                 </tr>
@@ -615,6 +620,13 @@
               <div>
                 <div class="font-medium text-fin-text">老年疾病终身年金</div>
                 <div>确诊严重脑退化症或柏金逊病1年后，每年给付6%保额直至身故，将重疾险与长期护理需求结合，这是内地产品普遍缺失的责任。</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-fin-gold/20 text-fin-gold flex items-center justify-center text-xs flex-shrink-0">5</span>
+              <div>
+                <div class="font-medium text-fin-text">首10年额外50%保障</div>
+                <div>投保后首10年内确诊严重疾病或身故，额外赔付50%保额。以50万保额为例，前10年实际赔付75万，覆盖家庭责任最重的阶段，内地产品无此设计。</div>
               </div>
             </div>
           </div>
