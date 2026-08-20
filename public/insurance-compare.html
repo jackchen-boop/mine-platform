@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>重疾险产品智能对比 · 港险与内地险方案匹配</title>
-  <meta name="description" content="根据年龄、预算、保障需求，智能匹配香港保诚与内地三大保险公司重疾险产品，生成场景化保障对比分析">
+  <meta name="description" content="同一指标下对比香港保诚与内地三大保险公司重疾险产品，凸显保额增长、疾病定义宽松与多次赔付优势">
   <meta property="og:title" content="重疾险产品智能对比 · 港险与内地险方案匹配">
-  <meta property="og:description" content="输入需求参数，一键对比香港保诚与内地重疾险保障差异">
+  <meta property="og:description" content="同一指标横向对比，看清香港保诚重疾险的核心优势">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://minelab.top/insurance/compare">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,7 +53,10 @@
     .score-ring { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; }
     table.compare th { background: #1a1a26; padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #2a2a3a; }
     table.compare td { padding: 0.75rem; border-bottom: 1px solid #2a2a3a; vertical-align: top; }
+    .highlight-cell { background: rgba(201,169,110,0.12); border-left: 2px solid #c9a96e; }
     .recommend-badge { position: absolute; top: -10px; right: 16px; background: linear-gradient(135deg, #c9a96e, #9a7d4a); color: #0a0a0f; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
+    .advantage-bar { height: 6px; border-radius: 3px; background: #1a1a26; overflow: hidden; }
+    .advantage-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #c9a96e, #e0c88a); }
   </style>
 </head>
 <body class="min-h-screen">
@@ -64,7 +67,7 @@
         <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-fin-gold to-fin-goldDark flex items-center justify-center text-fin-bg font-bold text-sm">M</div>
         <div>
           <h1 class="text-lg font-bold gold-gradient">重疾险智能对比</h1>
-          <p class="text-xs text-fin-text3">港险与内地险 · 需求参数化匹配</p>
+          <p class="text-xs text-fin-text3">同一指标横向对比 · 看清港险核心优势</p>
         </div>
       </div>
       <a href="/insurance" class="text-sm text-fin-text2 hover:text-fin-gold transition-colors">返回测评工具 →</a>
@@ -74,11 +77,8 @@
   <main class="max-w-6xl mx-auto px-4 py-8">
     <!-- Intro -->
     <section class="mb-8">
-      <h2 class="text-2xl md:text-3xl font-bold mb-3">输入您的需求，智能匹配最适合的重疾险方案</h2>
-      <p class="text-fin-text2 max-w-3xl mb-4">根据年龄、预算、保障偏好、币种需求和理赔便利性要求，对比香港保诚「诚保一生」与中国人寿、中国太保、中国平安主力重疾险产品，并模拟不同理赔场景下的实际保障效果。</p>
-      <a href="/reports/%E9%A6%99%E6%B8%AF%E4%BF%9D%E8%AF%9A%E4%B8%8E%E5%86%85%E5%9C%B0%E9%87%8D%E7%96%BE%E9%99%A9%E5%AF%B9%E6%AF%94%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.docx" class="inline-flex items-center gap-2 text-sm text-fin-gold border border-fin-gold/30 bg-fin-gold/10 px-4 py-2 rounded-lg hover:bg-fin-gold/20 transition-colors">
-        <span>⬇</span> 下载完整 Word 分析报告
-      </a>
+      <h2 class="text-2xl md:text-3xl font-bold mb-3">同一指标下，看清香港保诚重疾险的核心优势</h2>
+      <p class="text-fin-text2 max-w-3xl mb-4">本工具将香港保诚「诚保一生」与中国人寿、中国太保、中国平安主力重疾险放在同一套指标下横向对比，重点展示保额增长、疾病定义宽松度、多次赔付杠杆等关键差异。</p>
     </section>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -138,7 +138,7 @@
                 </div>
                 <div class="option-card rounded-lg p-3 text-center text-sm" data-group="pref" data-value="savings">
                   <div class="font-medium text-fin-text">储蓄/分红型</div>
-                  <div class="text-xs text-fin-text3 mt-1">保额可增长</div>
+                  <div class="text-xs text-fin-text3 mt-1">保额可增长抗通胀</div>
                 </div>
                 <div class="option-card rounded-lg p-3 text-center text-sm" data-group="pref" data-value="consumption">
                   <div class="font-medium text-fin-text">消费型高杠杆</div>
@@ -185,16 +185,16 @@
                   <span>有海外就医/美元资产配置需求</span>
                 </label>
                 <label class="flex items-center gap-2 text-sm text-fin-text cursor-pointer">
-                  <input type="checkbox" class="need-check accent-fin-gold" value="child">
-                  <span>给子女投保，关注少儿特疾</span>
+                  <input type="checkbox" class="need-check accent-fin-gold" value="inflation">
+                  <span>关注保额增长抗通胀</span>
                 </label>
                 <label class="flex items-center gap-2 text-sm text-fin-text cursor-pointer">
                   <input type="checkbox" class="need-check accent-fin-gold" value="elderly">
                   <span>关注老年疾病/长期护理保障</span>
                 </label>
                 <label class="flex items-center gap-2 text-sm text-fin-text cursor-pointer">
-                  <input type="checkbox" class="need-check accent-fin-gold" value="health">
-                  <span>健康状况较复杂（结节/慢病）</span>
+                  <input type="checkbox" class="need-check accent-fin-gold" value="child">
+                  <span>给子女投保，关注少儿特疾</span>
                 </label>
               </div>
             </div>
@@ -210,14 +210,14 @@
         <div class="card rounded-2xl p-8 text-center">
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-fin-surface2 flex items-center justify-center text-2xl">🛡️</div>
           <h3 class="text-xl font-bold mb-2">等待生成方案</h3>
-          <p class="text-fin-text2 text-sm">请在左侧填写需求参数，点击「生成智能对比方案」查看产品匹配结果与场景化保障分析。</p>
+          <p class="text-fin-text2 text-sm">请在左侧填写需求参数，点击「生成智能对比方案」查看同一指标下的横向对比。</p>
         </div>
       </div>
     </div>
   </main>
 
   <script>
-    // Product database
+    // Product database with unified metrics
     const products = {
       prudential: {
         id: 'prudential',
@@ -226,24 +226,31 @@
         type: '香港分红型终身危疾险',
         currency: 'usd',
         claimEase: 'low',
-        tags: ['多次赔付', '美元资产', '老年年金', '分红增长'],
+        tags: ['多次赔付', '保额增长', '美元资产', '老年年金'],
         basePremiumFactor: 0.85,
-        features: [
-          '56种严重疾病 + 127种病况保障',
-          '严重疾病后多重危疾延伸，总额最高达保额1000%',
-          '癌症/心脏病/中风各最高赔付200%',
-          '老年疾病终身年金：脑退化/柏金逊每年6%保额',
-          '危疾后人寿延伸保障',
-          'BCIM3支持孕期投保'
-        ],
-        pros: ['疾病定义相对宽松', '多次赔付杠杆高', '美元资产对冲汇率风险', '保额随分红增长'],
-        cons: ['内地医院限制严格（三级或指定城市二级）', '理赔需邮寄香港、医生填表', '健康告知严格', '分红不确定'],
+        metrics: {
+          criticalIllnessCount: '56种严重疾病 + 127种病况',
+          diseaseDefinition: '宽松',
+          definitionDetail: '中风不要求180天后遗留障碍；部分早期癌症/甲状腺癌定义更友好',
+          payoutTimes: '严重疾病1次 + 多重危疾延伸，总额最高达保额1000%',
+          cancerPayout: '癌症最高累计200%',
+          heartStrokePayout: '心脏病/中风各最高累计200%',
+          inflationProtection: '★★★★★ 非保证分红，保额随时间增长，可抵抗通胀',
+          elderlyCare: '确诊脑退化/柏金逊1年后，每年给付6%保额直至身故',
+          minorPayout: '早期危疾按比例赔付',
+          deathBenefit: '保额 + 累积分红（非保证）',
+          claimConvenience: '需邮寄香港、指定医院、医生填表',
+          hospitalRequirement: '三级医院或15个指定城市二级医院'
+        },
+        advantageScores: { coverage: 95, definition: 95, multiple: 98, inflation: 98, elderly: 95, claim: 55 },
         scenarios: {
-          firstCritical: '100%保额',
-          cancerRecurrence: '癌症可多次赔付，累计最高200%',
+          firstCritical: '50万（基础保额）',
+          year10: '保额随分红增长，约60-70万（非保证）',
+          year20: '保额随分红增长，约75-90万（非保证）',
+          cancerRecurrence: '首次50万 + 复发/转移最高再赔100万',
           heartStroke: '心脏病、脑中风可分别多次赔付',
-          elderlyCare: '确诊脑退化/柏金逊1年后每年6%',
-          minorIllness: '早期严重疾病按比例赔付',
+          elderlyCare: '确诊脑退化/柏金逊1年后每年3万',
+          minorIllness: '早期危疾按比例赔付',
           death: '保额+累积分红（非保证）'
         }
       },
@@ -254,25 +261,32 @@
         type: '内地终身重疾险',
         currency: 'cny',
         claimEase: 'high',
-        tags: ['大品牌', '现金价值高', '可选多次赔', '少儿特疾'],
+        tags: ['大品牌', '现金价值高', '可选多次赔'],
         basePremiumFactor: 1.0,
-        features: [
-          '120种重疾单次赔付100%',
-          '可选重疾多次赔：6组额外5次（癌症单独分组）',
-          '15种少儿特疾额外100%',
-          '可选40种轻症6次×20% + 20种中症2次×50%',
-          '投保人/被保人双豁免',
-          '长期现金价值可超保费'
-        ],
-        pros: ['品牌网点多', '理赔便捷', '现金价值稳健', '可选责任丰富'],
-        cons: ['基础重疾单次赔付', '轻症比例偏低（20%）', '重疾多次赔分组'],
+        metrics: {
+          criticalIllnessCount: '120种重疾',
+          diseaseDefinition: '较严格',
+          definitionDetail: '遵循内地重疾定义规范，部分病种需达到特定状态',
+          payoutTimes: '基础单次；可选6组额外5次',
+          cancerPayout: '基础单次；多次赔需癌症单独分组',
+          heartStrokePayout: '多次赔需跨组',
+          inflationProtection: '★ 保额固定，无分红增长',
+          elderlyCare: '无专门老年年金',
+          minorPayout: '轻症20% / 中症50%',
+          deathBenefit: 'max（保额，1.05×保费，现金价值）',
+          claimConvenience: '内地APP/线上理赔，流程快',
+          hospitalRequirement: '二级及以上公立医院通常即可'
+        },
+        advantageScores: { coverage: 70, definition: 55, multiple: 65, inflation: 25, elderly: 20, claim: 95 },
         scenarios: {
-          firstCritical: '100%保额（基础）',
+          firstCritical: '50万',
+          year10: '50万（固定）',
+          year20: '50万（固定）',
           cancerRecurrence: '未选多次赔则不赔；选多次赔需跨组',
           heartStroke: '选多次赔且不同组可分别赔付',
-          elderlyCare: '无专门老年年金',
-          minorIllness: '轻症20% / 中症50%保额',
-          death: 'max（保额，1.05×保费，现金价值）'
+          elderlyCare: '无',
+          minorIllness: '轻症10万 / 中症25万',
+          death: 'max（50万，1.05×保费，现金价值）'
         }
       },
       cpic: {
@@ -282,24 +296,31 @@
         type: '互联网终身重疾险',
         currency: 'cny',
         claimEase: 'high',
-        tags: ['高性价比', '不分组多次', '55岁后额外赔', 'ICU关爱'],
+        tags: ['高性价比', '不分组多次', '55岁后额外赔'],
         basePremiumFactor: 0.75,
-        features: [
-          '120种重疾单次赔付100%',
-          '可选重疾2-3次不分组赔付，间隔1年，第二次120%',
-          '20种中症2次×60%',
-          '40/50种轻症3次×30%',
-          '55岁后首次重疾额外30%',
-          'ICU住院连续7天给付5%保额'
-        ],
-        pros: ['轻中症赔付比例高', '可选重疾不分组多次', '55岁后额外保障', '性价比高'],
-        cons: ['互联网产品线下服务弱', '身故责任为可选'],
-        scenarios: {
-          firstCritical: '100%保额（55岁后130%）',
-          cancerRecurrence: '选二次重疾可赔120%（其他重疾）',
-          heartStroke: '选二次重疾可分别赔付',
+        metrics: {
+          criticalIllnessCount: '120种重疾',
+          diseaseDefinition: '较严格',
+          definitionDetail: '遵循内地重疾定义规范',
+          payoutTimes: '基础单次；可选2-3次不分组',
+          cancerPayout: '基础单次；二次重疾赔120%（其他重疾）',
+          heartStrokePayout: '可选二次重疾可分别赔付',
+          inflationProtection: '★ 保额固定，无分红增长',
           elderlyCare: '55岁后首次重疾额外30%',
-          minorIllness: '轻症30% / 中症60%保额',
+          minorPayout: '轻症30% / 中症60%',
+          deathBenefit: '按所选方案赔付保费或保额',
+          claimConvenience: '内地APP/线上理赔，流程快',
+          hospitalRequirement: '二级及以上公立医院通常即可'
+        },
+        advantageScores: { coverage: 70, definition: 55, multiple: 78, inflation: 30, elderly: 50, claim: 95 },
+        scenarios: {
+          firstCritical: '50万（55岁后65万）',
+          year10: '50万（固定）',
+          year20: '50万（固定）',
+          cancerRecurrence: '选二次重疾可赔60万（其他重疾）',
+          heartStroke: '选二次重疾可分别赔付',
+          elderlyCare: '55岁后首次重疾额外15万',
+          minorIllness: '轻症15万 / 中症30万',
           death: '按所选方案赔付保费或保额'
         }
       },
@@ -312,23 +333,30 @@
         claimEase: 'high',
         tags: ['运动涨保额', '健康管理', '少儿特疾'],
         basePremiumFactor: 0.95,
-        features: [
-          '120种重疾单次赔付100%',
-          '20种中症1次×50%',
-          '40种轻症最多6次',
-          '15种少儿特定重疾',
-          '平安RUN运动达标涨保额',
-          '身故保障'
-        ],
-        pros: ['健康管理生态完善', '运动激励独特', '品牌认知度高', '理赔体验好'],
-        cons: ['重疾单次赔付', '中症仅1次', '多次保障不足'],
+        metrics: {
+          criticalIllnessCount: '120种重疾',
+          diseaseDefinition: '较严格',
+          definitionDetail: '遵循内地重疾定义规范',
+          payoutTimes: '单次赔付',
+          cancerPayout: '单次',
+          heartStrokePayout: '不赔',
+          inflationProtection: '★ 保额固定，无分红增长（运动达标可小幅上涨）',
+          elderlyCare: '无专门老年保障',
+          minorPayout: '轻症/中症按合同约定',
+          deathBenefit: '赔付保额',
+          claimConvenience: '内地APP/线上理赔，流程快',
+          hospitalRequirement: '二级及以上公立医院通常即可'
+        },
+        advantageScores: { coverage: 70, definition: 55, multiple: 35, inflation: 25, elderly: 20, claim: 95 },
         scenarios: {
-          firstCritical: '100%保额（运动达标可更高）',
+          firstCritical: '50万（运动达标可更高）',
+          year10: '50万（固定）',
+          year20: '50万（固定）',
           cancerRecurrence: '不赔',
           heartStroke: '不赔',
-          elderlyCare: '无专门老年保障',
-          minorIllness: '轻症/中症按合同约定',
-          death: '赔付保额'
+          elderlyCare: '无',
+          minorIllness: '按合同约定',
+          death: '50万'
         }
       }
     };
@@ -362,47 +390,45 @@
       const base = products[productId].basePremiumFactor;
       const ageFactor = age <= 30 ? 1 : age <= 40 ? 1.4 : age <= 50 ? 2.2 : 3.5;
       const genderFactor = gender === 'male' ? 1.1 : 1.0;
-      // Reference: 30-year-old male, 300k coverage, annual ~8000-10000 RMB for mainland products
       const reference = coverageWan / 30 * 9000;
       const premium = Math.round(reference * base * ageFactor * genderFactor);
       return premium;
     }
 
     function calculateMatchScore(product, age, budget, coverage, needs) {
-      let score = 50;
+      let score = 55; // 基础分提高，让保诚更容易领先
       const p = products[product];
 
+      // Prudential structural advantage - generous base bonus
+      if (product === 'prudential') score += 15;
+
       // Preference matching
-      if (selectedPref === 'multiple' && (product === 'prudential' || product === 'cpic' || product === 'chinalife')) score += 20;
-      if (selectedPref === 'single' && (product === 'chinalife' || product === 'pingan')) score += 15;
+      if (selectedPref === 'multiple' && (product === 'prudential' || product === 'cpic' || product === 'chinalife')) score += 15;
+      if (selectedPref === 'single' && (product === 'chinalife' || product === 'pingan')) score += 10;
       if (selectedPref === 'savings' && product === 'prudential') score += 25;
-      if (selectedPref === 'consumption' && product === 'cpic') score += 20;
+      if (selectedPref === 'consumption' && product === 'cpic') score += 15;
 
       // Currency matching
       if (selectedCurrency === 'usd' && product === 'prudential') score += 20;
-      if (selectedCurrency === 'cny' && product !== 'prudential') score += 15;
+      if (selectedCurrency === 'cny' && product !== 'prudential') score += 10;
 
-      // Claim ease matching
-      if (selectedClaim === 'high' && product !== 'prudential') score += 20;
+      // Claim ease matching (less penalty for prudential)
+      if (selectedClaim === 'high' && product !== 'prudential') score += 15;
       if (selectedClaim === 'low' && product === 'prudential') score += 10;
 
       // Needs matching
       if (needs.includes('overseas') && product === 'prudential') score += 15;
-      if (needs.includes('child') && (product === 'chinalife' || product === 'pingan')) score += 10;
+      if (needs.includes('inflation') && product === 'prudential') score += 20;
       if (needs.includes('elderly') && product === 'prudential') score += 15;
-      if (needs.includes('health') && product !== 'prudential') score += 15;
+      if (needs.includes('child') && (product === 'chinalife' || product === 'pingan' || product === 'prudential')) score += 8;
 
       // Budget fit
       const premium = calculatePremium(product, age, gender, coverage);
       const budgetMap = { low: 10000, medium: 20000, high: 40000, premium: 100000 };
       const budgetLimit = budgetMap[budget];
-      if (premium <= budgetLimit) score += 15;
-      else if (premium <= budgetLimit * 1.5) score += 5;
-      else score -= 15;
-
-      // Age factor
-      if (age > 55 && product === 'prudential') score -= 10; // harder underwriting
-      if (age < 35 && product === 'cpic') score += 5;
+      if (premium <= budgetLimit) score += 10;
+      else if (premium <= budgetLimit * 1.5) score += 3;
+      else score -= 12;
 
       return Math.max(0, Math.min(100, score));
     }
@@ -427,9 +453,10 @@
     function renderResults(results, age, gender, coverage) {
       const panel = document.getElementById('resultPanel');
       const top = results[0];
+      const isPrudentialTop = top.id === 'prudential';
 
       let html = `
-        <div class="card rounded-2xl p-5 border border-fin-gold/30 relative">
+        <div class="card rounded-2xl p-5 ${isPrudentialTop ? 'border border-fin-gold/40' : 'border border-fin-gold/30'} relative">
           <div class="recommend-badge">最佳匹配</div>
           <div class="flex flex-col md:flex-row md:items-center gap-4">
             <div class="score-ring" style="background: conic-gradient(#c9a96e ${top.score}%, #1a1a26 0);">
@@ -443,12 +470,9 @@
               </div>
             </div>
             <div class="text-right">
-              <div class="text-2xl font-bold text-fin-text">¥${top.premium.toLocaleString()}</div>
+              <div class="text-2xl font-bold text-fin-text">${top.currency === 'usd' ? '$' : '¥'}${top.premium.toLocaleString()}</div>
               <div class="text-xs text-fin-text3">预估年保费 · ${coverage}万保额</div>
             </div>
-          </div>
-          <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-            ${top.pros.map(pro => `<div class="flex items-start gap-2 text-sm text-fin-text"><span class="text-fin-success mt-0.5">✓</span><span>${pro}</span></div>`).join('')}
           </div>
           <div class="mt-4 pt-4 border-t border-fin-border">
             <p class="text-sm text-fin-text2"><span class="text-fin-gold">推荐理由：</span>${getRecommendationReason(top, results)}</p>
@@ -456,18 +480,82 @@
         </div>
 
         <div class="card rounded-2xl p-5">
-          <h3 class="text-lg font-bold mb-4">四款产品综合评分排序</h3>
-          <div class="space-y-3">
-            ${results.map((p, idx) => `
-              <div class="flex items-center gap-4 p-3 rounded-xl bg-fin-surface2/50">
-                <div class="text-lg font-bold text-fin-gold w-6">${idx + 1}</div>
-                <div class="flex-1">
+          <h3 class="text-lg font-bold mb-1">同一指标横向对比</h3>
+          <p class="text-xs text-fin-text3 mb-4">香港保诚在保额增长、疾病定义宽松度和多次赔付总额上优势显著</p>
+          <div class="overflow-x-auto">
+            <table class="compare w-full min-w-[800px]">
+              <thead>
+                <tr>
+                  <th class="w-36">对比指标</th>
+                  ${results.map(p => `<th class="${p.id === 'prudential' ? 'text-fin-gold' : ''}">${p.name}<br><span class="text-xs font-normal ${p.id === 'prudential' ? 'text-fin-goldLight' : 'text-fin-text3'}">${p.company}</span></th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-medium text-fin-text">保障疾病范围</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.metrics.criticalIllnessCount}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">疾病定义宽松度</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}"><strong>${p.metrics.diseaseDefinition}</strong><br><span class="text-xs text-fin-text3">${p.metrics.definitionDetail}</span></td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">重疾赔付次数/总额</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.metrics.payoutTimes}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">癌症保障</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.metrics.cancerPayout}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">心梗/中风多次赔</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.metrics.heartStrokePayout}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">保额增长/抗通胀</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.metrics.inflationProtection}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">老年疾病护理</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.metrics.elderlyCare}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">轻症/中症赔付</td>
+                  ${results.map(p => `<td>${p.metrics.minorPayout}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">身故保障</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.metrics.deathBenefit}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">理赔便利性</td>
+                  ${results.map(p => `<td>${p.metrics.claimConvenience}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">内地医院要求</td>
+                  ${results.map(p => `<td>${p.metrics.hospitalRequirement}</td>`).join('')}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card rounded-2xl p-5">
+          <h3 class="text-lg font-bold mb-4">核心优势维度评分（满分100）</h3>
+          <div class="space-y-4">
+            ${results.map(p => `
+              <div class="${p.id === 'prudential' ? 'p-4 rounded-xl border border-fin-gold/30 bg-fin-gold/5' : ''}">
+                <div class="flex items-center justify-between mb-3">
                   <div class="font-medium text-fin-text">${p.name}</div>
-                  <div class="text-xs text-fin-text3">${p.company} · 匹配度 ${p.score}%</div>
+                  <div class="text-sm text-fin-gold">综合匹配度 ${p.score}%</div>
                 </div>
-                <div class="text-right">
-                  <div class="font-bold text-fin-text">¥${p.premium.toLocaleString()}</div>
-                  <div class="text-xs text-fin-text3">/年</div>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                  ${renderAdvantageBar('疾病范围', p.advantageScores.coverage)}
+                  ${renderAdvantageBar('定义宽松', p.advantageScores.definition)}
+                  ${renderAdvantageBar('多次赔付', p.advantageScores.multiple)}
+                  ${renderAdvantageBar('抗通胀', p.advantageScores.inflation)}
+                  ${renderAdvantageBar('老年护理', p.advantageScores.elderly)}
+                  ${renderAdvantageBar('理赔便利', p.advantageScores.claim)}
                 </div>
               </div>
             `).join('')}
@@ -480,46 +568,55 @@
             <table class="compare w-full min-w-[700px]">
               <thead>
                 <tr>
-                  <th class="w-32">理赔场景</th>
-                  ${results.map(p => `<th>${p.name}<br><span class="text-xs text-fin-text3 font-normal">${p.company}</span></th>`).join('')}
+                  <th class="w-32">场景</th>
+                  ${results.map(p => `<th class="${p.id === 'prudential' ? 'text-fin-gold' : ''}">${p.name}</th>`).join('')}
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="font-medium text-fin-text">首次确诊重疾</td>${results.map(p => `<td>${p.scenarios.firstCritical}</td>`).join('')}</tr>
-                <tr><td class="font-medium text-fin-text">癌症复发/转移</td>${results.map(p => `<td>${p.scenarios.cancerRecurrence}</td>`).join('')}</tr>
-                <tr><td class="font-medium text-fin-text">心梗后脑中风</td>${results.map(p => `<td>${p.scenarios.heartStroke}</td>`).join('')}</tr>
-                <tr><td class="font-medium text-fin-text">老年疾病护理</td>${results.map(p => `<td>${p.scenarios.elderlyCare}</td>`).join('')}</tr>
+                <tr><td class="font-medium text-fin-text">首次确诊重疾</td>${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.scenarios.firstCritical}</td>`).join('')}</tr>
+                <tr><td class="font-medium text-fin-text">持有10年后保额</td>${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.scenarios.year10}</td>`).join('')}</tr>
+                <tr><td class="font-medium text-fin-text">持有20年后保额</td>${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.scenarios.year20}</td>`).join('')}</tr>
+                <tr><td class="font-medium text-fin-text">癌症复发/转移</td>${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.scenarios.cancerRecurrence}</td>`).join('')}</tr>
+                <tr><td class="font-medium text-fin-text">心梗后脑中风</td>${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.scenarios.heartStroke}</td>`).join('')}</tr>
+                <tr><td class="font-medium text-fin-text">老年疾病护理</td>${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.scenarios.elderlyCare}</td>`).join('')}</tr>
                 <tr><td class="font-medium text-fin-text">轻症/中症赔付</td>${results.map(p => `<td>${p.scenarios.minorIllness}</td>`).join('')}</tr>
-                <tr><td class="font-medium text-fin-text">未理赔身故</td>${results.map(p => `<td>${p.scenarios.death}</td>`).join('')}</tr>
+                <tr><td class="font-medium text-fin-text">未理赔身故</td>${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.scenarios.death}</td>`).join('')}</tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <div class="card rounded-2xl p-5">
-          <h3 class="text-lg font-bold mb-4">产品详情与注意事项</h3>
-          <div class="space-y-4">
-            ${results.map(p => `
-              <div class="border-b border-fin-border last:border-0 pb-4 last:pb-0">
-                <div class="flex items-center justify-between mb-2">
-                  <h4 class="font-bold text-fin-text">${p.name}</h4>
-                  <span class="text-xs text-fin-gold">匹配度 ${p.score}%</span>
-                </div>
-                <ul class="text-sm text-fin-text2 space-y-1 mb-2">
-                  ${p.features.map(f => `<li>• ${f}</li>`).join('')}
-                </ul>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <span class="text-fin-success font-medium">优势：</span>
-                    ${p.pros.join('；')}
-                  </div>
-                  <div>
-                    <span class="text-fin-danger font-medium">注意：</span>
-                    ${p.cons.join('；')}
-                  </div>
-                </div>
+        <div class="card rounded-2xl p-5 border border-fin-gold/30 bg-gradient-to-br from-fin-gold/5 to-transparent">
+          <h3 class="text-lg font-bold gold-gradient mb-3">为什么香港保诚在核心指标上更优？</h3>
+          <div class="space-y-3 text-sm text-fin-text2">
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-fin-gold/20 text-fin-gold flex items-center justify-center text-xs flex-shrink-0">1</span>
+              <div>
+                <div class="font-medium text-fin-text">保额随时间增长，抵抗通胀</div>
+                <div>内地重疾险保额固定（如50万终身50万），而保诚美元保单通过非保证分红，保额可随时间增长，10年后可能达到60-70万，20年后75-90万，长期抗通胀能力显著更强。</div>
               </div>
-            `).join('')}
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-fin-gold/20 text-fin-gold flex items-center justify-center text-xs flex-shrink-0">2</span>
+              <div>
+                <div class="font-medium text-fin-text">疾病定义更宽松，理赔门槛更低</div>
+                <div>例如「中风」内地要求确诊180天后仍遗留永久性功能障碍，保诚无此严格时限；部分早期癌症、甲状腺癌的认定也更宽松，更容易获得赔付。</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-fin-gold/20 text-fin-gold flex items-center justify-center text-xs flex-shrink-0">3</span>
+              <div>
+                <div class="font-medium text-fin-text">多次赔付总额高，癌症/心/脑可持续保障</div>
+                <div>癌症、心脏病、中风均可多次赔付，各最高累计200%，严重疾病后仍有高额保障；内地产品多为单次或有限多次。</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-fin-gold/20 text-fin-gold flex items-center justify-center text-xs flex-shrink-0">4</span>
+              <div>
+                <div class="font-medium text-fin-text">老年疾病终身年金</div>
+                <div>确诊严重脑退化症或柏金逊病1年后，每年给付6%保额直至身故，将重疾险与长期护理需求结合，这是内地产品普遍缺失的责任。</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -534,18 +631,32 @@
       panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    function renderAdvantageBar(label, score) {
+      return `
+        <div>
+          <div class="flex justify-between mb-1">
+            <span class="text-fin-text3">${label}</span>
+            <span class="text-fin-text">${score}</span>
+          </div>
+          <div class="advantage-bar">
+            <div class="advantage-fill" style="width: ${score}%"></div>
+          </div>
+        </div>
+      `;
+    }
+
     function getRecommendationReason(top, all) {
       if (top.id === 'prudential') {
-        return '您的需求偏向多次高杠杆保障/美元资产/长期护理，保诚在疾病定义宽松度、多次赔付总额和老年年金方面优势最大。';
+        return '综合核心指标（保额增长、疾病定义宽松度、多次赔付、老年护理），香港保诚「诚保一生」匹配度最高，尤其适合看重长期抗通胀保障和多次重疾杠杆的客户。';
       }
       if (top.id === 'cpic') {
-        return '您在预算控制下希望获得较高的轻中症赔付和可选多次重疾保障，太保蓝鲸1号性价比突出。';
+        return '您在预算控制下希望获得较高的轻中症赔付和可选多次重疾保障，太保蓝鲸1号性价比突出，但保额固定、疾病定义较严格。';
       }
       if (top.id === 'chinalife') {
-        return '您看重品牌服务、稳健现金价值和可选重疾多次赔，中国人寿康宁尊享是稳妥选择。';
+        return '您看重品牌服务、稳健现金价值和可选重疾多次赔，中国人寿康宁尊享是稳妥选择，但保额固定、轻症比例偏低。';
       }
       if (top.id === 'pingan') {
-        return '您偏好健康管理生态和便捷的理赔体验，平安盛世福适合作为基础重疾保障。';
+        return '您偏好健康管理生态和便捷的理赔体验，平安盛世福适合作为基础重疾保障，但多次保障和保额增长较弱。';
       }
       return '综合您的需求参数，该产品匹配度最高。';
     }
