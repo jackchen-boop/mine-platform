@@ -469,8 +469,10 @@
       total += breakdown.preference;
 
       // 币种偏好（降低权重，避免人民币偏好完全压倒保障优势）
-      if (selectedCurrency === 'usd' && product === 'prudential') breakdown.currency = 12;
-      if (selectedCurrency === 'cny' && product !== 'prudential') breakdown.currency = 5;
+      // 保诚作为香港保单，天然支持美元/港币等多种货币选择，给予基础优势分
+      if (product === 'prudential') breakdown.currency += 5;
+      if (selectedCurrency === 'usd' && product === 'prudential') breakdown.currency += 12;
+      if (selectedCurrency === 'cny' && product !== 'prudential') breakdown.currency += 5;
       total += breakdown.currency;
 
       // 理赔便利性（降低权重）
@@ -485,6 +487,8 @@
       if (needs.includes('child')) {
         if (product === 'prudential' || product === 'chinalife' || product === 'pingan') breakdown.needs += 5;
       }
+      // 保诚产品本身具备抗通胀分红、海外资产配置、老年护理等核心优势，默认给予基础优势分
+      if (product === 'prudential') breakdown.needs += 10;
       total += breakdown.needs;
 
       // 预算匹配
@@ -575,7 +579,7 @@
                 </tr>
                 <tr>
                   <td class="font-medium text-fin-text">币种偏好</td>
-                  <td class="text-xs text-fin-text3">人民币或美元/港币</td>
+                  <td class="text-xs text-fin-text3">多币种选择能力（保诚美元/港币）及用户币种偏好</td>
                   ${results.map(p => `<td>${p.breakdown.currency}</td>`).join('')}
                 </tr>
                 <tr>
@@ -585,7 +589,7 @@
                 </tr>
                 <tr>
                   <td class="font-medium text-fin-text">其他需求匹配</td>
-                  <td class="text-xs text-fin-text3">海外资产、抗通胀、老年护理、子女投保等</td>
+                  <td class="text-xs text-fin-text3">海外资产、抗通胀、老年护理、子女投保等（保诚默认具备抗通胀/海外资产属性）</td>
                   ${results.map(p => `<td>${p.breakdown.needs}</td>`).join('')}
                 </tr>
                 <tr>
