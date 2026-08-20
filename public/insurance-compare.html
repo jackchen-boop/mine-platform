@@ -71,6 +71,10 @@
       .score-ring { width: 52px; height: 52px; font-size: 0.9rem; }
       .score-ring > div { width: 44px !important; height: 44px !important; }
     }
+    .wechat-tip { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; padding: 1rem; }
+    .wechat-tip.active { display: flex; }
+    .wechat-tip-content { background: #1a1a26; border: 1px solid #c9a96e; border-radius: 1rem; padding: 1.5rem; max-width: 320px; text-align: center; }
+    .wechat-tip-arrow { position: absolute; top: 12px; right: 20px; width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 20px solid #c9a96e; }
   </style>
 </head>
 <body class="min-h-screen">
@@ -900,10 +904,11 @@
               </div>
             </div>
           </div>
-          <a href="/assets/individual-life-claim-report-2025.pdf" target="_blank" class="btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm">
+          <a href="/assets/individual-life-claim-report-2025.pdf" target="_blank" download="保诚2025个人寿险理赔报告.pdf" onclick="if(isWechat()){showWechatTip(event);return false;}" class="btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             下载保诚2025个人寿险理赔报告（PDF）
           </a>
+          <p class="text-[10px] text-fin-text3 mt-2">若微信内无法下载，请点击右上角「在浏览器打开」后重试。</p>
         </div>
 
         <div class="card rounded-2xl p-5 mobile-compact">
@@ -915,6 +920,22 @@
 
       panel.innerHTML = html;
       panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function isWechat() {
+      return /MicroMessenger|WeChat/i.test(navigator.userAgent);
+    }
+
+    function showWechatTip(e) {
+      if (e) e.preventDefault();
+      const tip = document.getElementById('wechatTip');
+      if (tip) tip.classList.add('active');
+    }
+
+    function hideWechatTip(e) {
+      if (e) e.stopPropagation();
+      const tip = document.getElementById('wechatTip');
+      if (tip) tip.classList.remove('active');
     }
 
     function toggleCollapse(id, btn) {
@@ -964,5 +985,15 @@
     // Generate on load with defaults
     window.addEventListener('load', generateComparison);
   </script>
+
+  <!-- 微信内下载提示遮罩 -->
+  <div id="wechatTip" class="wechat-tip" onclick="hideWechatTip()">
+    <div class="wechat-tip-arrow"></div>
+    <div class="wechat-tip-content">
+      <div class="text-fin-gold text-lg font-bold mb-3">请在浏览器中打开</div>
+      <p class="text-sm text-fin-text2 mb-4">微信内置浏览器不支持直接下载 PDF 文件。请点击右上角 <span class="text-fin-gold">⋮</span> 或 <span class="text-fin-gold">···</span>，选择「在浏览器打开」后下载。</p>
+      <button class="btn-primary px-5 py-2 rounded-lg text-sm" onclick="hideWechatTip()">我知道了</button>
+    </div>
+  </div>
 </body>
 </html>
