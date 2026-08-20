@@ -229,27 +229,36 @@
         tags: ['多次赔付', '保额增长', '首10年额外50%', '美元资产', '老年年金'],
         basePremiumFactor: 0.85,
         metrics: {
-          criticalIllnessCount: '56种严重疾病 + 127种病况',
+          criticalIllnessCount: '56种严重疾病 + 49种早期严重病况 + 儿童病况',
           diseaseDefinition: '宽松',
-          definitionDetail: '中风不要求180天后遗留障碍；部分早期癌症/甲状腺癌定义更友好',
-          payoutTimes: '严重疾病1次 + 多重危疾延伸，总额最高达保额1000%',
-          cancerPayout: '癌症最高累计200%',
-          heartStrokePayout: '心脏病/中风各最高累计200%',
+          definitionDetail: '中风不要求180天后遗留障碍；部分早期癌症/甲状腺癌定义更友好；原位癌可赔',
+          payoutTimes: '首次严重疾病100% + 多重延伸，总额最高达保额1000%',
+          cancerPayout: '首次100% + 癌症额外2次×100% = 最高300%保额',
+          heartStrokePayout: '首次100% + 心脏病/中风各额外2次×100% = 各最高300%保额',
           inflationProtection: '★★★★★ 非保证分红，保额随时间增长，可抵抗通胀',
           first10Years: '首10年确诊重疾/身故额外赔付50%保额',
           elderlyCare: '确诊脑退化/柏金逊1年后，每年给付6%保额直至身故',
-          minorPayout: '早期危疾按比例赔付',
+          minorPayout: '49种早期严重病况按比例赔付（最高25%）',
           deathBenefit: '保额 + 累积分红（非保证）',
           claimConvenience: '需邮寄香港、指定医院、医生填表',
           hospitalRequirement: '三级医院或15个指定城市二级医院'
+        },
+        quantMetrics: {
+          severeIllnessCount: 56,
+          earlyIllnessCount: 49,
+          highIncidenceCoverage: 100,
+          definitionStrictness: 95,
+          claimProbabilityScore: 95,
+          totalCoveredConditions: 127,
+          maxTotalPayout: '1000%'
         },
         advantageScores: { coverage: 95, definition: 95, multiple: 98, inflation: 98, elderly: 95, claim: 55 },
         scenarios: {
           firstCritical: '50万（首10年额外25万，共75万）',
           year10: '保额随分红增长，约60-70万（非保证）',
           year20: '保额随分红增长，约75-90万（非保证）',
-          cancerRecurrence: '首次50万 + 复发/转移最高再赔100万',
-          heartStroke: '心脏病、脑中风可分别多次赔付',
+          cancerRecurrence: '首次50万 + 癌症额外最高再赔100万，累计最高150万',
+          heartStroke: '首次50万 + 心脏病/中风各自最高可再赔100万',
           elderlyCare: '确诊脑退化/柏金逊1年后每年3万',
           minorIllness: '早期危疾按比例赔付',
           death: '保额+累积分红（非保证）'
@@ -269,7 +278,7 @@
           diseaseDefinition: '较严格',
           definitionDetail: '遵循内地重疾定义规范，部分病种需达到特定状态',
           payoutTimes: '基础单次；可选6组额外5次',
-          cancerPayout: '基础单次；多次赔需癌症单独分组',
+          cancerPayout: '基础单次；多次赔需癌症单独分组且跨组',
           heartStrokePayout: '多次赔需跨组',
           inflationProtection: '★ 保额固定，无分红增长',
           elderlyCare: '无专门老年年金',
@@ -277,6 +286,15 @@
           deathBenefit: 'max（保额，1.05×保费，现金价值）',
           claimConvenience: '内地APP/线上理赔，流程快',
           hospitalRequirement: '二级及以上公立医院通常即可'
+        },
+        quantMetrics: {
+          severeIllnessCount: 120,
+          earlyIllnessCount: 40,
+          highIncidenceCoverage: 100,
+          definitionStrictness: 55,
+          claimProbabilityScore: 60,
+          totalCoveredConditions: 160,
+          maxTotalPayout: '600%'
         },
         advantageScores: { coverage: 70, definition: 55, multiple: 65, inflation: 25, elderly: 20, claim: 95 },
         scenarios: {
@@ -304,14 +322,23 @@
           diseaseDefinition: '较严格',
           definitionDetail: '遵循内地重疾定义规范',
           payoutTimes: '基础单次；可选2-3次不分组',
-          cancerPayout: '基础单次；二次重疾赔120%（其他重疾）',
-          heartStrokePayout: '可选二次重疾可分别赔付',
+          cancerPayout: '基础单次；二次重疾赔120%（需不同病种）',
+          heartStrokePayout: '可选二次重疾可分别赔付（需不同病种）',
           inflationProtection: '★ 保额固定，无分红增长',
           elderlyCare: '55岁后首次重疾额外30%',
           minorPayout: '轻症30% / 中症60%',
           deathBenefit: '按所选方案赔付保费或保额',
           claimConvenience: '内地APP/线上理赔，流程快',
           hospitalRequirement: '二级及以上公立医院通常即可'
+        },
+        quantMetrics: {
+          severeIllnessCount: 120,
+          earlyIllnessCount: 60,
+          highIncidenceCoverage: 100,
+          definitionStrictness: 55,
+          claimProbabilityScore: 65,
+          totalCoveredConditions: 180,
+          maxTotalPayout: '360%'
         },
         advantageScores: { coverage: 70, definition: 55, multiple: 78, inflation: 30, elderly: 50, claim: 95 },
         scenarios: {
@@ -347,6 +374,15 @@
           deathBenefit: '赔付保额',
           claimConvenience: '内地APP/线上理赔，流程快',
           hospitalRequirement: '二级及以上公立医院通常即可'
+        },
+        quantMetrics: {
+          severeIllnessCount: 120,
+          earlyIllnessCount: 60,
+          highIncidenceCoverage: 100,
+          definitionStrictness: 55,
+          claimProbabilityScore: 55,
+          totalCoveredConditions: 180,
+          maxTotalPayout: '100%'
         },
         advantageScores: { coverage: 70, definition: 55, multiple: 35, inflation: 25, elderly: 20, claim: 95 },
         scenarios: {
@@ -568,6 +604,67 @@
         </div>
 
         <div class="card rounded-2xl p-5">
+          <h3 class="text-lg font-bold mb-1">疾病保障范围量化对比</h3>
+          <p class="text-xs text-fin-text3 mb-4">不仅看病种数量，更看高发重疾覆盖、理赔宽松度和实际赔付概率</p>
+          <div class="overflow-x-auto">
+            <table class="compare w-full min-w-[800px]">
+              <thead>
+                <tr>
+                  <th class="w-40">量化指标</th>
+                  <th>指标说明</th>
+                  ${results.map(p => `<th class="${p.id === 'prudential' ? 'text-fin-gold' : ''}">${p.name}<br><span class="text-xs font-normal ${p.id === 'prudential' ? 'text-fin-goldLight' : 'text-fin-text3'}">${p.company}</span></th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-medium text-fin-text">严重疾病数量</td>
+                  <td class="text-xs text-fin-text3">达到重疾标准即可一次性赔付的病种数</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.quantMetrics.severeIllnessCount}种</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">早期/轻中症病况</td>
+                  <td class="text-xs text-fin-text3">未达重疾标准也可按比例赔付的病种数</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.quantMetrics.earlyIllnessCount}种</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">总保障病况数</td>
+                  <td class="text-xs text-fin-text3">重疾 + 早期/轻中症 + 儿童特疾等合计</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.quantMetrics.totalCoveredConditions}种</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">高发重疾覆盖率</td>
+                  <td class="text-xs text-fin-text3">癌症、心梗、脑中风等28种高发重疾是否全部覆盖</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.quantMetrics.highIncidenceCoverage}%</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">疾病定义宽松度</td>
+                  <td class="text-xs text-fin-text3">满分100，分数越高理赔门槛越低</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}"><div class="font-bold mb-1">${p.quantMetrics.definitionStrictness}</div><div class="advantage-bar"><div class="advantage-fill" style="width: ${p.quantMetrics.definitionStrictness}%"></div></div></td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">实际理赔概率评分</td>
+                  <td class="text-xs text-fin-text3">综合考虑病种数量、定义宽松度、早期病况覆盖后的理赔可能性</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}"><div class="font-bold mb-1">${p.quantMetrics.claimProbabilityScore}</div><div class="advantage-bar"><div class="advantage-fill" style="width: ${p.quantMetrics.claimProbabilityScore}%"></div></div></td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">最高累计赔付倍数</td>
+                  <td class="text-xs text-fin-text3">多次重疾/复发情况下，理论上最高可获赔的保额倍数</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.quantMetrics.maxTotalPayout}</td>`).join('')}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-4 p-4 rounded-xl bg-fin-surface2/50 text-xs text-fin-text2">
+            <div class="font-medium text-fin-text mb-2">解读</div>
+            <ul class="space-y-1 list-disc list-inside">
+              <li><span class="text-fin-gold">数量≠保障好：</span>内地产品重疾数量120种多于保诚56种，但28种高发重疾已占理赔95%以上，四家均100%覆盖。</li>
+              <li><span class="text-fin-gold">理赔门槛更重要：</span>保诚疾病定义更宽松（如中风不要求180天后遗留永久障碍），且早期病况覆盖更广，实际获赔概率更高。</li>
+              <li><span class="text-fin-gold">多次赔付杠杆：</span>保诚癌症/心/脑均可多次赔付，最高累计赔付倍数远高于内地产品。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card rounded-2xl p-5">
           <h3 class="text-lg font-bold mb-1">同一指标横向对比</h3>
           <p class="text-xs text-fin-text3 mb-4">香港保诚在保额增长、疾病定义宽松度和多次赔付总额上优势显著</p>
           <div class="overflow-x-auto">
@@ -699,7 +796,7 @@
               <span class="w-6 h-6 rounded-full bg-fin-gold/20 text-fin-gold flex items-center justify-center text-xs flex-shrink-0">3</span>
               <div>
                 <div class="font-medium text-fin-text">多次赔付总额高，癌症/心/脑可持续保障</div>
-                <div>癌症、心脏病、中风均可多次赔付，各最高累计200%，严重疾病后仍有高额保障；内地产品多为单次或有限多次。</div>
+                <div>首次严重疾病赔付100%后，癌症、心脏病、中风各可额外赔付2次（每次100%），加上脑退化症、主要器官及功能相关疾病的额外保障，总额最高可达保额的1000%；内地产品多为单次或有限多次。</div>
               </div>
             </div>
             <div class="flex items-start gap-3">
