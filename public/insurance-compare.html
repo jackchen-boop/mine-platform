@@ -500,7 +500,7 @@
       else breakdown.budget = -8;
       total += breakdown.budget;
 
-      const finalScore = Math.max(0, Math.min(100, total));
+      const finalScore = Math.max(0, total);
       return { score: finalScore, breakdown, premium };
     }
 
@@ -529,7 +529,7 @@
         <div class="card rounded-2xl p-5 ${isPrudentialTop ? 'border border-fin-gold/40' : 'border border-fin-gold/30'} relative">
           <div class="recommend-badge">最佳匹配</div>
           <div class="flex flex-col md:flex-row md:items-center gap-4">
-            <div class="score-ring" style="background: conic-gradient(#c9a96e ${top.score}%, #1a1a26 0);">
+            <div class="score-ring" style="background: conic-gradient(#c9a96e ${Math.min(top.score, 100)}%, #1a1a26 0);">
               <div class="w-14 h-14 rounded-full bg-fin-surface flex items-center justify-center">${top.score}</div>
             </div>
             <div class="flex-1">
@@ -598,8 +598,8 @@
                   ${results.map(p => `<td class="${p.breakdown.budget < 0 ? 'text-fin-danger' : ''}">${p.breakdown.budget > 0 ? '+' : ''}${p.breakdown.budget}</td>`).join('')}
                 </tr>
                 <tr class="bg-fin-surface2/50">
-                  <td class="font-bold text-fin-text">综合匹配度</td>
-                  <td></td>
+                  <td class="font-bold text-fin-text">综合评分</td>
+                  <td class="text-xs text-fin-text3">原始总分，反映真实分差</td>
                   ${results.map(p => `<td class="font-bold ${p.id === 'prudential' ? 'text-fin-gold' : 'text-fin-text'}">${p.score}</td>`).join('')}
                 </tr>
               </tbody>
@@ -741,7 +741,7 @@
               <div class="${p.id === 'prudential' ? 'p-4 rounded-xl border border-fin-gold/30 bg-fin-gold/5' : ''}">
                 <div class="flex items-center justify-between mb-3">
                   <div class="font-medium text-fin-text">${p.name}</div>
-                  <div class="text-sm text-fin-gold">综合匹配度 ${p.score}%</div>
+                  <div class="text-sm text-fin-gold">综合评分 ${p.score}</div>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
                   ${renderAdvantageBar('疾病范围', p.advantageScores.coverage)}
@@ -847,8 +847,9 @@
     }
 
     function getRecommendationReason(top, all) {
+      const gap = top.score - all[1].score;
       if (top.id === 'prudential') {
-        return '综合核心指标（保额增长、疾病定义宽松度、多次赔付、老年护理），香港保诚「诚保一生」匹配度最高，尤其适合看重长期抗通胀保障和多次重疾杠杆的客户。';
+        return `综合核心指标（保额增长、疾病定义宽松度、多次赔付、老年护理），香港保诚「诚保一生」综合评分最高（领先第二名${gap}分），尤其适合看重长期抗通胀保障和多次重疾杠杆的客户。`;
       }
       if (top.id === 'cpic') {
         return '您在预算控制下希望获得较高的轻中症赔付和可选多次重疾保障，太保蓝鲸1号性价比突出，但保额固定、疾病定义较严格。';
@@ -859,7 +860,7 @@
       if (top.id === 'pingan') {
         return '您偏好健康管理生态和便捷的理赔体验，平安盛世福适合作为基础重疾保障，但多次保障和保额增长较弱。';
       }
-      return '综合您的需求参数，该产品匹配度最高。';
+      return '综合您的需求参数，该产品综合评分最高。';
     }
 
     // Generate on load with defaults
