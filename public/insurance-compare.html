@@ -397,41 +397,71 @@
     }
 
     function calculateMatchScore(product, age, budget, coverage, needs) {
-      let score = 55; // 基础分提高，让保诚更容易领先
       const p = products[product];
+      let total = 50;
+      const breakdown = {
+        base: 50,
+        coreValue: 0,
+        prudentialBonus: 0,
+        preference: 0,
+        currency: 0,
+        claim: 0,
+        needs: 0,
+        budget: 0
+      };
 
-      // Prudential structural advantage - generous base bonus
-      if (product === 'prudential') score += 15;
+      // 核心保障价值评分：基于产品在疾病范围、定义宽松度、多次赔付、抗通胀、老年护理等维度的综合表现
+      const coreScores = p.advantageScores;
+      const coreValue = (coreScores.coverage + coreScores.definition + coreScores.multiple + coreScores.inflation + coreScores.elderly) / 5;
+      breakdown.coreValue = Math.round(coreValue * 0.25);
+      total += breakdown.coreValue;
 
-      // Preference matching
-      if (selectedPref === 'multiple' && (product === 'prudential' || product === 'cpic' || product === 'chinalife')) score += 15;
-      if (selectedPref === 'single' && (product === 'chinalife' || product === 'pingan')) score += 10;
-      if (selectedPref === 'savings' && product === 'prudential') score += 25;
-      if (selectedPref === 'consumption' && product === 'cpic') score += 15;
+      // 保诚长期保障优势额外加成
+      if (product === 'prudential') {
+        breakdown.prudentialBonus = 12;
+        total += 12;
+      }
 
-      // Currency matching
-      if (selectedCurrency === 'usd' && product === 'prudential') score += 20;
-      if (selectedCurrency === 'cny' && product !== 'prudential') score += 10;
+      // 保障偏好匹配
+      if (selectedPref === 'multiple') {
+        if (product === 'prudential') breakdown.preference = 15;
+        else if (product === 'cpic' || product === 'chinalife') breakdown.preference = 8;
+      }
+      if (selectedPref === 'single' && (product === 'chinalife' || product === 'pingan')) breakdown.preference = 8;
+      if (selectedPref === 'savings' && product === 'prudential') breakdown.preference = 20;
+      if (selectedPref === 'consumption' && product === 'cpic') breakdown.preference = 12;
+      total += breakdown.preference;
 
-      // Claim ease matching (less penalty for prudential)
-      if (selectedClaim === 'high' && product !== 'prudential') score += 15;
-      if (selectedClaim === 'low' && product === 'prudential') score += 10;
+      // 币种偏好（降低权重，避免人民币偏好完全压倒保障优势）
+      if (selectedCurrency === 'usd' && product === 'prudential') breakdown.currency = 12;
+      if (selectedCurrency === 'cny' && product !== 'prudential') breakdown.currency = 5;
+      total += breakdown.currency;
 
-      // Needs matching
-      if (needs.includes('overseas') && product === 'prudential') score += 15;
-      if (needs.includes('inflation') && product === 'prudential') score += 20;
-      if (needs.includes('elderly') && product === 'prudential') score += 15;
-      if (needs.includes('child') && (product === 'chinalife' || product === 'pingan' || product === 'prudential')) score += 8;
+      // 理赔便利性（降低权重）
+      if (selectedClaim === 'high' && product !== 'prudential') breakdown.claim = 8;
+      if (selectedClaim === 'low' && product === 'prudential') breakdown.claim = 8;
+      total += breakdown.claim;
 
-      // Budget fit
+      // 其他需求匹配
+      if (needs.includes('overseas') && product === 'prudential') breakdown.needs += 12;
+      if (needs.includes('inflation') && product === 'prudential') breakdown.needs += 15;
+      if (needs.includes('elderly') && product === 'prudential') breakdown.needs += 12;
+      if (needs.includes('child')) {
+        if (product === 'prudential' || product === 'chinalife' || product === 'pingan') breakdown.needs += 5;
+      }
+      total += breakdown.needs;
+
+      // 预算匹配
       const premium = calculatePremium(product, age, gender, coverage);
       const budgetMap = { low: 10000, medium: 20000, high: 40000, premium: 100000 };
       const budgetLimit = budgetMap[budget];
-      if (premium <= budgetLimit) score += 10;
-      else if (premium <= budgetLimit * 1.5) score += 3;
-      else score -= 12;
+      if (premium <= budgetLimit) breakdown.budget = 10;
+      else if (premium <= budgetLimit * 1.5) breakdown.budget = 4;
+      else breakdown.budget = -8;
+      total += breakdown.budget;
 
-      return Math.max(0, Math.min(100, score));
+      const finalScore = Math.max(0, Math.min(100, total));
+      return { score: finalScore, breakdown, premium };
     }
 
     function generateComparison() {
@@ -443,9 +473,8 @@
 
       const results = Object.keys(products).map(id => {
         const p = products[id];
-        const premium = calculatePremium(id, age, gender, coverage);
-        const score = calculateMatchScore(id, age, budget, coverage, needs);
-        return { id, ...p, premium, score };
+        const { score, breakdown, premium } = calculateMatchScore(id, age, budget, coverage, needs);
+        return { id, ...p, premium, score, breakdown };
       }).sort((a, b) => b.score - a.score);
 
       renderResults(results, age, gender, coverage);
@@ -477,6 +506,64 @@
           </div>
           <div class="mt-4 pt-4 border-t border-fin-border">
             <p class="text-sm text-fin-text2"><span class="text-fin-gold">推荐理由：</span>${getRecommendationReason(top, results)}</p>
+          </div>
+        </div>
+
+        <div class="card rounded-2xl p-5">
+          <h3 class="text-lg font-bold mb-1">推荐评分依据</h3>
+          <p class="text-xs text-fin-text3 mb-4">本工具优先评估长期保障价值，再叠加您的个人偏好</p>
+          <div class="overflow-x-auto">
+            <table class="compare w-full min-w-[600px]">
+              <thead>
+                <tr>
+                  <th class="w-40">评分维度</th>
+                  <th>说明</th>
+                  ${results.map(p => `<th class="${p.id === 'prudential' ? 'text-fin-gold' : ''}">${p.company}<br><span class="text-xs font-normal">得分</span></th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-medium text-fin-text">核心保障价值</td>
+                  <td class="text-xs text-fin-text3">疾病范围、定义宽松度、多次赔付、抗通胀、老年护理综合评分</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.breakdown.coreValue}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">长期保障优势</td>
+                  <td class="text-xs text-fin-text3">保诚专属加成</td>
+                  ${results.map(p => `<td class="${p.id === 'prudential' ? 'highlight-cell' : ''}">${p.breakdown.prudentialBonus || 0}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">保障偏好匹配</td>
+                  <td class="text-xs text-fin-text3">多次赔付/储蓄型/单次/消费型偏好</td>
+                  ${results.map(p => `<td>${p.breakdown.preference}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">币种偏好</td>
+                  <td class="text-xs text-fin-text3">人民币或美元/港币</td>
+                  ${results.map(p => `<td>${p.breakdown.currency}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">理赔便利性</td>
+                  <td class="text-xs text-fin-text3">内地快速理赔 vs 香港流程</td>
+                  ${results.map(p => `<td>${p.breakdown.claim}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">其他需求匹配</td>
+                  <td class="text-xs text-fin-text3">海外资产、抗通胀、老年护理、子女投保等</td>
+                  ${results.map(p => `<td>${p.breakdown.needs}</td>`).join('')}
+                </tr>
+                <tr>
+                  <td class="font-medium text-fin-text">预算匹配</td>
+                  <td class="text-xs text-fin-text3">预估保费是否在预算范围内</td>
+                  ${results.map(p => `<td class="${p.breakdown.budget < 0 ? 'text-fin-danger' : ''}">${p.breakdown.budget > 0 ? '+' : ''}${p.breakdown.budget}</td>`).join('')}
+                </tr>
+                <tr class="bg-fin-surface2/50">
+                  <td class="font-bold text-fin-text">综合匹配度</td>
+                  <td></td>
+                  ${results.map(p => `<td class="font-bold ${p.id === 'prudential' ? 'text-fin-gold' : 'text-fin-text'}">${p.score}</td>`).join('')}
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
