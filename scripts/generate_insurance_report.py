@@ -274,8 +274,44 @@ def main():
         '直至身故。以50万保额为例，每年可获得3万元护理金，将重疾险与长期护理需求结合，对长寿风险'
         '较高的客户极具价值。内地三款产品均无此类设计。')
 
-    # 四、保诚内地医院理赔要求
-    add_heading_zh(doc, '四、保诚重疾险内地医院理赔要求', level=1)
+    # 四、保诚理赔服务优势
+    add_heading_zh(doc, '四、保诚理赔服务优势：数据透明、能赔尽赔', level=1)
+    add_paragraph_zh(doc,
+        '理赔是保险的核心环节。香港保诚每年发布《个人寿险理赔报告》，公开理赔数据与服务承诺，'
+        '在透明度、赔付能力和客户体验上均处于行业领先地位。')
+    add_paragraph_zh(doc, '表4-1 保诚2025年理赔核心数据', bold=True)
+    table_data = [
+        ['核心指标', '数据'],
+        ['2025年处理理赔案件', '超过140,000宗'],
+        ['2025年总赔付金额', '近70亿港元'],
+        ['整体成功理赔率', '96.6%'],
+        ['住院理赔平均处理时效', '2.3个工作日'],
+        ['危疾理赔平均处理时效', '2.7个工作日'],
+        ['身故理赔平均处理时效', '2.7个工作日'],
+        ['客户理赔满意度', '超过90%'],
+        ['内地医院网络覆盖', '超过5,500家'],
+        ['PremierFlex医疗计划医院覆盖', '超过14,000家']
+    ]
+    add_table_zh(doc, 10, 2, table_data)
+    add_paragraph_zh(doc,
+        '保诚理赔服务的核心优势包括：')
+    add_paragraph_zh(doc,
+        '1. 理赔数据白皮书公开透明：保诚是香港少数每年发布详细理赔报告的保险公司，公开理赔件数、'
+        '赔付金额、成功率和主要理赔原因，让客户在投保前就能了解真实理赔情况。')
+    add_paragraph_zh(doc,
+        '2. 能赔尽赔的专业态度：对于复杂或高价值理赔案例，保诚理赔团队会与医院、医疗顾问及再保险公司协作，'
+        '基于医学合理性和保单条款进行综合评估，而非简单拒赔。2025年整体成功理赔率达96.6%。')
+    add_paragraph_zh(doc,
+        '3. 广泛医疗网络与直付服务：内地医院网络覆盖超过5,500家，PremierFlex医疗计划覆盖超过14,000家医院；'
+        '并首创大湾区跨境癌症治疗医疗费用直付服务，减轻客户垫付压力。')
+    add_paragraph_zh(doc,
+        '4. 客户满意度与行业认可：2025年超过90%客户对理赔服务表示满意，并荣获香港保险大奖'
+        '「Outstanding Claims Management (Life)」等多项理赔服务奖项。')
+    add_paragraph_zh(doc,
+        '完整理赔报告可通过以下链接下载：https://minelab.top/assets/individual-life-claim-report-2025.pdf')
+
+    # 五、保诚内地医院理赔要求
+    add_heading_zh(doc, '五、保诚重疾险内地医院理赔要求', level=1)
     add_paragraph_zh(doc,
         '根据保诚香港官网披露，在内地就医申请危疾理赔时，需满足以下条件：')
     add_paragraph_zh(doc,
@@ -289,8 +325,8 @@ def main():
     add_paragraph_zh(doc,
         '5. 对比提示：内地重疾险通常只需二级及以上公立医院即可理赔，医院范围更广、流程更简化。')
 
-    # 五、适合人群分析
-    add_heading_zh(doc, '五、适合人群分析', level=1)
+    # 六、适合人群分析
+    add_heading_zh(doc, '六、适合人群分析', level=1)
 
     add_paragraph_zh(doc, '表5 产品适合人群匹配', bold=True)
     table_data = [
@@ -302,8 +338,8 @@ def main():
     ]
     add_table_zh(doc, 5, 3, table_data)
 
-    # 六、投保建议与风险提示
-    add_heading_zh(doc, '六、投保建议与风险提示', level=1)
+    # 七、投保建议与风险提示
+    add_heading_zh(doc, '七、投保建议与风险提示', level=1)
 
     add_heading_zh(doc, '6.1 投保建议', level=2)
     add_paragraph_zh(doc,
