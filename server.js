@@ -112,18 +112,30 @@ app.use('/api/insurance',         insuranceRoutes);
 
 // 保险工具子路径（不影响 minelab.top 原有页面）
 app.get(['/insurance', '/insurance/'], (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(join(__dirname, 'public', 'insurance-assessment.html'));
 });
 app.get(['/insurance/admin', '/insurance/admin/'], (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(join(__dirname, 'public', 'insurance-admin.html'));
 });
 app.get(['/insurance/compare', '/insurance/compare/'], (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(join(__dirname, 'public', 'insurance-compare.html'));
 });
 
 // 所有其他 GET 请求回退到 index.html
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/')) return next();
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(join(__dirname, 'public', 'index.html'));
 });
 
