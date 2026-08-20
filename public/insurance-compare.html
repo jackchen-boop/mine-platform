@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>重疾险产品智能对比 · 港险与内地险方案匹配</title>
+  <meta name="description" content="根据年龄、预算、保障需求，智能匹配香港保诚与内地三大保险公司重疾险产品，生成场景化保障对比分析">
+  <meta property="og:title" content="重疾险产品智能对比 · 港险与内地险方案匹配">
+  <meta property="og:description" content="输入需求参数，一键对比香港保诚与内地重疾险保障差异">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://minelab.top/insurance/compare">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            fin: {
+              bg: '#0a0a0f',
+              surface: '#12121a',
+              surface2: '#1a1a26',
+              surface3: '#222230',
+              gold: '#c9a96e',
+              goldLight: '#e0c88a',
+              goldDark: '#9a7d4a',
+              text: '#e2e8f0',
+              text2: '#94a3b8',
+              text3: '#64748b',
+              border: '#2a2a3a',
+              success: '#22c55e',
+              warning: '#f59e0b',
+              danger: '#ef4444'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Noto Sans SC', sans-serif; background-color: #0a0a0f; color: #e2e8f0; }
+    .gold-gradient { background: linear-gradient(135deg, #e0c88a 0%, #c9a96e 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .card { background: rgba(26,26,38,0.8); border: 1px solid rgba(42,42,58,0.8); backdrop-filter: blur(10px); }
+    .input-field { background: #12121a; border: 1px solid #2a2a3a; color: #e2e8f0; transition: all 0.2s; }
+    .input-field:focus { border-color: #c9a96e; outline: none; }
+    .option-card { border: 1px solid #2a2a3a; background: #12121a; transition: all 0.2s; cursor: pointer; }
+    .option-card:hover { border-color: #c9a96e; }
+    .option-card.selected { border-color: #c9a96e; background: rgba(201,169,110,0.1); }
+    .btn-primary { background: linear-gradient(135deg, #c9a96e 0%, #9a7d4a 100%); color: #0a0a0f; font-weight: 600; }
+    .btn-primary:hover { opacity: 0.9; }
+    .badge { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 9999px; }
+    .score-ring { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; }
+    table.compare th { background: #1a1a26; padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #2a2a3a; }
+    table.compare td { padding: 0.75rem; border-bottom: 1px solid #2a2a3a; vertical-align: top; }
+    .recommend-badge { position: absolute; top: -10px; right: 16px; background: linear-gradient(135deg, #c9a96e, #9a7d4a); color: #0a0a0f; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
+  </style>
+</head>
+<body class="min-h-screen">
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-fin-bg/90 backdrop-blur-md border-b border-fin-border">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-fin-gold to-fin-goldDark flex items-center justify-center text-fin-bg font-bold text-sm">M</div>
+        <div>
+          <h1 class="text-lg font-bold gold-gradient">重疾险智能对比</h1>
+          <p class="text-xs text-fin-text3">港险与内地险 · 需求参数化匹配</p>
+        </div>
+      </div>
+      <a href="/insurance" class="text-sm text-fin-text2 hover:text-fin-gold transition-colors">返回测评工具 →</a>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <!-- Intro -->
+    <section class="mb-8">
+      <h2 class="text-2xl md:text-3xl font-bold mb-3">输入您的需求，智能匹配最适合的重疾险方案</h2>
+      <p class="text-fin-text2 max-w-3xl mb-4">根据年龄、预算、保障偏好、币种需求和理赔便利性要求，对比香港保诚「诚保一生」与中国人寿、中国太保、中国平安主力重疾险产品，并模拟不同理赔场景下的实际保障效果。</p>
+      <a href="/reports/%E9%A6%99%E6%B8%AF%E4%BF%9D%E8%AF%9A%E4%B8%8E%E5%86%85%E5%9C%B0%E9%87%8D%E7%96%BE%E9%99%A9%E5%AF%B9%E6%AF%94%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.docx" class="inline-flex items-center gap-2 text-sm text-fin-gold border border-fin-gold/30 bg-fin-gold/10 px-4 py-2 rounded-lg hover:bg-fin-gold/20 transition-colors">
+        <span>⬇</span> 下载完整 Word 分析报告
+      </a>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Input Panel -->
+      <div class="lg:col-span-4">
+        <div class="card rounded-2xl p-5 sticky top-24">
+          <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-fin-gold/20 text-fin-gold flex items-center justify-center text-xs">1</span>
+            填写您的需求
+          </h3>
+
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-fin-text3 mb-1">年龄</label>
+                <input type="number" id="age" value="35" min="0" max="70" class="input-field w-full rounded-lg px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-fin-text3 mb-1">性别</label>
+                <select id="gender" class="input-field w-full rounded-lg px-3 py-2 text-sm">
+                  <option value="male">男</option>
+                  <option value="female">女</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs text-fin-text3 mb-1">期望保额（万元）</label>
+              <input type="range" id="coverageRange" min="20" max="200" value="50" step="10" class="w-full accent-fin-gold mb-1">
+              <div class="flex justify-between text-xs text-fin-text3">
+                <span>20万</span>
+                <span id="coverageValue" class="text-fin-gold font-bold">50万</span>
+                <span>200万</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs text-fin-text3 mb-1">年预算范围（万元）</label>
+              <select id="budget" class="input-field w-full rounded-lg px-3 py-2 text-sm">
+                <option value="low">1万以下</option>
+                <option value="medium" selected>1-2万</option>
+                <option value="high">2-4万</option>
+                <option value="premium">4万以上</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs text-fin-text3 mb-2">保障偏好</label>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="option-card selected rounded-lg p-3 text-center text-sm" data-group="pref" data-value="multiple">
+                  <div class="font-medium text-fin-text">多次赔付</div>
+                  <div class="text-xs text-fin-text3 mt-1">担心复发/二次重疾</div>
+                </div>
+                <div class="option-card rounded-lg p-3 text-center text-sm" data-group="pref" data-value="single">
+                  <div class="font-medium text-fin-text">单次高保额</div>
+                  <div class="text-xs text-fin-text3 mt-1">首次赔付要充足</div>
+                </div>
+                <div class="option-card rounded-lg p-3 text-center text-sm" data-group="pref" data-value="savings">
+                  <div class="font-medium text-fin-text">储蓄/分红型</div>
+                  <div class="text-xs text-fin-text3 mt-1">保额可增长</div>
+                </div>
+                <div class="option-card rounded-lg p-3 text-center text-sm" data-group="pref" data-value="consumption">
+                  <div class="font-medium text-fin-text">消费型高杠杆</div>
+                  <div class="text-xs text-fin-text3 mt-1">预算有限先保障</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs text-fin-text3 mb-2">币种偏好</label>
+              <div class="flex gap-2">
+                <div class="option-card selected flex-1 rounded-lg p-3 text-center text-sm" data-group="currency" data-value="cny">
+                  <div class="font-medium text-fin-text">人民币保单</div>
+                </div>
+                <div class="option-card flex-1 rounded-lg p-3 text-center text-sm" data-group="currency" data-value="usd">
+                  <div class="font-medium text-fin-text">美元/港币保单</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs text-fin-text3 mb-2">理赔便利性要求</label>
+              <div class="flex gap-2">
+                <div class="option-card selected flex-1 rounded-lg p-3 text-center text-sm" data-group="claim" data-value="high">
+                  <div class="font-medium text-fin-text">高</div>
+                  <div class="text-xs text-fin-text3">内地快速理赔</div>
+                </div>
+                <div class="option-card flex-1 rounded-lg p-3 text-center text-sm" data-group="claim" data-value="medium">
+                  <div class="font-medium text-fin-text">中</div>
+                  <div class="text-xs text-fin-text3">可接受邮寄</div>
+                </div>
+                <div class="option-card flex-1 rounded-lg p-3 text-center text-sm" data-group="claim" data-value="low">
+                  <div class="font-medium text-fin-text">低</div>
+                  <div class="text-xs text-fin-text3">不介意流程长</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs text-fin-text3 mb-2">其他需求（多选）</label>
+              <div class="space-y-2">
+                <label class="flex items-center gap-2 text-sm text-fin-text cursor-pointer">
+                  <input type="checkbox" class="need-check accent-fin-gold" value="overseas">
+                  <span>有海外就医/美元资产配置需求</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-fin-text cursor-pointer">
+                  <input type="checkbox" class="need-check accent-fin-gold" value="child">
+                  <span>给子女投保，关注少儿特疾</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-fin-text cursor-pointer">
+                  <input type="checkbox" class="need-check accent-fin-gold" value="elderly">
+                  <span>关注老年疾病/长期护理保障</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-fin-text cursor-pointer">
+                  <input type="checkbox" class="need-check accent-fin-gold" value="health">
+                  <span>健康状况较复杂（结节/慢病）</span>
+                </label>
+              </div>
+            </div>
+
+            <button onclick="generateComparison()" class="btn-primary w-full py-3 rounded-xl text-sm mt-2">生成智能对比方案</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Panel -->
+      <div class="lg:col-span-8 space-y-6" id="resultPanel">
+        <!-- Placeholder -->
+        <div class="card rounded-2xl p-8 text-center">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-fin-surface2 flex items-center justify-center text-2xl">🛡️</div>
+          <h3 class="text-xl font-bold mb-2">等待生成方案</h3>
+          <p class="text-fin-text2 text-sm">请在左侧填写需求参数，点击「生成智能对比方案」查看产品匹配结果与场景化保障分析。</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Product database
+    const products = {
+      prudential: {
+        id: 'prudential',
+        name: '诚保一生 CIM3/BCIM3',
+        company: '香港保诚',
+        type: '香港分红型终身危疾险',
+        currency: 'usd',
+        claimEase: 'low',
+        tags: ['多次赔付', '美元资产', '老年年金', '分红增长'],
+        basePremiumFactor: 0.85,
+        features: [
+          '56种严重疾病 + 127种病况保障',
+          '严重疾病后多重危疾延伸，总额最高达保额1000%',
+          '癌症/心脏病/中风各最高赔付200%',
+          '老年疾病终身年金：脑退化/柏金逊每年6%保额',
+          '危疾后人寿延伸保障',
+          'BCIM3支持孕期投保'
+        ],
+        pros: ['疾病定义相对宽松', '多次赔付杠杆高', '美元资产对冲汇率风险', '保额随分红增长'],
+        cons: ['内地医院限制严格（三级或指定城市二级）', '理赔需邮寄香港、医生填表', '健康告知严格', '分红不确定'],
+        scenarios: {
+          firstCritical: '100%保额',
+          cancerRecurrence: '癌症可多次赔付，累计最高200%',
+          heartStroke: '心脏病、脑中风可分别多次赔付',
+          elderlyCare: '确诊脑退化/柏金逊1年后每年6%',
+          minorIllness: '早期严重疾病按比例赔付',
+          death: '保额+累积分红（非保证）'
+        }
+      },
+      chinalife: {
+        id: 'chinalife',
+        name: '康宁尊享 2024/2025',
+        company: '中国人寿',
+        type: '内地终身重疾险',
+        currency: 'cny',
+        claimEase: 'high',
+        tags: ['大品牌', '现金价值高', '可选多次赔', '少儿特疾'],
+        basePremiumFactor: 1.0,
+        features: [
+          '120种重疾单次赔付100%',
+          '可选重疾多次赔：6组额外5次（癌症单独分组）',
+          '15种少儿特疾额外100%',
+          '可选40种轻症6次×20% + 20种中症2次×50%',
+          '投保人/被保人双豁免',
+          '长期现金价值可超保费'
+        ],
+        pros: ['品牌网点多', '理赔便捷', '现金价值稳健', '可选责任丰富'],
+        cons: ['基础重疾单次赔付', '轻症比例偏低（20%）', '重疾多次赔分组'],
+        scenarios: {
+          firstCritical: '100%保额（基础）',
+          cancerRecurrence: '未选多次赔则不赔；选多次赔需跨组',
+          heartStroke: '选多次赔且不同组可分别赔付',
+          elderlyCare: '无专门老年年金',
+          minorIllness: '轻症20% / 中症50%保额',
+          death: 'max（保额，1.05×保费，现金价值）'
+        }
+      },
+      cpic: {
+        id: 'cpic',
+        name: '蓝鲸1号终身重疾险 2026',
+        company: '中国太保',
+        type: '互联网终身重疾险',
+        currency: 'cny',
+        claimEase: 'high',
+        tags: ['高性价比', '不分组多次', '55岁后额外赔', 'ICU关爱'],
+        basePremiumFactor: 0.75,
+        features: [
+          '120种重疾单次赔付100%',
+          '可选重疾2-3次不分组赔付，间隔1年，第二次120%',
+          '20种中症2次×60%',
+          '40/50种轻症3次×30%',
+          '55岁后首次重疾额外30%',
+          'ICU住院连续7天给付5%保额'
+        ],
+        pros: ['轻中症赔付比例高', '可选重疾不分组多次', '55岁后额外保障', '性价比高'],
+        cons: ['互联网产品线下服务弱', '身故责任为可选'],
+        scenarios: {
+          firstCritical: '100%保额（55岁后130%）',
+          cancerRecurrence: '选二次重疾可赔120%（其他重疾）',
+          heartStroke: '选二次重疾可分别赔付',
+          elderlyCare: '55岁后首次重疾额外30%',
+          minorIllness: '轻症30% / 中症60%保额',
+          death: '按所选方案赔付保费或保额'
+        }
+      },
+      pingan: {
+        id: 'pingan',
+        name: '盛世福 2025',
+        company: '中国平安',
+        type: '内地终身重疾险',
+        currency: 'cny',
+        claimEase: 'high',
+        tags: ['运动涨保额', '健康管理', '少儿特疾'],
+        basePremiumFactor: 0.95,
+        features: [
+          '120种重疾单次赔付100%',
+          '20种中症1次×50%',
+          '40种轻症最多6次',
+          '15种少儿特定重疾',
+          '平安RUN运动达标涨保额',
+          '身故保障'
+        ],
+        pros: ['健康管理生态完善', '运动激励独特', '品牌认知度高', '理赔体验好'],
+        cons: ['重疾单次赔付', '中症仅1次', '多次保障不足'],
+        scenarios: {
+          firstCritical: '100%保额（运动达标可更高）',
+          cancerRecurrence: '不赔',
+          heartStroke: '不赔',
+          elderlyCare: '无专门老年保障',
+          minorIllness: '轻症/中症按合同约定',
+          death: '赔付保额'
+        }
+      }
+    };
+
+    // State
+    let selectedPref = 'multiple';
+    let selectedCurrency = 'cny';
+    let selectedClaim = 'high';
+
+    // UI interactions
+    document.querySelectorAll('.option-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const group = card.dataset.group;
+        document.querySelectorAll(`.option-card[data-group="${group}"]`).forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        if (group === 'pref') selectedPref = card.dataset.value;
+        if (group === 'currency') selectedCurrency = card.dataset.value;
+        if (group === 'claim') selectedClaim = card.dataset.value;
+      });
+    });
+
+    document.getElementById('coverageRange').addEventListener('input', (e) => {
+      document.getElementById('coverageValue').textContent = e.target.value + '万';
+    });
+
+    function getCheckedNeeds() {
+      return Array.from(document.querySelectorAll('.need-check:checked')).map(cb => cb.value);
+    }
+
+    function calculatePremium(productId, age, gender, coverageWan) {
+      const base = products[productId].basePremiumFactor;
+      const ageFactor = age <= 30 ? 1 : age <= 40 ? 1.4 : age <= 50 ? 2.2 : 3.5;
+      const genderFactor = gender === 'male' ? 1.1 : 1.0;
+      // Reference: 30-year-old male, 300k coverage, annual ~8000-10000 RMB for mainland products
+      const reference = coverageWan / 30 * 9000;
+      const premium = Math.round(reference * base * ageFactor * genderFactor);
+      return premium;
+    }
+
+    function calculateMatchScore(product, age, budget, coverage, needs) {
+      let score = 50;
+      const p = products[product];
+
+      // Preference matching
+      if (selectedPref === 'multiple' && (product === 'prudential' || product === 'cpic' || product === 'chinalife')) score += 20;
+      if (selectedPref === 'single' && (product === 'chinalife' || product === 'pingan')) score += 15;
+      if (selectedPref === 'savings' && product === 'prudential') score += 25;
+      if (selectedPref === 'consumption' && product === 'cpic') score += 20;
+
+      // Currency matching
+      if (selectedCurrency === 'usd' && product === 'prudential') score += 20;
+      if (selectedCurrency === 'cny' && product !== 'prudential') score += 15;
+
+      // Claim ease matching
+      if (selectedClaim === 'high' && product !== 'prudential') score += 20;
+      if (selectedClaim === 'low' && product === 'prudential') score += 10;
+
+      // Needs matching
+      if (needs.includes('overseas') && product === 'prudential') score += 15;
+      if (needs.includes('child') && (product === 'chinalife' || product === 'pingan')) score += 10;
+      if (needs.includes('elderly') && product === 'prudential') score += 15;
+      if (needs.includes('health') && product !== 'prudential') score += 15;
+
+      // Budget fit
+      const premium = calculatePremium(product, age, gender, coverage);
+      const budgetMap = { low: 10000, medium: 20000, high: 40000, premium: 100000 };
+      const budgetLimit = budgetMap[budget];
+      if (premium <= budgetLimit) score += 15;
+      else if (premium <= budgetLimit * 1.5) score += 5;
+      else score -= 15;
+
+      // Age factor
+      if (age > 55 && product === 'prudential') score -= 10; // harder underwriting
+      if (age < 35 && product === 'cpic') score += 5;
+
+      return Math.max(0, Math.min(100, score));
+    }
+
+    function generateComparison() {
+      const age = parseInt(document.getElementById('age').value) || 35;
+      const gender = document.getElementById('gender').value;
+      const coverage = parseInt(document.getElementById('coverageRange').value) || 50;
+      const budget = document.getElementById('budget').value;
+      const needs = getCheckedNeeds();
+
+      const results = Object.keys(products).map(id => {
+        const p = products[id];
+        const premium = calculatePremium(id, age, gender, coverage);
+        const score = calculateMatchScore(id, age, budget, coverage, needs);
+        return { id, ...p, premium, score };
+      }).sort((a, b) => b.score - a.score);
+
+      renderResults(results, age, gender, coverage);
+    }
+
+    function renderResults(results, age, gender, coverage) {
+      const panel = document.getElementById('resultPanel');
+      const top = results[0];
+
+      let html = `
+        <div class="card rounded-2xl p-5 border border-fin-gold/30 relative">
+          <div class="recommend-badge">最佳匹配</div>
+          <div class="flex flex-col md:flex-row md:items-center gap-4">
+            <div class="score-ring" style="background: conic-gradient(#c9a96e ${top.score}%, #1a1a26 0);">
+              <div class="w-14 h-14 rounded-full bg-fin-surface flex items-center justify-center">${top.score}</div>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-xl font-bold gold-gradient">${top.name}</h3>
+              <p class="text-sm text-fin-text2">${top.company} · ${top.type}</p>
+              <div class="flex flex-wrap gap-2 mt-2">
+                ${top.tags.map(t => `<span class="badge bg-fin-gold/10 text-fin-gold border border-fin-gold/20">${t}</span>`).join('')}
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl font-bold text-fin-text">¥${top.premium.toLocaleString()}</div>
+              <div class="text-xs text-fin-text3">预估年保费 · ${coverage}万保额</div>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+            ${top.pros.map(pro => `<div class="flex items-start gap-2 text-sm text-fin-text"><span class="text-fin-success mt-0.5">✓</span><span>${pro}</span></div>`).join('')}
+          </div>
+          <div class="mt-4 pt-4 border-t border-fin-border">
+            <p class="text-sm text-fin-text2"><span class="text-fin-gold">推荐理由：</span>${getRecommendationReason(top, results)}</p>
+          </div>
+        </div>
+
+        <div class="card rounded-2xl p-5">
+          <h3 class="text-lg font-bold mb-4">四款产品综合评分排序</h3>
+          <div class="space-y-3">
+            ${results.map((p, idx) => `
+              <div class="flex items-center gap-4 p-3 rounded-xl bg-fin-surface2/50">
+                <div class="text-lg font-bold text-fin-gold w-6">${idx + 1}</div>
+                <div class="flex-1">
+                  <div class="font-medium text-fin-text">${p.name}</div>
+                  <div class="text-xs text-fin-text3">${p.company} · 匹配度 ${p.score}%</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-bold text-fin-text">¥${p.premium.toLocaleString()}</div>
+                  <div class="text-xs text-fin-text3">/年</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="card rounded-2xl p-5">
+          <h3 class="text-lg font-bold mb-4">场景化保障对比（${coverage}万保额）</h3>
+          <div class="overflow-x-auto">
+            <table class="compare w-full min-w-[700px]">
+              <thead>
+                <tr>
+                  <th class="w-32">理赔场景</th>
+                  ${results.map(p => `<th>${p.name}<br><span class="text-xs text-fin-text3 font-normal">${p.company}</span></th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="font-medium text-fin-text">首次确诊重疾</td>${results.map(p => `<td>${p.scenarios.firstCritical}</td>`).join('')}</tr>
+                <tr><td class="font-medium text-fin-text">癌症复发/转移</td>${results.map(p => `<td>${p.scenarios.cancerRecurrence}</td>`).join('')}</tr>
+                <tr><td class="font-medium text-fin-text">心梗后脑中风</td>${results.map(p => `<td>${p.scenarios.heartStroke}</td>`).join('')}</tr>
+                <tr><td class="font-medium text-fin-text">老年疾病护理</td>${results.map(p => `<td>${p.scenarios.elderlyCare}</td>`).join('')}</tr>
+                <tr><td class="font-medium text-fin-text">轻症/中症赔付</td>${results.map(p => `<td>${p.scenarios.minorIllness}</td>`).join('')}</tr>
+                <tr><td class="font-medium text-fin-text">未理赔身故</td>${results.map(p => `<td>${p.scenarios.death}</td>`).join('')}</tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card rounded-2xl p-5">
+          <h3 class="text-lg font-bold mb-4">产品详情与注意事项</h3>
+          <div class="space-y-4">
+            ${results.map(p => `
+              <div class="border-b border-fin-border last:border-0 pb-4 last:pb-0">
+                <div class="flex items-center justify-between mb-2">
+                  <h4 class="font-bold text-fin-text">${p.name}</h4>
+                  <span class="text-xs text-fin-gold">匹配度 ${p.score}%</span>
+                </div>
+                <ul class="text-sm text-fin-text2 space-y-1 mb-2">
+                  ${p.features.map(f => `<li>• ${f}</li>`).join('')}
+                </ul>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span class="text-fin-success font-medium">优势：</span>
+                    ${p.pros.join('；')}
+                  </div>
+                  <div>
+                    <span class="text-fin-danger font-medium">注意：</span>
+                    ${p.cons.join('；')}
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="card rounded-2xl p-5">
+          <h3 class="text-lg font-bold mb-3">需要进一步沟通？</h3>
+          <p class="text-sm text-fin-text2 mb-4">我们的保险顾问可以根据您的具体情况（健康告知、家庭财务状况、已有保单）给出更精准的配置建议。</p>
+          <a href="/insurance" class="btn-primary inline-block px-6 py-3 rounded-xl text-sm">返回保险测评工具</a>
+        </div>
+      `;
+
+      panel.innerHTML = html;
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function getRecommendationReason(top, all) {
+      if (top.id === 'prudential') {
+        return '您的需求偏向多次高杠杆保障/美元资产/长期护理，保诚在疾病定义宽松度、多次赔付总额和老年年金方面优势最大。';
+      }
+      if (top.id === 'cpic') {
+        return '您在预算控制下希望获得较高的轻中症赔付和可选多次重疾保障，太保蓝鲸1号性价比突出。';
+      }
+      if (top.id === 'chinalife') {
+        return '您看重品牌服务、稳健现金价值和可选重疾多次赔，中国人寿康宁尊享是稳妥选择。';
+      }
+      if (top.id === 'pingan') {
+        return '您偏好健康管理生态和便捷的理赔体验，平安盛世福适合作为基础重疾保障。';
+      }
+      return '综合您的需求参数，该产品匹配度最高。';
+    }
+
+    // Generate on load with defaults
+    window.addEventListener('load', generateComparison);
+  </script>
+</body>
+</html>

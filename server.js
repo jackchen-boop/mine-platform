@@ -117,6 +117,9 @@ app.get(['/insurance', '/insurance/'], (req, res) => {
 app.get(['/insurance/admin', '/insurance/admin/'], (req, res) => {
   res.sendFile(join(__dirname, 'public', 'insurance-admin.html'));
 });
+app.get(['/insurance/compare', '/insurance/compare/'], (req, res) => {
+  res.sendFile(join(__dirname, 'public', 'insurance-compare.html'));
+});
 
 // 所有其他 GET 请求回退到 index.html
 app.get('*', (req, res, next) => {
