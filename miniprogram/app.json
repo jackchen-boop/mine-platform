@@ -3,7 +3,8 @@
     "pages/index/index",
     "pages/login/login",
     "pages/upload/upload",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/insurance/insurance"
   ],
   "window": {
     "backgroundTextStyle": "light",

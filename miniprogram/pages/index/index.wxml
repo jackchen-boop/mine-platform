@@ -1,4 +1,16 @@
 <view class="container">
+  <!-- 保险工具入口 -->
+  <view class="insurance-card" bindtap="goInsurance">
+    <view class="insurance-left">
+      <view class="insurance-icon">🛡️</view>
+      <view>
+        <view class="insurance-title">保险方案工具</view>
+        <view class="insurance-desc">港险与内地险对比、家庭财富风险测评</view>
+      </view>
+    </view>
+    <view class="insurance-arrow">→</view>
+  </view>
+
   <!-- 搜索栏 -->
   <view class="search-bar">
     <input class="search-input" placeholder="搜索项目名称、矿种、省份..." bindinput="onSearchInput" value="{{keyword}}" />

@@ -1,0 +1,13 @@
+<view class="page">
+  <!-- 顶部工具切换 -->
+  <view class="tool-tabs">
+    <view wx:for="{{tools}}" wx:key="key"
+          class="tool-tab {{activeTool === item.key ? 'tool-tab-active' : ''}}"
+          bindtap="switchTool" data-key="{{item.key}}">
+      {{item.name}}
+    </view>
+  </view>
+
+  <!-- web-view 嵌套 H5 -->
+  <web-view src="{{currentUrl}}" bindmessage="onMessage" bindload="onLoadWebview" binderror="onError"></web-view>
+</view>

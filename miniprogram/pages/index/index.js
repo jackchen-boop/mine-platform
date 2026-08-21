@@ -81,5 +81,9 @@ Page({
     const id = e.currentTarget.dataset.id;
     wx.showToast({ title: '项目详情页开发中', icon: 'none' });
     // wx.navigateTo({ url: '/pages/project-detail/project-detail?id=' + id });
+  },
+
+  goInsurance() {
+    wx.navigateTo({ url: '/pages/insurance/insurance' });
   }
 });

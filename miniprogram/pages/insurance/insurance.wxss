@@ -1,0 +1,47 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #0a0a0f;
+}
+
+.tool-tabs {
+  display: flex;
+  flex-direction: row;
+  background-color: #12121a;
+  border-bottom: 1rpx solid #2a2a3a;
+  padding: 0 8rpx;
+  flex-shrink: 0;
+}
+
+.tool-tab {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 26rpx;
+  color: #94a3b8;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.tool-tab-active {
+  color: #c9a96e;
+  font-weight: 600;
+}
+
+.tool-tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48rpx;
+  height: 4rpx;
+  background: linear-gradient(90deg, #c9a96e, #e0c88a);
+  border-radius: 2rpx;
+}
+
+web-view {
+  flex: 1;
+  width: 100%;
+}
