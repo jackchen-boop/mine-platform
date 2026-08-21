@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>高杠杆终身寿险智能对比 · 港险与内地险方案匹配</title>
+  <meta name="description" content="同一指标下对比香港保诚自主未来保障计划与内地三大保险公司终身寿险产品，重点展示保障杠杆、长期收益与传承功能差异">
+  <meta property="og:title" content="高杠杆终身寿险智能对比 · 港险与内地险方案匹配">
+  <meta property="og:description" content="同一指标横向对比，看清香港高杠杆终身寿险的核心优势">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://minelab.top/life/compare">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            fin: { bg: '#0a0a0f', surface: '#12121a', surface2: '#1a1a26', surface3: '#222230', gold: '#c9a96e', goldLight: '#e0c88a', goldDark: '#9a7d4a', text: '#e2e8f0', text2: '#94a3b8', text3: '#64748b', border: '#2a2a3a', success: '#22c55e', warning: '#f59e0b', danger: '#ef4444' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Noto Sans SC', sans-serif; background-color: #0a0a0f; color: #e2e8f0; }
+    .gold-gradient { background: linear-gradient(135deg, #e0c88a 0%, #c9a96e 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .card { background: rgba(26,26,38,0.8); border: 1px solid rgba(42,42,58,0.8); backdrop-filter: blur(10px); }
+    .input-field { background: #12121a; border: 1px solid #2a2a3a; color: #e2e8f0; transition: all 0.2s; }
+    .input-field:focus { border-color: #c9a96e; outline: none; }
+    .option-card { border: 1px solid #2a2a3a; background: #12121a; transition: all 0.2s; cursor: pointer; }
+    .option-card:hover { border-color: #c9a96e; }
+    .option-card.selected { border-color: #c9a96e; background: rgba(201,169,110,0.1); }
+    .btn-primary { background: linear-gradient(135deg, #c9a96e 0%, #9a7d4a 100%); color: #0a0a0f; font-weight: 600; }
+    .btn-primary:hover { opacity: 0.9; }
+    .badge { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 9999px; }
+    .score-ring { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; }
+    table.compare th { background: #1a1a26; padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #2a2a3a; }
+    table.compare td { padding: 0.75rem; border-bottom: 1px solid #2a2a3a; vertical-align: top; }
+    .highlight-cell { background: rgba(201,169,110,0.12); border-left: 2px solid #c9a96e; }
+    .recommend-badge { position: absolute; top: -10px; right: 16px; background: linear-gradient(135deg, #c9a96e, #9a7d4a); color: #0a0a0f; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
+    .advantage-bar { height: 6px; border-radius: 3px; background: #1a1a26; overflow: hidden; }
+    .advantage-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #c9a96e, #e0c88a); }
+    .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+    .collapsible-content.expanded { max-height: 2000px; }
+    @media (max-width: 768px) {
+      .mobile-compact { padding: 1rem !important; }
+      .mobile-compact h3 { font-size: 1rem !important; margin-bottom: 0.75rem !important; }
+      table.compare th, table.compare td { padding: 0.5rem 0.375rem !important; font-size: 0.75rem !important; }
+      .score-ring { width: 52px; height: 52px; font-size: 0.9rem; }
+      .score-ring > div { width: 44px !important; height: 44px !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <header class="sticky top-0 z-40 bg-fin-bg/90 backdrop-blur-md border-b border-fin-border">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-fin-gold to-fin-goldDark flex items-center justify-center text-fin-bg font-bold text-sm">M</div>
+        <div>
+          <h1 class="text-lg font-bold gold-gradient">高杠杆终身寿险智能对比</h1>
+          <p class="text-xs text-fin-text3">同一指标横向对比 · 看清港险核心优势</p>
+        </div>
+      </div>
+      <a href="/insurance" class="text-sm text-fin-text2 hover:text-fin-gold transition-colors">返回测评工具 →</a>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <section class="mb-8">
+      <h2 class="text-2xl md:text-3xl font-bold mb-3">同一指标下，看清香港高杠杆终身寿险的核心优势</h2>
+      <p class="text-fin-text2 max-w-3xl">本工具将香港保诚「自主未来」保障计划与中国人寿、中国平安、中国太保主力终身寿险放在同一套指标下横向对比，重点展示保障杠杆、终身保障、长期收益与传承功能的关键差异。</p>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-4">
+        <div class="card rounded-2xl p-5 mobile-compact sticky top-24">
+          <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-fin-gold/20 text-fin-gold flex items-center justify-center text-xs">1</span>填写您的需求</h3>
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class="block text-xs text-fin-text3 mb-1">年龄</label><input type="number" id="age" value="35" min="0" max="70" class="input-field w-full rounded-lg px-3 py-2 text-sm"></div>
+              <div><label class="block text-xs text-fin-text3 mb-1">性别</label><select id="gender" class="input-field w-full rounded-lg px-3 py-2 text-sm"><option value="male">男</option><option value="female">女</option></select></div>
+            </div>
+            <div>
+              <label class="block text-xs text-fin-text3 mb-1">年缴保费（万元等值）</label>
+              <input type="range" id="premiumRange" min="1" max="50" value="10" step="1" class="w-full accent-fin-gold mb-1">
+              <div class="flex justify-between text-xs text-fin-text3"><span>1万</span><span id="premiumValue" class="text-fin-gold font-bold">10万</span><span>50万</span></div>
+            </div>
+            <div><label class="block text-xs text-fin-text3 mb-1">缴费年期</label><select id="paymentTerm" class="input-field w-full rounded-lg px-3 py-2 text-sm"><option value="5">5年缴</option><option value="10">10年缴</option><option value="20" selected>20年缴</option><option value="30">30年缴</option></select></div>
+            <div>
+              <label class="block text-xs text-fin-text3 mb-2">保障目标</label>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="option-card selected rounded-lg p-3 text-center text-sm" data-goal="family" onclick="selectGoal(this)">家庭保障</div>
+                <div class="option-card rounded-lg p-3 text-center text-sm" data-goal="mortgage" onclick="selectGoal(this)">房贷对冲</div>
+                <div class="option-card rounded-lg p-3 text-center text-sm" data-goal="retirement" onclick="selectGoal(this)">养老储备</div>
+                <div class="option-card rounded-lg p-3 text-center text-sm" data-goal="inheritance" onclick="selectGoal(this)">财富传承</div>
+              </div>
+            </div>
+            <div><label class="block text-xs text-fin-text3 mb-1">币种偏好</label><select id="currency" class="input-field w-full rounded-lg px-3 py-2 text-sm"><option value="cny" selected>人民币</option><option value="usd">美元</option></select></div>
+            <div><label class="block text-xs text-fin-text3 mb-1">投资期限</label><select id="horizon" class="input-field w-full rounded-lg px-3 py-2 text-sm"><option value="short">中短期（10年内）</option><option value="medium" selected>中长期（10-30年）</option><option value="long">超长期（30年以上/传承）</option></select></div>
+            <div>
+              <label class="block text-xs text-fin-text3 mb-2">其他需求（多选）</label>
+              <div class="space-y-2">
+                <label class="flex items-center gap-2 text-sm text-fin-text2 cursor-pointer"><input type="checkbox" name="needs" value="leverage" class="accent-fin-gold rounded"> 追求高保障杠杆</label>
+                <label class="flex items-center gap-2 text-sm text-fin-text2 cursor-pointer"><input type="checkbox" name="needs" value="withdraw" class="accent-fin-gold rounded"> 灵活提取现金流</label>
+                <label class="flex items-center gap-2 text-sm text-fin-text2 cursor-pointer"><input type="checkbox" name="needs" value="inherit" class="accent-fin-gold rounded"> 跨代传承</label>
+                <label class="flex items-center gap-2 text-sm text-fin-text2 cursor-pointer"><input type="checkbox" name="needs" value="community" class="accent-fin-gold rounded"> 养老社区权益</label>
+              </div>
+            </div>
+            <button onclick="generateComparison()" class="btn-primary w-full py-3 rounded-xl text-sm">生成对比方案</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-8 space-y-6" id="resultPanel">
+        <div class="card rounded-2xl p-8 text-center text-fin-text2">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-fin-surface2 flex items-center justify-center">
+            <svg class="w-8 h-8 text-fin-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          </div>
+          <p>填写左侧需求并点击「生成对比方案」，即可查看高杠杆终身寿险产品智能匹配结果</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const products = {
+      prudential: {
+        name: '自主未来保障计划', shortName: '自主未来', company: '香港保诚', type: '香港股东全资分红终身寿险',
+        tags: ['超高保障杠杆', '保单逆按', '终身保障'], currency: 'usd',
+        scores: { protectionLeverage: 95, returnPotential: 75, flexibility: 70, inheritance: 80, guarantee: 45, convenience: 55, access: 75 },
+        metrics: {
+          productType: '股东全资分红终身寿险', returnStructure: '保证现金价值+非保证终期红利',
+          expectedReturn: '长期总回报IRR约4.6%-6.0%（视供款期及持有期）',
+          guaranteedReturn: '较低。保证现金价值占比低，非保证终期红利为主要增长来源；20年供款第20年保证IRR约-11.4%',
+          protectionLeverage: '极高。30岁男性20年供款，首日身故赔偿/首年保费约62倍；25岁女性30年供款可达97倍',
+          deathBenefit: '保额100% + 终期红利面值 + 递增保障权益（如附加）',
+          currency: '美元', currencyConvert: '不支持（单一美元保单）', premiumTerm: '整付/5/10/20/30年', minEntry: '最低保额10,000美元',
+          withdraw: '可部分退保提取，但保额会相应减少',
+          inheritance: '灵活身故赔偿支付选择（一次性/月付/混合）、保单逆按、可附加豁免保费',
+          additional: '递增保障权益（每年5%至200%保额）、大额保费折扣（保额≥20,000美元）、可附加医疗/危疾/意外',
+          risk: '分红非保证、汇率波动、需赴港签约'
+        },
+        scenarios: { family: '约15-25万美元', mortgage: '约15-25万美元', retirement: '保单逆按每月约1万港元起', inheritance: '约50-150万美元' }
+      },
+      chinalife: {
+        name: '鑫益传家终身寿险（分红型）', shortName: '鑫益传家', company: '中国人寿', type: '内地分红型增额终身寿险',
+        tags: ['大品牌', '保证稳健', '现金分红'], currency: 'cny',
+        scores: { protectionLeverage: 50, returnPotential: 65, flexibility: 55, inheritance: 45, guarantee: 75, convenience: 95, access: 90 },
+        metrics: {
+          productType: '分红型增额终身寿险', returnStructure: '保证现金价值+年度红利（现金分红）',
+          expectedReturn: '长期IRR约2.5%-3.0%（含分红演示）',
+          guaranteedReturn: '较高。有效保额按年2%复利递增，保证现金价值IRR约2.0%-2.3%',
+          protectionLeverage: '中等。18-40岁身故按已交保费160%给付，但增额寿以储蓄为主，杠杆有限',
+          deathBenefit: '身故保险金=保额/现金价值/已交保费×比例取大',
+          currency: '人民币', currencyConvert: '不支持', premiumTerm: '3/5/10年等', minEntry: '门槛较低',
+          withdraw: '支持减保，每年累计减保金额不超过基本保额的20%',
+          inheritance: '指定受益人，身故赔付保额/现金价值/保费较大者',
+          additional: '中国人寿品牌服务网络、理赔便捷', risk: '收益上限较低、杠杆有限、无货币转换'
+        },
+        scenarios: { family: '约80-120万人民币', mortgage: '约80-120万人民币', retirement: '减保取现或保单贷款', inheritance: '约200-300万人民币' }
+      },
+      pingan: {
+        name: '御享金越（2025）终身寿险（分红型）', shortName: '御享金越2025', company: '中国平安', type: '内地分红型增额终身寿险',
+        tags: ['双被保人', '前期杠杆较高', '康养服务'], currency: 'cny',
+        scores: { protectionLeverage: 65, returnPotential: 70, flexibility: 65, inheritance: 60, guarantee: 70, convenience: 95, access: 90 },
+        metrics: {
+          productType: '分红型增额终身寿险', returnStructure: '保证现金价值+保单分红',
+          expectedReturn: '第20年IRR约2.5%，第40年约2.8%（含分红演示）',
+          guaranteedReturn: '中等。保证现金价值按2.0%定价，年度保额按2.0%递增',
+          protectionLeverage: '较高（在内地增额寿中）。18-40岁身故按已交保费160%给付，前期杠杆优于一般增额寿',
+          deathBenefit: '18岁前：保费/现价取大；18岁后交费期内：保费×比例/现价取大；交费期满后：保费×比例/现价/保额取大',
+          currency: '人民币', currencyConvert: '不支持', premiumTerm: '3/6/10年', minEntry: '门槛较低',
+          withdraw: '支持减保，保单贷款最高可贷现金价值80%', inheritance: '支持双被保险人，可指定受益人',
+          additional: '双被保险人延长财富积累期、臻享家医/居家养老/康养社区', risk: '分红不确定、杠杆仍低于香港高杠杆寿险'
+        },
+        scenarios: { family: '约80-130万人民币', mortgage: '约80-130万人民币', retirement: '减保取现或对接康养社区', inheritance: '约220-320万人民币' }
+      },
+      cpic: {
+        name: '福有余（2025）终身寿险（分红型）', shortName: '福有余2025', company: '中国太保', type: '内地分红型增额终身寿险',
+        tags: ['回本快', '养老社区', '减保灵活'], currency: 'cny',
+        scores: { protectionLeverage: 60, returnPotential: 75, flexibility: 75, inheritance: 50, guarantee: 70, convenience: 90, access: 90 },
+        metrics: {
+          productType: '分红型增额终身寿险', returnStructure: '保证现金价值+浮动红利（交清增额）',
+          expectedReturn: '保证IRR长期约1.8%-1.9%，含分红演示可达3%+',
+          guaranteedReturn: '较高。保证现金价值写入合同，5年交约第5年回本',
+          protectionLeverage: '中等。18-40岁身故按已交保费160%给付',
+          deathBenefit: '身故/全残保险金=保额/现金价值/已交保费×比例取大',
+          currency: '人民币', currencyConvert: '不支持', premiumTerm: '趸交/3/5/9/10年', minEntry: '5000元起',
+          withdraw: '支持减保，每年累计不超过基本保额20%', inheritance: '指定受益人',
+          additional: '可对接太保家园高端养老社区', risk: '分红非保证、养老社区有保费门槛'
+        },
+        scenarios: { family: '约80-120万人民币', mortgage: '约80-120万人民币', retirement: '减保取现或对接太保家园', inheritance: '约230-350万人民币' }
+      }
+    };
+
+    const dimensions = [
+      { key: 'protectionLeverage', name: '保障杠杆倍数', weight: 1.8, desc: '首日身故赔偿/首年保费，衡量保障效率' },
+      { key: 'returnPotential', name: '长期综合收益潜力', weight: 1.0, desc: '演示总回报、长期复利增长能力' },
+      { key: 'flexibility', name: '提取与现金流灵活性', weight: 0.8, desc: '减保、部分提取、保单逆按' },
+      { key: 'inheritance', name: '财富传承功能', weight: 0.8, desc: '身故赔偿支付方式、双被保人、信托式传承' },
+      { key: 'guarantee', name: '保证收益稳健性', weight: 0.6, desc: '保证现金价值、保底利率（仅作参考）' },
+      { key: 'convenience', name: '购买与服务便利性', weight: 0.6, desc: '内地购买、理赔、服务网点' },
+      { key: 'access', name: '投保门槛与可达性', weight: 0.5, desc: '最低保费、投保年龄、健康告知' }
+    ];
+
+    let selectedGoal = 'family';
+    function selectGoal(el) { document.querySelectorAll('[data-goal]').forEach(c => c.classList.remove('selected')); el.classList.add('selected'); selectedGoal = el.dataset.goal; }
+
+    const premiumRange = document.getElementById('premiumRange');
+    const premiumValue = document.getElementById('premiumValue');
+    premiumRange.addEventListener('input', () => { premiumValue.textContent = premiumRange.value + '万'; });
+
+    function getInput() {
+      return {
+        age: parseInt(document.getElementById('age').value) || 35,
+        gender: document.getElementById('gender').value,
+        premium: parseInt(premiumRange.value) || 10,
+        term: parseInt(document.getElementById('paymentTerm').value) || 20,
+        currency: document.getElementById('currency').value,
+        horizon: document.getElementById('horizon').value,
+        goal: selectedGoal,
+        needs: Array.from(document.querySelectorAll('input[name="needs"]:checked')).map(cb => cb.value)
+      };
+    }
+
+    function calculateScore(product, input) {
+      let score = 0, weights = 0;
+      const s = product.scores;
+      dimensions.forEach(d => {
+        let w = d.weight;
+        if (d.key === 'protectionLeverage') { if (input.goal === 'family' || input.goal === 'mortgage' || input.needs.includes('leverage')) w *= 1.6; if (input.horizon === 'short') w *= 1.3; }
+        if (d.key === 'returnPotential') { if (input.horizon === 'long') w *= 1.4; if (input.horizon === 'short') w *= 0.6; }
+        if (d.key === 'inheritance') { if (input.goal === 'inheritance' || input.needs.includes('inherit')) w *= 1.5; }
+        if (d.key === 'flexibility') { if (input.goal === 'retirement' || input.needs.includes('withdraw')) w *= 1.4; }
+        if (d.key === 'guarantee' && input.horizon === 'short') w *= 1.3;
+        if ((d.key === 'convenience' || d.key === 'access') && input.currency === 'cny' && !input.needs.includes('leverage')) w *= 1.2;
+        score += s[d.key] * w; weights += w;
+      });
+      const goalBoosts = { family: ['protectionLeverage', 'guarantee'], mortgage: ['protectionLeverage', 'guarantee'], retirement: ['flexibility', 'returnPotential', 'guarantee'], inheritance: ['inheritance', 'returnPotential', 'protectionLeverage'] };
+      let goalBonus = 0;
+      (goalBoosts[input.goal] || []).forEach(k => { goalBonus += s[k] * 0.25; });
+      return Math.round(score / weights + goalBonus);
+    }
+
+    function getScoreLevel(score) {
+      if (score >= 90) return { label: '高度匹配', color: 'bg-green-500/20 text-green-400' };
+      if (score >= 75) return { label: '较为匹配', color: 'bg-fin-gold/20 text-fin-gold' };
+      if (score >= 60) return { label: '一般匹配', color: 'bg-yellow-500/20 text-yellow-400' };
+      return { label: '匹配度低', color: 'bg-red-500/20 text-red-400' };
+    }
+
+    function goalText(g) { return { family: '家庭保障', mortgage: '房贷对冲', retirement: '养老储备', inheritance: '财富传承' }[g] || '家庭保障'; }
+    function horizonText(h) { return { short: '中短期持有', medium: '中长期持有', long: '超长期/传承' }[h] || '中长期持有'; }
+    function currencyText(c) { return { cny: '人民币保单', usd: '美元保单' }[c] || '人民币保单'; }
+
+    function generateComparison() {
+      const input = getInput();
+      const panel = document.getElementById('resultPanel');
+      const productList = Object.keys(products).map(k => ({ key: k, ...products[k], score: calculateScore(products[k], input) }));
+      productList.sort((a, b) => b.score - a.score);
+      const winner = productList[0], runnerUp = productList[1];
+
+      panel.innerHTML = `
+        <div class="card rounded-2xl p-6 mobile-compact relative">
+          <span class="recommend-badge">最佳匹配</span>
+          <div class="flex flex-col md:flex-row md:items-start gap-5">
+            <div class="flex-1">
+              <div class="text-xs text-fin-text3 mb-1">智能推荐</div>
+              <h2 class="text-2xl font-bold mb-2">${winner.name}</h2>
+              <div class="flex flex-wrap gap-2 mb-3">${winner.tags.map(t => `<span class="badge bg-fin-gold/20 text-fin-gold">${t}</span>`).join('')}</div>
+              <p class="text-sm text-fin-text2 mb-4">基于您「${goalText(input.goal)}、${horizonText(input.horizon)}、${currencyText(input.currency)}」的需求，<strong class="text-fin-text">${winner.company} ${winner.shortName}</strong> 在综合匹配度上领先。${winner.key === 'prudential' ? '其超高保障杠杆、终身保障与灵活身故赔付方式最契合您的保障目标。' : '作为内地头部保险公司产品，在便利性、保证收益稳健性方面更具优势。'}</p>
+              ${winner.key === 'prudential' ? `<div class="bg-fin-surface2 rounded-xl p-4 mb-4"><div class="text-xs text-fin-text3 mb-2">推荐缴费与币种方案</div><div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm"><div><span class="text-fin-text3">年缴保费</span><div class="text-fin-gold font-bold">${input.premium}万美元等值</div></div><div><span class="text-fin-text3">缴费期</span><div class="text-fin-text font-bold">${input.term}年</div></div><div><span class="text-fin-text3">建议币种</span><div class="text-fin-text font-bold">美元</div></div><div><span class="text-fin-text3">核心用途</span><div class="text-fin-text font-bold">${goalText(input.goal)}</div></div></div></div>` : ''}
+              <div class="flex flex-wrap gap-3">
+                <a href="https://wa.me/85262331166" target="_blank" class="btn-primary px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.52 3.48A11.96 11.96 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.55 4.1 1.52 5.83L0 24l6.35-1.66A11.95 11.95 0 0012 24c6.63 0 12-5.37 12-12 0-3.21-1.25-6.21-3.48-8.52zM12 21.8c-1.97 0-3.83-.52-5.43-1.43l-.39-.22-3.77.99 1.01-3.67-.26-.41A9.79 9.79 0 012.2 12 9.8 9.8 0 0112 2.2 9.8 9.8 0 0121.8 12c0 5.41-4.39 9.8-9.8 9.8zm5.37-7.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.08-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.48-.5-.67-.51l-.57-.01c-.2 0-.52.08-.8.37-.27.3-1.04 1.02-1.04 2.48 0 1.47 1.07 2.89 1.22 3.09.15.2 2.1 3.21 5.09 4.5.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35z"/></svg>咨询顾问获取方案</a>
+                <button onclick="toggleCollapse('whyWinner', this)" class="px-5 py-2.5 rounded-xl text-sm border border-fin-gold text-fin-gold hover:bg-fin-gold/10 inline-flex items-center gap-2">展开详情 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button>
+              </div>
+            </div>
+            <div class="flex flex-col items-center justify-center min-w-[120px]">
+              <div class="score-ring" style="background: conic-gradient(#c9a96e ${winner.score*3.6}deg, #1a1a26 0deg);"><div class="w-[52px] h-[52px] rounded-full bg-fin-surface flex items-center justify-center">${winner.score}</div></div>
+              <div class="text-[10px] text-fin-text3 mt-1">综合匹配度</div>
+              <span class="badge ${getScoreLevel(winner.score).color} mt-2">${getScoreLevel(winner.score).label}</span>
+            </div>
+          </div>
+          <div id="whyWinner" class="collapsible-content mt-4"><div class="bg-fin-surface2 rounded-xl p-4 text-sm text-fin-text2">${generateWhyBetter(winner, runnerUp)}</div></div>
+        </div>
+
+        <div class="card rounded-2xl p-6 mobile-compact overflow-x-auto">
+          <h3 class="text-lg font-bold mb-4">核心优势维度评分（单项满分100）</h3>
+          <table class="w-full compare min-w-[600px]">
+            <thead><tr><th class="text-fin-text3">维度</th><th class="text-fin-gold">${winner.shortName}</th><th>${runnerUp.shortName}</th><th>其他产品</th><th class="text-fin-text3">说明</th></tr></thead>
+            <tbody>
+              ${dimensions.map(d => {
+                const wv = winner.scores[d.key], rv = runnerUp.scores[d.key];
+                const others = productList.filter(p => p.key !== winner.key && p.key !== runnerUp.key);
+                const isTop = wv >= Math.max(rv, ...others.map(o => o.scores[d.key]));
+                return `<tr><td class="font-medium">${d.name}</td><td class="${isTop ? 'highlight-cell' : ''}"><div class="flex items-center gap-2"><span class="font-bold ${isTop ? 'text-fin-gold' : ''}">${wv}</span><div class="advantage-bar flex-1 max-w-[80px]"><div class="advantage-fill" style="width:${wv}%"></div></div></div></td><td><div class="flex items-center gap-2"><span class="font-bold">${rv}</span><div class="advantage-bar flex-1 max-w-[80px]"><div class="advantage-fill" style="width:${rv}%"></div></div></div></td><td class="text-fin-text2">${others.map(o => `${o.shortName}: ${o.scores[d.key]}`).join('<br>')}</td><td class="text-xs text-fin-text3">${d.desc}</td></tr>`;
+              }).join('')}
+              <tr class="bg-fin-surface2/50"><td class="font-bold">综合匹配度</td><td class="font-bold text-fin-gold text-lg">${winner.score}</td><td class="font-bold">${runnerUp.score}</td><td class="text-fin-text2">${productList.filter(p => p.key !== winner.key && p.key !== runnerUp.key).map(o => `${o.shortName}: ${o.score}`).join('<br>')}</td><td class="text-xs text-fin-text3">原始总分，反映真实分差，不设100分上限</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card rounded-2xl p-6 mobile-compact">
+          <h3 class="text-lg font-bold mb-4">保障杠杆与身故赔偿对比（年缴10万人民币等值）</h3>
+          <p class="text-xs text-fin-text3 mb-4">以下演示值含非保证分红，仅供参考。杠杆倍数=首日身故赔偿/首年保费；内地产品为人民币计价，香港保诚产品以美元保单按汇率折算。</p>
+          <div class="overflow-x-auto">
+            <table class="w-full compare min-w-[600px]">
+              <thead><tr><th>产品</th><th>首日身故赔偿</th><th>杠杆倍数</th><th>第30年预期身故赔偿</th><th>保证回本/总回本</th></tr></thead>
+              <tbody>
+                ${productList.map(p => `<tr class="${p.key === winner.key ? 'bg-fin-gold/5' : ''}"><td class="font-medium">${p.company}<br><span class="text-fin-gold">${p.shortName}</span></td><td>${p.key === 'prudential' ? '约62万美元' : '约16-24万人民币'}</td><td class="font-bold">${p.key === 'prudential' ? '约62倍' : '约1.6-2.4倍'}</td><td>${p.key === 'prudential' ? '约150-260万人民币等值' : '约80-130万人民币'}</td><td>${p.key === 'prudential' ? '总回本约16年' : '保证/总回本约5-8年'}</td></tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card rounded-2xl p-6 mobile-compact">
+          <h3 class="text-lg font-bold mb-4">保诚「自主未来」的核心优势数据</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-fin-surface2 rounded-xl p-4 text-center">
+              <div class="text-3xl font-bold text-fin-gold mb-1">62-97倍</div>
+              <div class="text-sm text-fin-text2">首日身故赔偿/首年保费<br>保障杠杆倍数</div>
+            </div>
+            <div class="bg-fin-surface2 rounded-xl p-4 text-center">
+              <div class="text-3xl font-bold text-fin-gold mb-1">4.6%+</div>
+              <div class="text-sm text-fin-text2">第30个保单年度<br>预期每年回报率</div>
+            </div>
+            <div class="bg-fin-surface2 rounded-xl p-4 text-center">
+              <div class="text-3xl font-bold text-fin-gold mb-1">5%</div>
+              <div class="text-sm text-fin-text2">递增保障权益<br>每年自动加保幅度</div>
+            </div>
+          </div>
+          <p class="text-xs text-fin-text3 mt-4">以30岁男性20年缴、年缴约2.5万美元为例，首日身故赔偿约15.4万美元，杠杆约62倍；25岁女性30年缴、年缴约1,027美元，保额10万美元，杠杆可达97倍。递增保障权益最高可将保额提升至原始保额的200%。</p>
+        </div>
+
+        <div class="card rounded-2xl p-6 mobile-compact">
+          <h3 class="text-lg font-bold mb-4">收益结构说明：为何香港高杠杆寿险的「低保证」值得理解</h3>
+          <div class="space-y-4 text-sm text-fin-text2">
+            <p><strong class="text-fin-gold">保诚自主未来的核心价值在于「高杠杆+长期综合回报」。</strong>以20年供款、30岁男性非吸烟为例：首日身故赔偿约15.4万美元，杠杆达62倍；第30年预期身故赔偿约26万美元（约为总保费的518%），预期每年回报率约4.62%。同样的保费投入，香港高杠杆寿险在身故保障效率上远超内地增额寿。</p>
+            <p><strong class="text-fin-gold">「低保证现金价值」是换取高杠杆的设计结果。</strong>自主未来的保证现金价值占比较低（20年供款第10年保证IRR约-47.8%，第20年约-11.4%），但身故赔偿中的保额部分是保证的，且非保证终期红利提供长期增长空间。内地增额寿则将更多资金配置于固定收益资产，保证IRR约1.5%-2.5%，但身故杠杆通常仅1.2-1.6倍。两者面向不同的核心需求：前者适合「用较少保费撬动大额保障」，后者适合「稳健储蓄+适度保障」。</p>
+            <p><strong class="text-fin-gold">保单逆按提供独特退休现金流。</strong>自主未来是香港按证保险公司认可的保单逆按计划，55岁以上、保单完全清缴后可申请将保额活化为终身每月年金，实现「以房养老」之外的另一种退休收入方案。内地增额寿则主要通过减保或保单贷款获取现金流。</p>
+            <p><strong class="text-fin-gold">适合谁？</strong>如果你正值青壮年、承担家庭支柱责任、希望以较低保费获得高额终身保障，同时兼顾长期储蓄与传承，自主未来是更匹配的选择；如果你极度厌恶波动、 primarily 看重保证现金价值与内地服务便利性，内地增额寿更适合。</p>
+            <p class="text-xs text-fin-text3 pt-2 border-t border-fin-border">提示：分红收益为非保证，实际派发可能高于或低于演示。历史分红实现率不代表未来，但可作为保险公司分红管理能力的重要参考。</p>
+          </div>
+        </div>
+
+        <div class="card rounded-2xl p-6 mobile-compact overflow-x-auto">
+          <h3 class="text-lg font-bold mb-4">产品功能横向对比</h3>
+          <table class="w-full compare min-w-[700px]">
+            <thead><tr><th class="text-fin-text3">对比项</th><th class="text-fin-gold">自主未来</th><th>鑫益传家</th><th>御享金越2025</th><th>福有余2025</th></tr></thead>
+            <tbody>${generateFeatureRows()}</tbody>
+          </table>
+        </div>
+
+        <div class="card rounded-2xl p-6 mobile-compact">
+          <h3 class="text-lg font-bold mb-4">场景化方案匹配</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${generateScenarioCards(productList)}</div>
+        </div>
+
+        <div class="card rounded-2xl p-6 mobile-compact">
+          <h3 class="text-lg font-bold mb-3">重要提示</h3>
+          <ul class="text-sm text-fin-text2 space-y-2 list-disc pl-5">
+            <li>香港保险产品（如保诚自主未来）的分红收益为非保证收益，实际派发可能高于或低于演示值。</li>
+            <li>内地客户投保香港保险需本人赴港签署文件，保单以美元计价，存在汇率波动风险。</li>
+            <li>内地终身寿险的保证收益写入合同，但演示红利同样不保证，某些年度红利可能为零。</li>
+            <li>保障杠杆倍数会随年龄、性别、吸烟习惯、供款期及保额变化，具体以保险公司核保结果为准。</li>
+            <li>本页面数据基于公开资料整理，仅供横向对比参考，具体以各保险公司最新条款与利益说明为准。</li>
+            <li>投保前请咨询持牌专业人士，根据自身财务状况与风险承受能力做出决策。</li>
+          </ul>
+        </div>
+      `;
+    }
+
+    function generateWhyBetter(winner, runnerUp) {
+      if (winner.key === 'prudential') {
+        return `<p class="mb-2"><strong class="text-fin-gold">超高保障杠杆：</strong>自主未来以较低年缴保费即可创造数十倍首日身故赔偿，30岁男性20年供款杠杆约62倍，25岁女性30年供款可达97倍，远超内地增额寿1.2-1.6倍的杠杆水平。</p><p class="mb-2"><strong class="text-fin-gold">终身保障+长期储蓄：</strong>不仅提供终身身故保障，更通过终期红利累积财富，第30年预期每年回报率可达4.6%以上。</p><p class="mb-2"><strong class="text-fin-gold">灵活身故赔付：</strong>可选择一次性、每月分期或综合两种方式支付身故赔偿，实现类似信托的财富分配效果。</p><p class="mb-2"><strong class="text-fin-gold">保单逆按活化保额：</strong>55岁以上可申请保单逆按计划，将保额转化为终身每月年金，补充退休收入。</p><p>相较之下，${runnerUp.company}${runnerUp.shortName}在${runnerUp.key === 'pingan' ? '双被保人与康养服务' : runnerUp.key === 'cpic' ? '养老社区与回本速度' : '购买便利性与保证收益'}方面更具优势，更适合无需跨境配置、追求稳健保证收益的客户。</p>`;
+      }
+      return `<p class="mb-2">${winner.company}${winner.shortName}在${winner.key === 'pingan' ? '双被保人设计与康养服务' : winner.key === 'cpic' ? '养老社区对接、回本速度与减保灵活性' : '品牌服务网络、购买便利性与保证收益稳健性'}方面表现更优。</p><p class="mb-2">内地终身寿险的优势在于人民币计价、无汇率波动、购买与服务便捷、保证部分写入合同，且前期身故杠杆（18-40岁按已交保费160%）在内地产品中已属较高水平。</p><p>若您希望以更低保费撬动更高终身保障、或有美元资产配置需求，香港保诚自主未来仍是更优选择。</p>`;
+    }
+
+    function generateFeatureRows() {
+      const rows = [
+        { label: '产品类型', key: 'productType' }, { label: '收益结构', key: 'returnStructure' },
+        { label: '演示长期收益', key: 'expectedReturn' }, { label: '保证收益', key: 'guaranteedReturn' },
+        { label: '保障杠杆', key: 'protectionLeverage' }, { label: '身故赔偿', key: 'deathBenefit' },
+        { label: '支持币种', key: 'currency' }, { label: '货币转换', key: 'currencyConvert' },
+        { label: '缴费期', key: 'premiumTerm' }, { label: '资金提取', key: 'withdraw' },
+        { label: '传承功能', key: 'inheritance' }, { label: '附加权益', key: 'additional' },
+        { label: '主要风险', key: 'risk' }
+      ];
+      const keys = ['prudential', 'chinalife', 'pingan', 'cpic'];
+      return rows.map(r => `<tr><td class="font-medium text-fin-text3">${r.label}</td>${keys.map((k, idx) => `<td class="${idx === 0 ? 'text-fin-gold' : 'text-fin-text2'}">${products[k].metrics[r.key] || '-'}</td>`).join('')}</tr>`).join('');
+    }
+
+    function generateScenarioCards(productList) {
+      const scenarios = [
+        { key: 'family', title: '家庭支柱保障', icon: '🛡️', desc: '用较低保费为家人留下一笔大额保障金。' },
+        { key: 'mortgage', title: '房贷/债务对冲', icon: '🏠', desc: '覆盖剩余贷款，防止家庭支柱倒下影响还款。' },
+        { key: 'retirement', title: '养老现金流规划', icon: '🏖️', desc: '保单逆按或减保取现，补充退休收入。' },
+        { key: 'inheritance', title: '财富传承', icon: '🏛️', desc: '通过身故赔偿支付方式实现定向、分期传承。' }
+      ];
+      const weights = {
+        family: { prudential: 100, pingan: 80, cpic: 75, chinalife: 60 },
+        mortgage: { prudential: 100, pingan: 85, cpic: 80, chinalife: 65 },
+        retirement: { prudential: 90, cpic: 90, pingan: 80, chinalife: 65 },
+        inheritance: { prudential: 95, pingan: 60, cpic: 50, chinalife: 45 }
+      };
+      return scenarios.map(s => {
+        const sorted = [...productList].sort((a, b) => weights[s.key][b.key] - weights[s.key][a.key]);
+        const top = sorted[0];
+        return `<div class="bg-fin-surface2 rounded-xl p-4"><div class="flex items-center gap-2 mb-2"><span class="text-xl">${s.icon}</span><h4 class="font-bold">${s.title}</h4></div><p class="text-sm text-fin-text2 mb-2">${s.desc}</p><p class="text-sm text-fin-text2 mb-3">示例身故赔偿：${top.scenarios[s.key]}</p><div class="text-xs text-fin-gold font-medium">最适配：${top.company} ${top.shortName}</div></div>`;
+      }).join('');
+    }
+
+    function toggleCollapse(id, btn) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const isExpanded = el.classList.contains('expanded');
+      if (isExpanded) {
+        el.classList.remove('expanded');
+        btn.innerHTML = '展开详情 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';
+      } else {
+        el.classList.add('expanded');
+        btn.innerHTML = '收起详情 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>';
+      }
+    }
+
+    window.addEventListener('load', generateComparison);
+  </script>
+</body>
+</html>
