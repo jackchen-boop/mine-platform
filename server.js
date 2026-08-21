@@ -129,6 +129,12 @@ app.get(['/insurance/compare', '/insurance/compare/'], (req, res) => {
   res.setHeader('Expires', '0');
   res.sendFile(join(__dirname, 'public', 'insurance-compare.html'));
 });
+app.get(['/savings/compare', '/savings/compare/'], (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(join(__dirname, 'public', 'savings-compare.html'));
+});
 
 // 所有其他 GET 请求回退到 index.html
 app.get('*', (req, res, next) => {
