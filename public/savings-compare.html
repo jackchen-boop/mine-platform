@@ -135,7 +135,7 @@
         scores: { returnPotential: 98, flexibility: 98, currency: 100, inheritance: 98, guarantee: 40, convenience: 55, access: 70 },
         metrics: {
           productType: '分红型多元货币储蓄计划', returnStructure: '保证现金价值+归原红利+终期红利',
-          expectedReturn: '第25年总回报约6.09%（5年缴美元保单）', guaranteedReturn: '保证部分较低，长期以非保证分红为主',
+          expectedReturn: '第25年总回报约6.09%（5年缴美元保单）', guaranteedReturn: '较低。美元5年缴保单，第10年保证IRR -4.51%，第20年仅0.13%，第100年0.43%；保证回本需18年'
           currency: '美元/港币/人民币/英镑/澳元/加元等6种', currencyConvert: '第3个保单周年日起，同一计划内无限次转换',
           premiumTerm: '3/5/8/10年等', minEntry: '约5,000美元/年（视计划而定）',
           withdraw: '可部分提取、终期红利锁定/解锁、自主入息',
@@ -150,7 +150,7 @@
         scores: { returnPotential: 65, flexibility: 55, currency: 20, inheritance: 45, guarantee: 75, convenience: 95, access: 90 },
         metrics: {
           productType: '分红型增额终身寿险', returnStructure: '保证现金价值+年度红利（现金分红）',
-          expectedReturn: '长期IRR约2.5%-3.0%（含分红演示）', guaranteedReturn: '有效保额按年2%复利递增',
+          expectedReturn: '长期IRR约2.5%-3.0%（含分红演示）', guaranteedReturn: '较高。有效保额按年2%复利递增，保证现金价值IRR约2.0%-2.3%'
           currency: '人民币', currencyConvert: '不支持', premiumTerm: '3/5/10年等', minEntry: '门槛较低',
           withdraw: '支持减保，每年累计减保金额不超过基本保额的20%',
           inheritance: '指定受益人，身故赔付保额/现金价值/保费较大者',
@@ -164,7 +164,7 @@
         scores: { returnPotential: 60, flexibility: 65, currency: 20, inheritance: 60, guarantee: 70, convenience: 95, access: 90 },
         metrics: {
           productType: '分红型增额终身寿险', returnStructure: '保证现金价值+保单分红',
-          expectedReturn: '保证现金价值年增速约1.75%，加分红演示', guaranteedReturn: '现金价值按约1.75%逐年增长',
+          expectedReturn: '保证现金价值年增速约1.75%，加分红演示', guaranteedReturn: '较高。保证现金价值按约1.75%逐年增长，写入合同'
           currency: '人民币', currencyConvert: '不支持', premiumTerm: '3/6/8年', minEntry: '门槛较低',
           withdraw: '支持减保，保单贷款最高可贷现金价值80%', inheritance: '支持双被保险人，可指定受益人',
           additional: '双被保险人延长财富积累期、平安服务网络', risk: '收益上限较低、分红不确定、无货币转换'
@@ -177,7 +177,7 @@
         scores: { returnPotential: 75, flexibility: 75, currency: 20, inheritance: 50, guarantee: 70, convenience: 90, access: 90 },
         metrics: {
           productType: '分红型增额终身寿险', returnStructure: '保证现金价值+浮动红利（交清增额）',
-          expectedReturn: '5年缴约第6年回本（含红利），长期含红利演示较高', guaranteedReturn: '保证部分现金价值写入合同',
+          expectedReturn: '5年缴约第6年回本（含红利），长期含红利演示较高', guaranteedReturn: '较高。保证现金价值写入合同，5年缴约第8年保证部分接近回本，长期保证IRR约1.5%-2.0%'
           currency: '人民币', currencyConvert: '不支持', premiumTerm: '趸交/3/5/9/10年', minEntry: '5000元起',
           withdraw: '支持减保，每年累计不超过基本保额20%', inheritance: '指定受益人',
           additional: '可对接太保家园高端养老社区、减保灵活', risk: '分红非保证、无货币转换、养老社区有保费门槛'
@@ -302,6 +302,25 @@
                 ${productList.map(p => `<tr class="${p.key === winner.key ? 'bg-fin-gold/5' : ''}"><td class="font-medium">${p.company}<br><span class="text-fin-gold">${p.shortName}</span></td><td>${p.scenarios.year10}</td><td>${p.scenarios.year20}</td><td>${p.scenarios.year30}</td><td>${p.scenarios.year60}</td><td class="text-xs text-fin-text3">${p.key === 'prudential' ? '6.0%+' : p.key === 'cpic' ? '3.0%-4.0%' : '2.5%左右'}</td></tr>`).join('')}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <div class="card rounded-2xl p-6 mobile-compact">
+          <h3 class="text-lg font-bold mb-4">关于「保证收益」的关键说明</h3>
+          <div class="space-y-4 text-sm text-fin-text2">
+            <p><strong class="text-fin-gold">保诚信守明天的保证部分确实较低。</strong>以美元5年缴保单为例：第10年保证IRR为<span class="text-fin-danger">-4.51%</span>（即退保仍亏损），第20年仅<span class="text-fin-text">0.13%</span>，即使持有到第100年，保证IRR也只有<span class="text-fin-text">0.43%</span>；保证回本需<span class="text-fin-text">18年</span>。这意味着如果保险公司未来分红大幅不及预期，前18年退保可能拿不回本金。</p>
+            <p><strong class="text-fin-gold">内地三款产品也有非保证分红，但保证部分明显更高。</strong>它们的核心是「增额终身寿险」——保额/现金价值的增长速度直接写入合同，属于保证收益：</p>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>国寿鑫益传家：保额按<span class="text-fin-text">2%</span>年复利递增</li>
+              <li>平安盛世金越尊享版：保证现金价值按约<span class="text-fin-text">1.75%</span>逐年增长</li>
+              <li>太保福有余2025：保证现金价值写入合同，长期保证IRR约<span class="text-fin-text">1.5%-2.0%</span></li>
+            </ul>
+            <p><strong class="text-fin-gold">差距有多大？</strong>长期来看，内地产品保证IRR约1.5%-2.5%，保诚仅约0.4%，差距约<span class="text-fin-text">1-2个百分点</span>。但加上非保证分红后，保诚总回报可达6%以上，远超内地产品。</p>
+            <p><strong class="text-fin-gold">这是不是劣势？</strong>取决于你的风险偏好与投资期限：</p>
+            <ul class="list-disc pl-5 space-y-1">
+              <li><span class="text-fin-text">是劣势</span>：如果你追求确定性、可能中短期用钱、无法承受分红波动</li>
+              <li><span class="text-fin-text">不是劣势</span>：如果你能持有20-30年以上、愿意用「低保证」换取「更高的长期预期回报」、有海外货币需求</li>
+            </ul>
           </div>
         </div>
 
